@@ -4,8 +4,8 @@
 //  of the same browser only — perfect for trying it out).
 // ─────────────────────────────────────────────────────────────
 window.STICKY_CONFIG = {
-  SUPABASE_URL: "",        // e.g. "https://abcdxyz.supabase.co"
-  SUPABASE_ANON_KEY: "",   // the public "anon" key (safe to publish)
+  SUPABASE_URL: "https://vkphwxyctiftwqhqtwda.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrcGh3eHljdGlmdHdxaHF0d2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3NjIyNzAsImV4cCI6MjEwOTMzODI3MH0.5EMlYxTgph2D9ogK0vKCjQC6EdwK-MiutpaRy8lHPC0",
 
   // Optional event branding. The presenter can change the title and
   // subtitle directly on the board (pencil button or press E).
