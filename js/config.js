@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 window.STICKY_CONFIG = {
   SUPABASE_URL: "https://vkphwxyctiftwqhqtwda.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrcGh3eHljdGlmdHdxaHF0d2RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3NjIyNzAsImV4cCI6MjEwOTMzODI3MH0.5EMlYxTgph2D9ogK0vKCjQC6EdwK-MiutpaRy8lHPC0",
+  SUPABASE_ANON_KEY: "sb_publishable_d4oNn8kp1y0oZhek6W1S7A_r-GpXRXF",
 
   // Optional event branding. The presenter can change the title and
   // subtitle directly on the board (pencil button or press E).
