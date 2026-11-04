@@ -1,0 +1,32 @@
+/* ─────────────────────────────────────────────────────────────
+   Shared design tokens + paper textures.
+   No build step: everything is plain CSS, SVG and custom props.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --font-ui: "Outfit", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand: "Caveat", "Segoe Print", cursive;
+
+  --ease-out: cubic-bezier(.22,.9,.24,1);
+  --ease-spring: cubic-bezier(.18,.9,.22,1.08);
+  --ease-soft: cubic-bezier(.45,0,.25,1);
+
+  /* fine paper grain */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='.42'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  /* long paper fibres */
+  --fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .32' numOctaves='2' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E");
+
+  /* photographic paper texture, derived from a real sticky note */
+  --paper-fibre: url("../assets/paper-fibre.png");
+  --paper-mottle: url("../assets/paper-mottle.png");
+}
+
+/* reduced motion: keep the look, remove the movement */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    scroll-behavior:auto !important;
+    transition-duration:.001ms !important;
+  }
+}

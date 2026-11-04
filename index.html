@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b120d">
+<title data-i18n="Sticky note">Sticky note</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css?v=20261104d"><link rel="stylesheet" href="css/mobile.css?v=20261104d"><link rel="stylesheet" href="css/charts.css?v=20261104d">
+</head>
+<body>
+<main class="app">
+
+  <!-- 1 · sender name -->
+  <section id="s-name" class="screen">
+    <div class="bg-notes" aria-hidden="true">
+      <span class="bg-note n1"></span><span class="bg-note n2"></span><span class="bg-note n3"></span>
+    </div>
+    <div class="name-wrap">
+      <div class="brandmark">
+        <span class="brandmark__bean" aria-hidden="true">
+          <svg viewBox="0 0 24 26"><path d="M12 2c5.4 0 8.6 4.1 8.6 9.4 0 6.2-3.5 12.6-8.6 12.6S3.4 17.6 3.4 11.4C3.4 6.1 6.6 2 12 2Z" fill="#b06a3a" stroke="#2a160b" stroke-width="1.7"/><path d="M12 3.2c-3.2 3.8 3.1 5.7 0 9.5s3.1 5.7 0 9.6" fill="none" stroke="#2a160b" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+        <span>Sticky Wall</span>
+      </div>
+
+      <form id="f-name" class="paper-card">
+        <span class="paper-card__strip" aria-hidden="true"></span>
+        <p class="eyebrow" data-i18n="Before we start">Before we start</p>
+        <label for="name" data-i18n="What should we call you?">What should we call you?</label>
+        <input id="name" maxlength="40" autocomplete="nickname" autocapitalize="words" placeholder="A name or nickname" data-i18n-placeholder="A name or nickname" required>
+        <button type="submit"><span data-i18n="Continue">Continue</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="fine" data-i18n="Your name appears with your note on the wall.">Your name appears with your note on the wall.</p>
+      </form>
+      <div class="lang-switch lang-switch--center" data-lang-switch></div>
+    </div>
+  </section>
+
+  <!-- 2 · category -->
+  <section id="s-cat" class="screen hidden">
+    <header class="cat-head">
+      <div class="cat-head__top">
+        <p class="eyebrow" data-i18n="New note">New note</p>
+        <div class="lang-switch" data-lang-switch></div>
+      </div>
+      <h1 data-i18n="What’s on your mind?">What’s on your mind?</h1>
+      <p class="cat-sub" data-i18n="Pick a colour, then write.">Pick a colour, then write.</p>
+    </header>
+
+    <button id="poll-banner" class="poll-banner" type="button" hidden>
+      <span class="poll-banner__icon" aria-hidden="true">🗳</span>
+      <span class="poll-banner__copy">
+        <b id="poll-banner-title">Live polls</b>
+        <small id="poll-banner-sub">Tap to answer</small>
+      </span>
+      <span class="poll-banner__go" aria-hidden="true">→</span>
+    </button>
+
+    <div id="cats" class="cats" aria-label="Note categories" data-i18n-aria="Note categories"></div>
+
+    <p id="demo-note" class="demo-note" hidden data-i18n="Demo mode · notes stay in this browser">Demo mode · notes stay in this browser</p>
+    <button id="who" class="who"></button>
+  </section>
+
+  <!-- 3 · write -->
+  <section id="s-write" class="screen hidden">
+    <header class="write-head">
+      <button id="back" class="back" aria-label="Back" data-i18n-aria="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <span class="cat-pill"><span class="dot"></span><span id="cat-pill-label">Idea</span></span>
+    </header>
+
+    <div class="note-stage">
+      <div id="sheet" class="sheet">
+        <textarea id="text" placeholder="" rows="1" autocomplete="off" spellcheck="true" aria-label="Your note" data-i18n-aria="Your note"></textarea>
+        <div class="sheet__foot">
+          <span id="hint">Keep it short and sweet.</span>
+          <span id="count">0 / 200</span>
+        </div>
+      </div>
+      <p id="link-hint" class="link-hint" hidden data-i18n="Select a word, then paste a link to embed it.">Select a word, then paste a link to embed it.</p>
+    </div>
+
+    <div class="write-foot">
+      <button id="send"><span data-i18n="Stick it on the wall">Stick it on the wall</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- 4 · live polls list -->
+  <section id="s-polls" class="screen poll-screen hidden">
+    <header class="poll-head">
+      <button id="poll-list-back" class="back" aria-label="Back to notes" data-i18n-aria="Back to notes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="poll-head__copy">
+        <p class="eyebrow" data-i18n="Live polls">Live polls</p>
+        <h1 data-i18n="Have your say">Have your say</h1>
+      </div>
+    </header>
+    <div class="poll-list-wrap">
+      <div id="poll-list" class="poll-list" aria-label="Open polls" data-i18n-aria="Open polls"></div>
+      <p id="poll-list-empty" class="poll-list-empty" hidden data-i18n="No polls yet. The presenter will open one soon.">No polls yet. The presenter will open one soon.</p>
+    </div>
+  </section>
+
+  <!-- 5 · answer one poll -->
+  <section id="s-poll" class="screen poll-screen poll-vote hidden">
+    <header class="poll-head poll-head--vote">
+      <button id="poll-back" class="back" aria-label="Back to polls" data-i18n-aria="Back to polls">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <span class="cat-pill poll-cat-pill"><span class="dot"></span><span id="poll-cat-label">Feedback</span></span>
+      <span id="poll-status" class="poll-status">Open</span>
+    </header>
+    <div class="poll-scroll">
+      <article class="poll-paper">
+        <h1 id="poll-question"></h1>
+        <p id="poll-desc" class="poll-desc"></p>
+        <p id="poll-meta" class="poll-meta"></p>
+        <div id="poll-answer" class="poll-answer"></div>
+        <div id="poll-your" class="poll-your" hidden></div>
+        <button id="poll-submit" class="poll-submit" type="button">Send answer</button>
+        <div id="poll-results" class="poll-results"></div>
+        <p id="poll-note" class="poll-note" hidden></p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=20261104d"></script><script src="js/i18n.js?v=20261104d"></script><script src="js/polls.js?v=20261104d"></script><script src="js/store.js?v=20261104d"></script><script src="js/shared.js?v=20261104d"></script><script src="js/charts.js?v=20261104d"></script>
+<script src="js/mobile.js?v=20261104d"></script>
+</body></html>

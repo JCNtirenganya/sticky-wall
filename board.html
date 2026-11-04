@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css?v=20261104d"><link rel="stylesheet" href="css/postit.css?v=20261104d"><link rel="stylesheet" href="css/board.css?v=20261104d"><link rel="stylesheet" href="css/avatar.css?v=20261104d"><link rel="stylesheet" href="css/piles.css?v=20261104d"><link rel="stylesheet" href="css/qr.css?v=20261104d"><link rel="stylesheet" href="css/charts.css?v=20261104d">
+</head>
+<body>
+<main id="board">
+  <div id="wall-image" aria-hidden="true"></div>
+  <div id="ambient" aria-hidden="true"></div>
+  <div id="empty">
+    <div class="empty-card" id="welcome-card">
+      <h1 data-i18n="The wall is waiting.">The wall is waiting.</h1>
+      <p data-i18n="Notes land here the moment someone sends one. Scan the QR code or open the link to add the first note.">Notes land here the moment someone sends one. Scan the QR code or open the link to add the first note.</p>
+      <div class="empty-hints">
+        <span class="empty-hint" id="empty-hint"><kbd>S</kbd> <span data-i18n="drop sample notes">drop sample notes</span></span>
+        <span class="empty-hint"><kbd>E</kbd> <span data-i18n="name this wall">name this wall</span></span>
+        <span class="empty-hint"><kbd>C</kbd> <span data-i18n="edit categories">edit categories</span></span>
+        <span class="empty-hint"><kbd>P</kbd> <span data-i18n="poll room">poll room</span></span>
+      </div>
+    </div>
+    <section class="dash-card" id="dash-card" aria-label="Presenter dashboard" data-i18n-aria="Presenter dashboard" hidden>
+      <p class="dash-kicker" data-i18n="Presenter · received notes">Presenter · received notes</p>
+      <h1 id="dash-title">You received 0 notes.</h1>
+      <p class="dash-lead" id="dash-lead">Everything received is on the wall.</p>
+      <div class="dash-cats" id="dash-cats"></div>
+      <div id="dash-polls" class="dash-polls" hidden>
+        <div class="dash-polls-head">
+          <span data-i18n="Live polls">Live polls</span>
+          <button id="dash-poll-new" type="button" data-i18n="+ New poll">+ New poll</button>
+        </div>
+        <div id="dash-poll-list" class="dash-poll-list"></div>
+      </div>
+      <div class="dash-actions">
+        <button id="dash-back" class="dash-btn" type="button" data-i18n="Back to the wall">Back to the wall</button>
+        <button id="dash-reset" class="dash-btn dash-btn--quiet" type="button" data-i18n="Reset view">Reset view</button>
+        <button id="dash-restore" class="dash-btn dash-btn--quiet" type="button" data-i18n="Restore hidden" hidden>Restore hidden</button>
+        <button id="dash-download-pdf" class="dash-btn dash-btn--quiet" type="button" data-i18n="Wall summary PDF">Wall summary PDF</button>
+        <button id="dash-download-jpeg" class="dash-btn dash-btn--quiet" type="button" data-i18n="Notes image JPEG">Notes image JPEG</button>
+        <button id="dash-clear" class="dash-btn dash-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
+        <div class="lang-switch" data-lang-switch></div>
+      </div>
+      <div class="dash-list-head"><span data-i18n="Notes">Notes</span><span id="dash-count"></span></div>
+      <ul id="dash-notes" class="dash-notes"></ul>
+      <p class="dash-foot"><kbd>D</kbd> or <kbd>Esc</kbd> <span data-i18n="returns to the wall · hidden notes stay here until restored">returns to the wall · hidden notes stay here until restored</span></p>
+    </section>
+  </div>
+  <div id="sheet"></div>
+  <div id="piles" aria-label="Notes grouped by category" data-i18n-aria="Notes grouped by category" hidden></div>
+</main>
+
+<!-- optional event branding, set in js/config.js or edited on the board with E -->
+<header id="brand" class="hidden">
+  <img id="brand-logo" class="brand-logo" alt="" width="64" height="64">
+  <div class="brand-copy">
+    <h1 id="brand-title"></h1>
+    <p id="brand-sub"></p>
+  </div>
+  <button id="brand-edit" class="brand-edit" type="button" aria-label="Edit event name" data-i18n-aria="Edit event name" title="Edit event name (E)" data-i18n-title="Edit event name (E)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+  </button>
+  <button id="cat-edit" class="brand-edit" type="button" aria-label="Edit categories and colours" data-i18n-aria="Edit categories and colours" title="Edit categories and colours (C)" data-i18n-title="Edit categories and colours (C)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+  </button>
+</header>
+<div id="status"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button></div>
+<button id="piles-back" type="button" hidden><span aria-hidden="true">←</span> <span data-i18n="All piles">All piles</span></button>
+
+<!-- presenter extras: washed-out dock, appears on pointer movement -->
+<div id="extras" aria-label="Board extras" data-i18n-aria="Board extras">
+  <div id="extras-panel" class="extras-panel" role="dialog" aria-label="Presenter controls" data-i18n-aria="Presenter controls">
+    <p class="extras-kicker" data-i18n="Notes">Notes</p>
+    <div class="extras-grid">
+      <button id="extras-dashboard" class="extras-btn" type="button"><span data-i18n="Dashboard">Dashboard</span> <kbd>D</kbd></button>
+      <button id="extras-reset-view" class="extras-btn" type="button" data-i18n="Reset view">Reset view</button>
+      <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
+      <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
+    </div>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Polls">Polls</p>
+    <div class="extras-grid">
+      <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
+      <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
+      <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
+      <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
+      <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
+    </div>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Demo data">Demo data</p>
+    <div class="extras-grid">
+      <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
+      <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
+      <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
+    </div>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Layout">Layout</p>
+    <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
+      <input type="checkbox" data-extra="columns">
+      <span data-i18n="Categories in columns">Categories in columns</span>
+    </label>
+    <label class="extra-range">
+      <span class="extra-range-head"><span data-i18n="Note spacing">Note spacing</span> <output id="gap-out" data-for="gap">12</output><span class="extra-unit">px</span></span>
+      <input type="range" data-extra="gap" min="0" max="40" step="1" value="12">
+    </label>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Presentation">Presentation</p>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="autoplay" checked>
+      <span data-i18n="Autoplay in full screen">Autoplay in full screen</span>
+    </label>
+    <label class="extra-range">
+      <span class="extra-range-head"><span data-i18n="Start after">Start after</span> <output id="autoplay-delay-out" data-for="autoplayDelay">10</output><span class="extra-unit">s</span></span>
+      <input type="range" data-extra="autoplayDelay" min="0" max="60" step="1" value="10">
+    </label>
+    <label class="extra-range">
+      <span class="extra-range-head"><span data-i18n="Seconds per slide">Seconds per slide</span> <output id="autoplay-duration-out" data-for="autoplayDuration">6</output><span class="extra-unit">s</span></span>
+      <input type="range" data-extra="autoplayDuration" min="2" max="60" step="1" value="6">
+    </label>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="On the wall">On the wall</p>
+    <div class="extras-grid">
+      <button id="extras-event-title" class="extras-btn" type="button"><span data-i18n="Edit event name">Edit event name</span> <kbd>E</kbd></button>
+      <button id="extras-categories" class="extras-btn" type="button"><span data-i18n="Edit categories and colours">Edit categories and colours</span> <kbd>C</kbd></button>
+    </div>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="brand" checked>
+      <span data-i18n="Header &amp; logo">Header &amp; logo</span>
+    </label>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="mascot" checked>
+      <span data-i18n="Mascot">Mascot</span>
+    </label>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="qr" checked>
+      <span data-i18n="QR code">QR code</span>
+    </label>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="status" checked>
+      <span data-i18n="Note count">Note count</span>
+    </label>
+    <label class="extra-row">
+      <input type="checkbox" data-extra="filters" checked>
+      <span data-i18n="Filter bar">Filter bar</span>
+    </label>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Wall colour">Wall colour</p>
+    <div class="extra-swatches" id="extras-swatches" aria-label="Wall colour presets" data-i18n-aria="Wall colour presets">
+      <button type="button" data-wall="" style="--sw:#0b0b0c" aria-label="Default textured wall" data-i18n-aria="Default textured wall" title="Default textured wall" data-i18n-title="Default textured wall"></button>
+      <button type="button" data-wall="#000000" style="--sw:#000000" aria-label="Black wall" data-i18n-aria="Black wall" title="Black wall" data-i18n-title="Black wall"></button>
+      <button type="button" data-wall="#14171C" style="--sw:#14171C" aria-label="Charcoal wall" data-i18n-aria="Charcoal wall"></button>
+      <button type="button" data-wall="#1B2430" style="--sw:#1B2430" aria-label="Slate blue wall" data-i18n-aria="Slate blue wall"></button>
+      <button type="button" data-wall="#122420" style="--sw:#122420" aria-label="Deep green wall" data-i18n-aria="Deep green wall"></button>
+      <button type="button" data-wall="#2A1B22" style="--sw:#2A1B22" aria-label="Plum wall" data-i18n-aria="Plum wall"></button>
+      <button type="button" data-wall="#2B2114" style="--sw:#2B2114" aria-label="Warm brown wall" data-i18n-aria="Warm brown wall"></button>
+    </div>
+    <label class="extra-row extra-row--color">
+      <input type="color" data-extra="bgColor" value="#000000" aria-label="Custom wall colour" data-i18n-aria="Custom wall colour">
+      <span data-i18n="Custom colour">Custom colour</span>
+      <button id="extras-bg-color-reset" class="extra-mini" type="button" data-i18n="Reset">Reset</button>
+    </label>
+    <div class="extra-file-row">
+      <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background image…">Background image…</button>
+      <button id="extras-bg-clear" class="extras-btn" type="button" data-i18n="Remove image">Remove image</button>
+    </div>
+    <input id="extras-bg-file" type="file" accept="image/*" hidden>
+    <div class="extra-input-row">
+      <input id="extras-bg-url" type="url" inputmode="url" placeholder="…or paste an image URL" data-i18n-placeholder="…or paste an image URL" autocomplete="off">
+      <button id="extras-bg-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
+    </div>
+    <label class="extra-range">
+      <span class="extra-range-head"><span data-i18n="Image dim">Image dim</span> <output id="bgdim-out" data-for="bgDim">35</output><span class="extra-unit">%</span></span>
+      <input type="range" data-extra="bgDim" min="0" max="85" step="1" value="35">
+    </label>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Logo">Logo</p>
+    <div class="extra-file-row">
+      <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logo…">Change logo…</button>
+      <button id="extras-logo-reset" class="extras-btn" type="button" data-i18n="Default logo">Default logo</button>
+    </div>
+    <input id="extras-logo-file" type="file" accept="image/*" hidden>
+    <div class="extra-input-row">
+      <input id="extras-logo-url" type="url" inputmode="url" placeholder="…or paste a logo URL" data-i18n-placeholder="…or paste a logo URL" autocomplete="off">
+      <button id="extras-logo-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
+    </div>
+    <label class="extra-range">
+      <span class="extra-range-head"><span data-i18n="Logo size">Logo size</span> <output id="logosize-out" data-for="logoSize">100</output><span class="extra-unit">%</span></span>
+      <input type="range" data-extra="logoSize" min="50" max="180" step="5" value="100">
+    </label>
+
+    <div class="extras-sep" role="separator"></div>
+    <div class="extras-actions">
+      <button id="extras-notes-only" type="button" data-i18n="Notes only">Notes only</button>
+      <button id="extras-notes-manual" type="button" aria-pressed="false" title="Show the notes without autoplay (M)" data-i18n-title="Show the notes without autoplay (M)" data-i18n="No auto">No auto</button>
+      <button id="extras-show-all" type="button" data-i18n="Show all">Show all</button>
+    </div>
+
+    <div class="extras-sep" role="separator"></div>
+    <p class="extras-kicker" data-i18n="Download">Download</p>
+    <div class="extras-grid">
+      <button id="extras-download-pdf" class="extras-btn" type="button"><span data-i18n="Wall summary PDF">Wall summary PDF</span></button>
+      <button id="extras-download-jpeg" class="extras-btn" type="button"><span data-i18n="Notes image JPEG">Notes image JPEG</span></button>
+    </div>
+
+    <div class="extras-sep" role="separator"></div>
+    <div class="extras-lang">
+      <span class="extras-kicker" data-i18n="Language">Language</span>
+      <div class="lang-switch" data-lang-switch></div>
+    </div>
+  </div>
+  <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+    <span data-i18n="Extras">Extras</span>
+  </button>
+</div>
+
+<!-- presentation QR: opens the phone page -->
+<aside id="qr-card" aria-label="Scan to add a note from your phone" data-i18n-aria="Scan to add a note from your phone">
+  <div id="qr-code" class="qr-code"></div>
+  <p class="qr-caption" data-i18n="Scan to add your note">Scan to add your note</p>
+</aside>
+
+<!-- presenter: live poll room -->
+<section id="poll-room" class="poll-room" aria-label="Poll room" data-i18n-aria="Poll room" aria-hidden="true">
+  <div class="poll-room__shell">
+    <header class="poll-room__head">
+      <div class="poll-room__title">
+        <p class="poll-kicker" data-i18n="Presenter · live audience">Presenter · live audience</p>
+        <h2 data-i18n="Poll room">Poll room</h2>
+        <p id="poll-summary" class="poll-summary">No polls yet.</p>
+      </div>
+      <div class="poll-room__actions">
+        <button id="poll-new" class="poll-btn poll-btn--primary" type="button"><span data-i18n="+ New poll">+ New poll</span> <kbd>N</kbd></button>
+        <button id="poll-samples" class="poll-btn poll-btn--samples" type="button"><span data-i18n="Sample polls">Sample polls</span> <kbd>S</kbd></button>
+        <button id="poll-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
+        <button id="poll-present" class="poll-btn" type="button" aria-pressed="false" title="Present the results full screen (F)" data-i18n-title="Present the results full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
+        <button id="poll-present-one" class="poll-btn" type="button" aria-pressed="false" title="Present the results one by one (O)" data-i18n-title="Present the results one by one (O)"><span data-i18n="One by one">One by one</span> <kbd>O</kbd></button>
+        <button id="poll-present-manual" class="poll-btn" type="button" aria-pressed="false" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
+        <button id="poll-race-open" class="poll-btn" type="button"><span data-i18n="Chart race">Chart race</span> <kbd>R</kbd></button>
+        <button id="poll-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>P</kbd></button>
+      </div>
+    </header>
+    <div id="poll-filters" class="poll-filters" aria-label="Filter polls" data-i18n-aria="Filter polls"></div>
+    <div id="poll-grid" class="poll-grid"></div>
+    <div id="poll-empty" class="poll-empty" hidden>
+      <p class="poll-empty__icon" aria-hidden="true">▣</p>
+      <h3 data-i18n="No polls yet">No polls yet</h3>
+      <p data-i18n="Create a poll and it appears on every phone instantly.">Create a poll and it appears on every phone instantly.</p>
+      <div class="poll-empty__actions">
+        <button id="poll-empty-new" class="poll-btn poll-btn--primary" type="button" data-i18n="Create the first poll">Create the first poll</button>
+        <button id="poll-empty-samples" class="poll-btn poll-btn--samples" type="button" data-i18n="Load sample polls">Load sample polls</button>
+      </div>
+    </div>
+    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
+  </div>
+</section>
+
+<!-- presenter: live bar-chart race -->
+<section id="poll-race" class="poll-race" aria-label="Live chart race" data-i18n-aria="Live chart race" aria-hidden="true">
+  <div class="poll-race__shell">
+    <header class="poll-race__head">
+      <div class="poll-race__copy">
+        <p class="poll-kicker" data-i18n="Presenter · live results">Presenter · live results</p>
+        <h2 id="race-title"></h2>
+        <p id="race-sub" class="poll-race__sub"></p>
+      </div>
+      <div class="poll-race__actions">
+        <span id="race-live" class="race-live">
+          <span class="race-live__dot" aria-hidden="true"></span>
+          <span data-i18n="Live">Live</span>
+        </span>
+        <button id="race-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
+      </div>
+    </header>
+    <div id="race-stage" class="race-stage" aria-live="polite"></div>
+    <footer class="poll-race__foot">
+      <button id="race-play" class="poll-btn poll-btn--primary" type="button" data-playing="0">Pause</button>
+      <button id="race-replay" class="poll-btn" type="button" data-i18n="Replay">Replay</button>
+      <label class="race-progress-wrap">
+        <span class="race-progress-label" data-i18n="Race progress">Race progress</span>
+        <input id="race-progress" class="race-progress" type="range" min="0" max="100" step="1" value="0" aria-label="Race progress" data-i18n-aria="Race progress">
+      </label>
+      <span id="race-clock" class="race-clock">0:00</span>
+      <div class="race-speeds" role="group" aria-label="Playback speed" data-i18n-aria="Playback speed">
+        <button type="button" data-race-speed="0.5" class="race-speed">0.5×</button>
+        <button type="button" data-race-speed="1" class="race-speed act">1×</button>
+        <button type="button" data-race-speed="2" class="race-speed">2×</button>
+        <button type="button" data-race-speed="4" class="race-speed">4×</button>
+      </div>
+    </footer>
+  </div>
+</section>
+
+<!-- presenter: poll editor -->
+<dialog id="poll-dialog" class="event-dialog poll-dialog">
+  <form id="poll-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 id="poll-dialog-title">New poll</h2>
+    <p class="event-lead" data-i18n="Only you can change the question, options and settings. Phones can only answer.">Only you can change the question, options and settings. Phones can only answer.</p>
+    <div class="poll-form-scroll">
+      <label for="poll-question" data-i18n="Question">Question</label>
+      <input id="poll-question" maxlength="160" autocomplete="off" placeholder="e.g. Which topic should we cover next?" data-i18n-placeholder="e.g. Which topic should we cover next?" required>
+      <label for="poll-description"><span data-i18n="Description">Description</span> <span data-i18n="optional">optional</span></label>
+      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the room…" data-i18n-placeholder="A little context for the room…"></textarea>
+      <div class="poll-form-row">
+        <label for="poll-type"><span data-i18n="Type">Type</span>
+          <select id="poll-type"></select>
+        </label>
+        <label for="poll-category"><span data-i18n="Category">Category</span>
+          <input id="poll-category" maxlength="32" list="poll-category-list" autocomplete="off" placeholder="Feedback" data-i18n-placeholder="Feedback">
+          <datalist id="poll-category-list"></datalist>
+        </label>
+      </div>
+      <div id="poll-options-wrap" class="poll-options-wrap">
+        <span class="poll-field-label" data-i18n="Options">Options</span>
+        <div id="poll-options" class="poll-options"></div>
+        <button id="poll-add-option" class="poll-add-option" type="button" data-i18n="+ Add option">+ Add option</button>
+        <label id="poll-max-wrap" class="poll-max" for="poll-max">
+          <span><span data-i18n="Max choices">Max choices</span> <output id="poll-max-out">2</output></span>
+          <input id="poll-max" type="range" min="2" max="8" step="1" value="2">
+        </label>
+      </div>
+      <div class="poll-form-row">
+        <label for="poll-status"><span data-i18n="Status">Status</span>
+          <select id="poll-status"></select>
+        </label>
+        <label for="poll-results"><span data-i18n="Results on phones">Results on phones</span>
+          <select id="poll-results"></select>
+        </label>
+      </div>
+    </div>
+    <div class="event-actions">
+      <button id="poll-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
+      <span class="event-spacer"></span>
+      <button type="submit" class="event-btn" id="poll-save">Save poll</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: name the wall -->
+<dialog id="event-dialog" class="event-dialog">
+  <form id="event-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 data-i18n="Name this wall">Name this wall</h2>
+    <p class="event-lead" data-i18n="Shown large on the board, above the notes.">Shown large on the board, above the notes.</p>
+    <label for="event-title" data-i18n="Event name">Event name</label>
+    <input id="event-title" maxlength="60" autocomplete="off" placeholder="e.g. Sanokip Annual Meeting" data-i18n-placeholder="e.g. Sanokip Annual Meeting">
+    <label for="event-subtitle"><span data-i18n="Subtitle">Subtitle</span> <span data-i18n="optional">optional</span></label>
+    <input id="event-subtitle" maxlength="80" autocomplete="off" placeholder="e.g. Notes from the room" data-i18n-placeholder="e.g. Notes from the room">
+    <div class="event-actions">
+      <button id="event-reset" type="button" class="event-btn event-btn--quiet" data-i18n="Use defaults">Use defaults</button>
+      <span class="event-spacer"></span>
+      <button id="event-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
+      <button type="submit" class="event-btn" data-i18n="Save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: categories and colours -->
+<dialog id="category-dialog" class="event-dialog category-dialog">
+  <form id="category-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 data-i18n="Categories">Categories</h2>
+    <p class="event-lead" data-i18n="Add, rename, recolour or remove note types. Removing one moves its notes to the first category.">Add, rename, recolour or remove note types. Removing one moves its notes to the first category.</p>
+    <div id="category-list" class="category-list"></div>
+    <button id="category-add" type="button" class="cat-add" data-i18n="+ Add category">+ Add category</button>
+    <div class="event-actions">
+      <button id="category-reset" type="button" class="event-btn event-btn--quiet" data-i18n="Use defaults">Use defaults</button>
+      <span class="event-spacer"></span>
+      <button id="category-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
+      <button type="submit" class="event-btn" data-i18n="Save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- hidden filter controls: hover the top edge, press F, or double-tap the top edge -->
+<div id="hot"></div>
+<nav id="filters" aria-label="Filter notes" data-i18n-aria="Filter notes"></nav>
+
+<div id="focus">
+  <div id="focus-meta"><span class="dot"></span><span id="focus-cat"></span><span class="sep">/</span><span id="focus-count"></span></div>
+  <div id="focus-stage"></div>
+  <div id="focus-ui">
+    <button id="prev" class="focus-btn" aria-label="Previous note" data-i18n-aria="Previous note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button id="next" class="focus-btn" aria-label="Next note" data-i18n-aria="Next note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    <button id="focus-hide" class="focus-btn focus-btn--hide" title="Hide this note from the wall (X)" data-i18n-title="Hide this note from the wall (X)" aria-label="Hide this note from the wall" data-i18n-aria="Hide this note from the wall" data-i18n="Hide note">Hide note</button>
+    <span class="focus-btn hint"><kbd>Esc</kbd> <span data-i18n="close">close</span></span>
+  </div>
+</div>
+
+<!-- Bun, the map-and-coffee rabbit host -->
+<div id="avatar" data-mood="idle" aria-hidden="true">
+<svg viewBox="0 -58 240 348" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bunFur" cx="38%" cy="22%" r="90%">
+      <stop offset="0" stop-color="#fffdf0"/>
+      <stop offset=".4" stop-color="#f4eecb"/>
+      <stop offset=".76" stop-color="#e0e0c0"/>
+      <stop offset="1" stop-color="#bfb184"/>
+    </radialGradient>
+    <linearGradient id="bunShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset=".52" stop-color="#5a3a1a" stop-opacity="0"/>
+      <stop offset="1" stop-color="#5a3a1a" stop-opacity=".3"/>
+    </linearGradient>
+    <radialGradient id="bunBelly" cx="42%" cy="28%" r="82%">
+      <stop offset="0" stop-color="#fffef8"/>
+      <stop offset="1" stop-color="#f1e9cd"/>
+    </radialGradient>
+    <linearGradient id="bunEar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#e6a978"/>
+      <stop offset="1" stop-color="#c06020"/>
+    </linearGradient>
+    <radialGradient id="bunIris" cx="40%" cy="34%" r="76%">
+      <stop offset="0" stop-color="#e2b47a"/>
+      <stop offset=".56" stop-color="#a96a2f"/>
+      <stop offset="1" stop-color="#4a240c"/>
+    </radialGradient>
+    <radialGradient id="bunGlow">
+      <stop offset="0" stop-color="#fff8b0" stop-opacity=".95"/>
+      <stop offset=".5" stop-color="#ffd94a" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#ffd400" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bunSoft"><feGaussianBlur stdDeviation="2.4"/></filter>
+    <filter id="bunGrainF" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <pattern id="bunGrainP" width="84" height="84" patternUnits="userSpaceOnUse">
+      <rect width="84" height="84" filter="url(#bunGrainF)" opacity=".5"/>
+    </pattern>
+  </defs>
+
+  <ellipse class="ground" cx="120" cy="282" rx="66" ry="9" fill="#000" opacity=".4"/>
+
+  <g id="all">
+    <!-- ears (behind the head) -->
+    <g class="earL">
+      <path d="M104 96 C84 56 66 12 72 -20 C75 -39 92 -42 99 -24 C108 4 118 54 124 86 Z"
+            fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M102 84 C88 50 78 12 82 -14 C84 -27 91 -28 95 -15 C101 8 109 52 114 78 Z"
+            fill="url(#bunEar)" opacity=".85"/>
+      <path d="M104 92 C89 60 81 26 84 0" fill="none" stroke="#fff" stroke-width="2.2" opacity=".35" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(240 0) scale(-1 1)">
+      <g class="earR">
+        <path d="M104 96 C84 56 66 12 72 -20 C75 -39 92 -42 99 -24 C108 4 118 54 124 86 Z"
+              fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M102 84 C88 50 78 12 82 -14 C84 -27 91 -28 95 -15 C101 8 109 52 114 78 Z"
+              fill="url(#bunEar)" opacity=".85"/>
+        <path d="M104 92 C89 60 81 26 84 0" fill="none" stroke="#fff" stroke-width="2.2" opacity=".35" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- feet -->
+    <g class="feet">
+      <ellipse cx="92" cy="266" rx="26" ry="14" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4"/>
+      <ellipse cx="148" cy="266" rx="26" ry="14" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4"/>
+      <path d="M84 261 q0 8 0 12 M92 260 q0 9 0 13 M100 261 q0 8 0 12" fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".35" stroke-linecap="round"/>
+      <path d="M140 261 q0 8 0 12 M148 260 q0 9 0 13 M156 261 q0 8 0 12" fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".35" stroke-linecap="round"/>
+    </g>
+
+    <!-- body -->
+    <g class="body">
+      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunFur)"/>
+      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunShade)"/>
+      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunGrainP)" opacity=".12" style="mix-blend-mode:soft-light"/>
+      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="none" stroke="#3a1d0d" stroke-width="4.4" stroke-linejoin="round"/>
+      <path d="M120 188 C144 188 158 210 158 230 C158 250 142 260 120 260 C98 260 82 250 82 230 C82 210 96 188 120 188 Z" fill="url(#bunBelly)" opacity=".92"/>
+    </g>
+
+    <!-- head -->
+    <g class="head">
+      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunFur)"/>
+      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunShade)" opacity=".85"/>
+      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunGrainP)" opacity=".13" style="mix-blend-mode:soft-light"/>
+      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="none" stroke="#3a1d0d" stroke-width="4.4" stroke-linejoin="round"/>
+      <ellipse cx="84" cy="80" rx="30" ry="17" fill="#fff" opacity=".2" transform="rotate(-24 84 80)" filter="url(#bunSoft)"/>
+
+      <!-- muzzle + cheeks -->
+      <ellipse cx="120" cy="152" rx="41" ry="29" fill="#fffdf4" opacity=".92"/>
+      <ellipse cx="70" cy="140" rx="17" ry="12" fill="#e08a72" opacity=".2"/>
+      <ellipse cx="170" cy="140" rx="17" ry="12" fill="#e08a72" opacity=".2"/>
+
+      <!-- whiskers -->
+      <g fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".45" stroke-linecap="round">
+        <path d="M86 146 q-16 -6 -28 -11"/>
+        <path d="M84 154 q-18 0 -30 -2"/>
+        <path d="M86 162 q-16 6 -26 13"/>
+        <path d="M154 146 q16 -6 28 -11"/>
+        <path d="M156 154 q18 0 30 -2"/>
+        <path d="M154 162 q16 6 26 13"/>
+      </g>
+
+      <!-- eyes: idle + question -->
+      <g class="v vn vq">
+        <g class="blink">
+          <ellipse cx="92" cy="118" rx="16" ry="19" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
+          <ellipse cx="148" cy="118" rx="16" ry="19" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
+          <g class="pupils">
+            <circle cx="94" cy="121" r="9.5" fill="url(#bunIris)" stroke="#3a1d0d" stroke-width="2"/>
+            <circle cx="94" cy="121" r="4.6" fill="#2a1408"/>
+            <circle cx="97" cy="117" r="3" fill="#fff"/>
+            <circle cx="91" cy="125" r="1.3" fill="#fff" opacity=".8"/>
+            <circle cx="150" cy="121" r="9.5" fill="url(#bunIris)" stroke="#3a1d0d" stroke-width="2"/>
+            <circle cx="150" cy="121" r="4.6" fill="#2a1408"/>
+            <circle cx="153" cy="117" r="3" fill="#fff"/>
+            <circle cx="147" cy="125" r="1.3" fill="#fff" opacity=".8"/>
+          </g>
+        </g>
+      </g>
+      <!-- eyes: idea -->
+      <g class="v vi">
+        <ellipse cx="92" cy="118" rx="17" ry="20" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
+        <ellipse cx="148" cy="118" rx="17" ry="20" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
+        <g class="starE">
+          <path d="M92 104 l3.6 9.6 10.2 .8 -7.8 6.7 2.4 10.2 -8.4 -6 -8.4 6 2.4 -10.2 -7.8 -6.7 10.2 -.8z" fill="#ffbe1a" stroke="#3a1d0d" stroke-width="2.6" stroke-linejoin="round"/>
+          <path d="M148 104 l3.6 9.6 10.2 .8 -7.8 6.7 2.4 10.2 -8.4 -6 -8.4 6 2.4 -10.2 -7.8 -6.7 10.2 -.8z" fill="#ffbe1a" stroke="#3a1d0d" stroke-width="2.6" stroke-linejoin="round"/>
+        </g>
+      </g>
+      <!-- eyes: appreciation -->
+      <g class="v va">
+        <path d="M76 124 Q92 100 108 124" fill="none" stroke="#3a1d0d" stroke-width="6.5" stroke-linecap="round"/>
+        <path d="M132 124 Q148 100 164 124" fill="none" stroke="#3a1d0d" stroke-width="6.5" stroke-linecap="round"/>
+        <g class="tears">
+          <path class="t1" d="M78 128 q-7 15 0 22 q7 -7 0 -22z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
+          <path class="t2" d="M162 128 q-7 15 0 22 q7 -7 0 -22z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
+        </g>
+      </g>
+
+      <!-- brows -->
+      <g class="v vn"><path d="M78 96 Q92 88 106 96 M134 96 Q148 88 162 96" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/></g>
+      <g class="v vq"><path class="bq1" d="M76 92 Q92 76 108 92" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/><path d="M132 100 L160 94" fill="none" stroke="#3a1d0d" stroke-width="5" stroke-linecap="round"/></g>
+      <g class="v vi"><path class="bi" d="M76 94 Q92 80 108 94 M132 94 Q148 80 164 94" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/></g>
+      <g class="v va"><path d="M78 106 Q92 98 106 103 M134 103 Q148 98 162 106" fill="none" stroke="#3a1d0d" stroke-width="4" stroke-linecap="round"/></g>
+
+      <!-- nose + mouth -->
+      <path d="M112 137 C116 133 124 133 128 137 C130 140 126 145 120 146 C114 145 110 140 112 137 Z" fill="#c06020" stroke="#3a1d0d" stroke-width="2.4" stroke-linejoin="round"/>
+      <g class="wob">
+        <path d="M120 146 v4" stroke="#3a1d0d" stroke-width="3" stroke-linecap="round"/>
+        <path d="M120 150 q-8 8 -15 3 M120 150 q8 8 15 3" fill="none" stroke="#3a1d0d" stroke-width="3.2" stroke-linecap="round"/>
+      </g>
+      <g class="v vn vq va teeth">
+        <rect x="113" y="152" width="6.6" height="9" rx="2.4" fill="#fffdf4" stroke="#3a1d0d" stroke-width="2"/>
+        <rect x="120.4" y="152" width="6.6" height="9" rx="2.4" fill="#fffdf4" stroke="#3a1d0d" stroke-width="2"/>
+      </g>
+
+      <!-- open smile (idea) -->
+      <g class="v vi">
+        <path d="M102 150 Q120 178 138 150 Q120 160 102 150 Z" fill="#5a1522" stroke="#3a1d0d" stroke-width="3.4" stroke-linejoin="round"/>
+        <path d="M110 160 Q120 153 130 160 Q120 170 110 160Z" fill="#ff8aa0"/>
+      </g>
+
+      <!-- sweat (question) -->
+      <path class="v vq sweat" d="M50 92 q-7 13 0 19 q7 -6 0 -19z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
+    </g>
+
+    <!-- neckerchief -->
+    <g class="scarf">
+      <path d="M72 184 C90 198 150 198 168 184 C170 198 148 212 120 213 C92 212 70 198 72 184 Z" fill="#c06020" stroke="#3a1d0d" stroke-width="3.6" stroke-linejoin="round"/>
+      <path d="M150 202 L164 222 L150 228 L144 206 Z" fill="#a94f18" stroke="#3a1d0d" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M86 192 q14 10 34 12" fill="none" stroke="#e0894a" stroke-width="2.4" opacity=".7" stroke-linecap="round"/>
+    </g>
+
+    <!-- left arm + map -->
+    <g class="mapRig">
+      <path d="M82 200 C70 204 56 208 44 214" fill="none" stroke="#3a1d0d" stroke-width="18" stroke-linecap="round"/>
+      <path d="M82 200 C70 204 56 208 44 214" fill="none" stroke="#f0e9cb" stroke-width="10" stroke-linecap="round"/>
+      <g transform="rotate(-8 68 204)">
+        <rect x="36" y="180" width="64" height="48" rx="2.5" fill="#f1e8c9" stroke="#3a1d0d" stroke-width="3.2"/>
+        <path d="M57 181 v46 M78 181 v46" stroke="#cfbe93" stroke-width="1.5" opacity=".85"/>
+        <path d="M37 204 h62" stroke="#cfbe93" stroke-width="1.5" opacity=".7" stroke-dasharray="3 4"/>
+        <path d="M45 216 C54 208 60 214 66 206 C71 199 76 200 84 192" fill="none" stroke="#c06020" stroke-width="2.6" stroke-dasharray="4 3" stroke-linecap="round"/>
+        <circle cx="45" cy="216" r="2.8" fill="#3a1d0d"/>
+        <path d="M80 188 l8 8 M88 188 l-8 8" stroke="#b03b2a" stroke-width="2.6" stroke-linecap="round"/>
+        <circle class="routeDot" cx="45" cy="216" r="3.6" fill="#c06020" stroke="#fff8e6" stroke-width="1.6"/>
+        <g class="v vq magnify">
+          <circle cx="76" cy="198" r="16" fill="#eaf6ff" fill-opacity=".4" stroke="#3a1d0d" stroke-width="5"/>
+          <circle cx="76" cy="198" r="16" fill="none" stroke="#c06020" stroke-width="2.4"/>
+          <path d="M88 210 l12 16" stroke="#3a1d0d" stroke-width="8" stroke-linecap="round"/>
+          <path d="M88 210 l12 16" stroke="#c06020" stroke-width="4" stroke-linecap="round"/>
+          <path d="M68 190 a10 10 0 0 1 6 -5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g class="hand">
+        <circle cx="42" cy="216" r="12.5" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="3.4"/>
+        <path d="M37 219 q5 3 10 0" fill="none" stroke="#3a1d0d" stroke-width="2" stroke-linecap="round" opacity=".5"/>
+      </g>
+    </g>
+
+    <!-- right arm + coffee -->
+    <g class="cupRig">
+      <path d="M168 202 C180 196 178 184 164 184" fill="none" stroke="#3a1d0d" stroke-width="18" stroke-linecap="round"/>
+      <path d="M168 202 C180 196 178 184 164 184" fill="none" stroke="#f0e9cb" stroke-width="10" stroke-linecap="round"/>
+      <g class="cup" transform="translate(150 184)">
+        <path d="M-15 -14 L15 -14 L11 15 C10.5 19 -10.5 19 -11 15 Z" fill="#fdf8ea" stroke="#3a1d0d" stroke-width="3.4" stroke-linejoin="round"/>
+        <ellipse cx="0" cy="-14" rx="15" ry="4.6" fill="#6b3a1c" stroke="#3a1d0d" stroke-width="2.4"/>
+        <ellipse cx="0" cy="-14.5" rx="10.5" ry="2.6" fill="#8a4c25"/>
+        <path d="M15 -8 C25 -10 26 8 12 13" fill="none" stroke="#3a1d0d" stroke-width="5.2" stroke-linecap="round"/>
+        <path d="M15 -8 C25 -10 26 8 12 13" fill="none" stroke="#fdf8ea" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M-13.5 2 h27" stroke="#c06020" stroke-width="4.5"/>
+        <path d="M-9 -13 q1 6 -1 13" fill="none" stroke="#fff" stroke-width="2.4" opacity=".55"/>
+      </g>
+      <g class="steam" fill="none" stroke="#fff" stroke-linecap="round">
+        <path d="M146 164 q-7 -8 0 -16 q7 -8 0 -14" stroke-width="3.4" opacity=".7"/>
+        <path d="M156 166 q6 -7 0 -14 q-6 -7 0 -12" stroke-width="2.8" opacity=".55"/>
+      </g>
+      <g class="hand">
+        <circle cx="159" cy="189" r="11.5" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="3.4"/>
+        <path d="M154 192 q5 3 10 0" fill="none" stroke="#3a1d0d" stroke-width="2" stroke-linecap="round" opacity=".5"/>
+      </g>
+    </g>
+
+    <!-- question: floating marks -->
+    <g class="v vq qm">
+      <text x="24" y="70" font-size="42" font-weight="700" fill="#fff" stroke="#3a1d0d" stroke-width="2.4" paint-order="stroke" font-family="Caveat, cursive">?</text>
+      <text x="182" y="54" font-size="30" font-weight="700" fill="#fff" stroke="#3a1d0d" stroke-width="2.4" paint-order="stroke" font-family="Caveat, cursive">?</text>
+    </g>
+
+    <!-- idea: bulb + sparks -->
+    <g class="v vi bulbwrap">
+      <circle class="halo" cx="120" cy="-16" r="52" fill="url(#bunGlow)"/>
+      <g class="rays" stroke="#ffc233" stroke-width="4.5" stroke-linecap="round">
+        <path d="M120 -54 v-8"/>
+        <path d="M94 -46 l-6 -8"/>
+        <path d="M146 -46 l6 -8"/>
+        <path d="M78 -22 l-9 -3"/>
+        <path d="M162 -22 l9 -3"/>
+      </g>
+      <rect x="109" y="2" width="22" height="14" rx="4" fill="#c9cdd2" stroke="#3a1d0d" stroke-width="3.4"/>
+      <path class="bulb" d="M120 -44 C98 -44 90 -20 104 -6 C109 -1 110 1 111 6 H129 C130 1 131 -1 136 -6 C150 -20 142 -44 120 -44Z" fill="#fff17a" stroke="#3a1d0d" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M112 -20 L116 -30 L120 -22 L124 -30 L128 -20" fill="none" stroke="#e08a00" stroke-width="3" stroke-linecap="round"/>
+      <path d="M104 -28 a16 16 0 0 1 8 -11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+    </g>
+    <g class="v vi">
+      <g class="spark" style="transform-origin:52px 8px"><path d="M52 0 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#ffd24a"/></g>
+      <g class="spark" style="transform-origin:190px 18px"><path d="M190 10 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#ffd24a"/></g>
+      <g class="spark" style="transform-origin:36px 60px"><path d="M36 53 l1.6 4.8 4.8 1.6 -4.8 1.6 -1.6 4.8 -1.6 -4.8 -4.8 -1.6 4.8 -1.6z" fill="#ffe98a"/></g>
+      <g class="spark" style="transform-origin:204px 66px"><path d="M204 59 l1.6 4.8 4.8 1.6 -4.8 1.6 -1.6 4.8 -1.6 -4.8 -4.8 -1.6 4.8 -1.6z" fill="#ffe98a"/></g>
+    </g>
+
+    <!-- appreciation: floating heart + kisses -->
+    <g class="v va held" transform="translate(196 112)">
+      <path d="M0 0 c-16 -12 -26 -26 -14 -36 c7 -6 14 -2 14 6 c0 -8 7 -12 14 -6 c12 10 2 24 -14 36z" fill="#ff4f86" stroke="#3a1d0d" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M-9 -26 q-4 3 -3 8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <g class="v va kisses">
+      <g class="k k1"><path d="M0 0 c-13 -10 -21 -21 -11 -29 c6 -5 11 -2 11 5 c0 -7 5 -10 11 -5 c10 8 2 19 -11 29z" fill="#ff4f86" stroke="#3a1d0d" stroke-width="2.4" stroke-linejoin="round"/></g>
+      <g class="k k2"><path d="M0 0 c-11 -8 -18 -18 -9 -25 c5 -4 9 -1 9 4 c0 -5 4 -8 9 -4 c8 7 2 17 -9 25z" fill="#ff7aa8" stroke="#3a1d0d" stroke-width="2.2" stroke-linejoin="round"/></g>
+      <g class="k k3"><path d="M0 0 c-10 -8 -16 -16 -8 -22 c4 -4 8 -1 8 4 c0 -5 4 -8 8 -4 c7 6 2 14 -8 22z" fill="#ff6d9d" stroke="#3a1d0d" stroke-width="2.2" stroke-linejoin="round"/></g>
+    </g>
+  </g>
+</svg>
+</div>
+</div>
+<!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
+<div id="print-sheet" aria-hidden="true"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=20261104d"></script><script src="js/i18n.js?v=20261104d"></script><script src="js/polls.js?v=20261104d"></script><script src="js/store.js?v=20261104d"></script><script src="js/shared.js?v=20261104d"></script><script src="js/charts.js?v=20261104d"></script><script src="js/qrcode.js?v=20261104d"></script><script src="js/export.js?v=20261104d"></script><script src="js/board.js?v=20261104d"></script>
+</body></html>

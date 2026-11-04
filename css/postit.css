@@ -1,0 +1,201 @@
+/* ─────────────────────────────────────────────────────────────
+   Post-it note: matte paper, fibre grain, adhesive sheen,
+   layered contact/shadow, optional curled corner.
+   ───────────────────────────────────────────────────────────── */
+.note{
+  --s: 200px;
+  --fold: calc(var(--s) * var(--fold-scale, .15));
+  --pull: 0px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--s);
+  height: var(--s);
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--s)*.115) calc(var(--s)*.115) calc(var(--s)*.13) calc(var(--s)*.095);
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform: translate3d(var(--x,0), calc(var(--y,0) - var(--pull)), 0) rotate(var(--r, 0deg));
+  transition:
+    transform .68s var(--ease-out),
+    width .8s var(--ease-out),
+    height .8s var(--ease-out),
+    opacity .45s var(--ease-soft),
+    filter .45s var(--ease-soft);
+  will-change: transform;
+}
+
+/* the sheet itself is a separate layer so the fold + shadows can sit around it */
+.note .paper{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.12) 9%, rgba(255,255,255,0) 16%),
+    radial-gradient(125% 92% at 17% -4%, rgba(255,255,255,.40), rgba(255,255,255,0) 58%),
+    linear-gradient(96deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 8%, rgba(0,0,0,0) 86%, rgba(0,0,0,.09) 100%),
+    linear-gradient(155deg, var(--paper) 0%, var(--paper) 44%, var(--paper2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 1px 0 0 rgba(255,255,255,.22),
+    inset -1px 0 0 rgba(0,0,0,.055),
+    inset 0 -1px 0 rgba(0,0,0,.075),
+    0 1px 1px rgba(0,0,0,.44),
+    0 calc(var(--s)*.018) calc(var(--s)*.032) rgba(0,0,0,calc(.34 * var(--shade,1))),
+    0 calc(var(--s)*.065) calc(var(--s)*.115) rgba(0,0,0,calc(.27 * var(--shade,1))),
+    0 calc(var(--s)*.13) calc(var(--s)*.20) rgba(0,0,0,calc(.19 * var(--shade,1)));
+  border-radius: 1px 1px 2px 2px;
+  transition: box-shadow .45s var(--ease-soft);
+}
+/* real paper: soft tonal mottling under a fine fibre grain */
+.note .paper::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image: var(--paper-mottle), var(--paper-fibre);
+  background-size: 310px 310px, 190px 190px;
+  background-position: 0 0, 40px 70px;
+  opacity: .9;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+/* faint gum line across the top + raking light + darkened paper edge */
+.note .paper::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, transparent 13.2%, rgba(70,40,20,.055) 13.6%, rgba(255,255,255,.13) 14.05%, transparent 14.6%),
+    linear-gradient(118deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,0) 31%, rgba(255,255,255,0) 66%, rgba(35,18,8,.07) 100%),
+    radial-gradient(140% 130% at 50% 46%, rgba(255,255,255,0) 58%, rgba(40,22,10,.075) 100%);
+  opacity: .62;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* shadow pocket beneath a lifted corner */
+.note::after{
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--fold) * 1.45);
+  height: calc(var(--fold) * 1.45);
+  background: radial-gradient(circle at 72% 72%, rgba(30,16,7,.22), rgba(30,16,7,0) 66%);
+  pointer-events: none;
+  opacity: .9;
+}
+.note.fold-r::after{ right: calc(var(--fold) * .08); bottom: calc(var(--fold) * .08); }
+.note.fold-l::after{ left: calc(var(--fold) * .08); bottom: calc(var(--fold) * .08); }
+
+/* the lifted triangle (back of the sheet) */
+.note .fold{
+  position: absolute;
+  z-index: 2;
+  width: var(--fold);
+  height: var(--fold);
+  pointer-events: none;
+  filter: drop-shadow(-1.5px -1.5px 2px rgba(30,16,7,.22));
+  transition: width .2s, height .2s;
+}
+.note.fold-r .paper{ clip-path: polygon(0 0,100% 0,100% calc(100% - var(--fold)),calc(100% - var(--fold)) 100%,0 100%); }
+.note.fold-r .fold{
+  right: 0; bottom: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.72) 0%, rgba(255,255,255,.30) 30%, rgba(35,20,10,.10) 74%, rgba(35,20,10,.22) 100%);
+  clip-path: polygon(0 100%,100% 0,100% 100%);
+  border-radius: 0 0 2px 0;
+}
+.note.fold-l .paper{ clip-path: polygon(0 0,100% 0,100% 100%,var(--fold) 100%,0 calc(100% - var(--fold))); }
+.note.fold-l .fold{
+  left: 0; bottom: 0;
+  background:
+    linear-gradient(225deg, rgba(255,255,255,.72) 0%, rgba(255,255,255,.30) 30%, rgba(35,20,10,.10) 74%, rgba(35,20,10,.22) 100%);
+  clip-path: polygon(0 0,100% 100%,0 100%);
+  border-radius: 0 0 0 2px;
+}
+.note.fold-none .fold{ display: none; }
+
+/* words that carry a link keep the handwriting look */
+.note-link{
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, .055em);
+  text-underline-offset: .12em;
+  cursor: pointer;
+}
+.note-link:hover{ text-decoration-thickness: max(2px, .09em); }
+
+/* handwriting */
+.note-text{
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font), var(--font-hand);
+  font-size: var(--fs, calc(var(--s) * .155));
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: .005em;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-shadow: .2px .4px 0 color-mix(in srgb, var(--ink) 15%, transparent);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* sender's signature, tucked into the bottom of the sheet */
+.note-author{
+  position: relative;
+  z-index: 1;
+  flex: none;
+  margin-top: calc(var(--s) * .022);
+  padding-right: calc(var(--fold) * .55);
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font), var(--font-hand);
+  font-size: calc(var(--s) * .068);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: .01em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: .58;
+  text-shadow: .2px .4px 0 color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.note:focus-visible{outline:none}
+.note:focus-visible .paper{
+  outline:3px solid #ffe9b8;
+  outline-offset:3px;
+}
+
+/* lift the whole note a touch when the moderator points at it */
+@media (hover:hover){
+  body:not(.reading) #board .note:hover{
+    z-index: 999 !important;
+    transform: translate3d(var(--x,0), calc(var(--y,0) - 7px), 0) rotate(var(--r, 0deg)) scale(1.018);
+  }
+  body:not(.reading) #board .note:hover .paper{
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.58),
+      inset 1px 0 0 rgba(255,255,255,.24),
+      inset -1px 0 0 rgba(0,0,0,.05),
+      inset 0 -1px 0 rgba(0,0,0,.07),
+      0 2px 2px rgba(0,0,0,.42),
+      0 calc(var(--s)*.03) calc(var(--s)*.05) rgba(0,0,0,calc(.36 * var(--shade,1))),
+      0 calc(var(--s)*.09) calc(var(--s)*.15) rgba(0,0,0,calc(.29 * var(--shade,1))),
+      0 calc(var(--s)*.18) calc(var(--s)*.28) rgba(0,0,0,calc(.20 * var(--shade,1)));
+  }
+}

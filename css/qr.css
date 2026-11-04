@@ -1,0 +1,76 @@
+/* ─────────────────────────────────────────────────────────────
+   Presentation QR card: a small paper square in the top-right
+   corner that opens the phone version of the wall.
+   ───────────────────────────────────────────────────────────── */
+#qr-card{
+  position:fixed;
+  top:clamp(14px,2vh,26px);
+  right:clamp(14px,1.8vw,26px);
+  z-index:20;
+  width:clamp(124px,11.5vw,170px);
+  padding:9px 9px 11px;
+  color:#382617;
+  text-align:center;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.48),rgba(255,255,255,0) 18%),
+    radial-gradient(120% 90% at 18% 0%,rgba(255,255,255,.46),transparent 56%),
+    linear-gradient(152deg,#fff6cf 0%,#ffeeb0 56%,#f8dc8e 100%);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.36),
+    0 12px 26px rgba(0,0,0,.38),
+    0 34px 60px rgba(0,0,0,.3);
+  transform:rotate(1.5deg);
+  pointer-events:none;
+  transition:opacity .5s var(--ease-soft),transform .5s var(--ease-out),visibility .5s;
+}
+#qr-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:var(--paper-mottle),var(--paper-fibre);
+  background-size:310px 310px,190px 190px;
+  background-position:0 0,30px 48px;
+  opacity:.82;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+}
+#qr-card::after{
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:34px;
+  height:34px;
+  background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,.24) 34%,rgba(43,27,18,.12));
+  clip-path:polygon(0 100%,100% 0,100% 100%);
+  filter:drop-shadow(-2px -2px 3px rgba(43,27,18,.16));
+  pointer-events:none;
+}
+
+.qr-code{
+  position:relative;
+  z-index:1;
+  padding:7px;
+  background:#fffdf4;
+  box-shadow:
+    inset 0 0 0 1px rgba(43,27,18,.08),
+    0 1px 2px rgba(43,27,18,.1);
+}
+.qr-code svg{display:block;width:100%;height:auto;shape-rendering:crispEdges}
+
+.qr-caption{
+  position:relative;
+  z-index:1;
+  margin:9px 1px 0;
+  font:600 clamp(13px,1.05vw,16px)/1.03 var(--font-hand);
+  letter-spacing:.005em;
+  color:rgba(56,38,23,.86);
+  transform:rotate(-1.2deg);
+}
+
+body.reading #qr-card{opacity:0;transform:rotate(1.5deg) translateY(-10px)}
+body.hide-qr #qr-card{opacity:0;visibility:hidden;transform:rotate(1.5deg) translateY(-10px) scale(.96)}
+
+@media (max-width:800px){
+  #qr-card{display:none}
+}

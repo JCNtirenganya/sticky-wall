@@ -1,0 +1,224 @@
+/* ─────────────────────────────────────────────────────────────
+   Category piles: same-colour paper stacks, fanned so every sheet
+   shows an edge of the one beneath. Click a pile to filter.
+   ───────────────────────────────────────────────────────────── */
+#piles{
+  position:fixed;
+  inset:0;
+  z-index:6;
+  display:flex;
+  align-items:center;
+  align-content:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:var(--pile-gap,clamp(16px,3.2vw,52px));
+  padding:clamp(78px,13vh,132px) 24px 64px;
+  pointer-events:none;
+  transition:opacity .3s var(--ease-soft);
+}
+#piles[hidden]{display:none}
+
+.pile{
+  --size:var(--pile-size,clamp(146px,min(18vw,23vh),240px));
+  --tilt:-1deg;
+  position:relative;
+  width:var(--size);
+  height:var(--size);
+  flex:none;
+  padding:0;
+  border:0;
+  border-radius:2px;
+  background:none;
+  color:#2a1a0e;
+  cursor:pointer;
+  pointer-events:auto;
+  transform:rotate(var(--tilt));
+  filter:drop-shadow(0 24px 30px rgba(0,0,0,.34));
+  transition:transform .38s var(--ease-spring),filter .3s;
+  -webkit-tap-highlight-color:transparent;
+}
+.pile:nth-child(2){--tilt:.9deg}
+.pile:nth-child(3){--tilt:-.5deg}
+.pile:nth-child(4){--tilt:.65deg}
+.pile:nth-child(5){--tilt:-.72deg}
+
+.pile-stack{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  animation:pileIn .62s var(--ease-spring) both;
+  animation-delay:calc(var(--pi,0) * 80ms + 60ms);
+}
+
+.pile-sheet{
+  position:absolute;
+  inset:0;
+  z-index:calc(10 - var(--i,0));
+  border-radius:2px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.36) 0%,rgba(255,255,255,.12) 9%,rgba(255,255,255,0) 16%),
+    radial-gradient(125% 92% at 17% -4%,rgba(255,255,255,.42),rgba(255,255,255,0) 58%),
+    linear-gradient(155deg,var(--pile) 0%,var(--pile) 46%,var(--pile2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.58),
+    inset 1px 0 0 rgba(255,255,255,.22),
+    inset -1px 0 0 rgba(0,0,0,.055),
+    inset 0 -1px 0 rgba(0,0,0,.08),
+    0 1px 1px rgba(0,0,0,.38),
+    0 8px 14px rgba(0,0,0,.24),
+    0 18px 28px rgba(0,0,0,.18);
+  transform:
+    translate(calc(var(--i,0) * 7px),calc(var(--i,0) * 8px))
+    rotate(calc(var(--i,0) * 1.25deg - 1deg));
+  transform-origin:50% 18%;
+  transition:transform .46s var(--ease-spring),box-shadow .3s;
+  will-change:transform;
+}
+/* every sheet keeps the paper grain of a real post-it */
+.pile-sheet::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background-image:var(--paper-mottle),var(--paper-fibre);
+  background-size:310px 310px,190px 190px;
+  background-position:0 0,36px 62px;
+  opacity:.88;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+}
+.pile-sheet::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:
+    linear-gradient(180deg,transparent 13.2%,rgba(70,40,20,.06) 13.6%,rgba(255,255,255,.14) 14.05%,transparent 14.6%),
+    radial-gradient(140% 130% at 50% 46%,rgba(255,255,255,0) 58%,rgba(40,22,10,.09) 100%);
+  opacity:.68;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+}
+
+.pile-label{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:13% 12%;
+  text-align:center;
+  pointer-events:none;
+}
+.pile-kicker{
+  font:600 clamp(8.5px,calc(var(--size) * .048),11px)/1 var(--font-ui);
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:color-mix(in srgb,var(--pile-deep) 82%,#2a1a0e);
+  opacity:.76;
+}
+.pile-count{
+  margin:calc(var(--size) * .035) 0 0;
+  font:700 calc(var(--size) * .34)/.88 var(--font-hand);
+  letter-spacing:-.02em;
+  color:color-mix(in srgb,var(--pile-deep) 86%,#2a1a0e);
+  text-shadow:0 1px 0 rgba(255,255,255,.32);
+  transition:transform .3s var(--ease-spring);
+}
+.pile-word{
+  margin-top:calc(var(--size) * .022);
+  font:600 clamp(8.5px,calc(var(--size) * .05),11.5px)/1 var(--font-ui);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:color-mix(in srgb,var(--pile-deep) 62%,#2a1a0e);
+  opacity:.62;
+}
+.pile-open{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:calc(var(--size) * .085);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font:600 clamp(8px,calc(var(--size) * .044),10px)/1 var(--font-ui);
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:color-mix(in srgb,var(--pile-deep) 68%,#2a1a0e);
+  opacity:.48;
+  transition:opacity .25s,transform .3s var(--ease-out);
+}
+.pile-open::after{content:"→";font-size:1.15em;line-height:1}
+
+.pile:focus-visible{outline:none}
+.pile:focus-visible .pile-sheet:first-child{
+  outline:3px solid #ffe9b8;
+  outline-offset:4px;
+}
+
+@media (hover:hover){
+  .pile:hover{
+    transform:rotate(var(--tilt)) translateY(-9px) scale(1.018);
+    filter:drop-shadow(0 34px 42px rgba(0,0,0,.42));
+  }
+  .pile:hover .pile-sheet{
+    transform:
+      translate(calc(var(--i,0) * 11px),calc(var(--i,0) * 12px))
+      rotate(calc(var(--i,0) * 1.9deg - 1.4deg));
+  }
+  .pile:hover .pile-open{opacity:.78;transform:translateY(-1px)}
+}
+
+/* a new note landing in this pile gives the count a little pop */
+.pile.bump .pile-count{animation:pileCountPop .55s var(--ease-spring)}
+@keyframes pileCountPop{
+  0%{transform:scale(1)}
+  38%{transform:scale(1.18)}
+  100%{transform:scale(1)}
+}
+
+@keyframes pileIn{
+  from{opacity:0;transform:translateY(34px) scale(.92)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* ── back to the piles after a filter ───────────────────────── */
+#piles-back{
+  position:fixed;
+  left:clamp(16px,2.2vw,28px);
+  bottom:calc(clamp(14px,2.2vh,24px) + 43px);
+  z-index:21;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  height:34px;
+  padding:0 13px;
+  border:1px solid rgba(255,242,224,.16);
+  border-radius:999px;
+  background:rgba(31,17,8,.5);
+  backdrop-filter:blur(12px) saturate(1.2);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2);
+  box-shadow:0 6px 18px rgba(25,12,4,.2);
+  color:rgba(255,244,230,.8);
+  font:600 10px/1 var(--font-ui);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .2s,color .2s,transform .2s,opacity .3s;
+}
+#piles-back[hidden]{display:none}
+#piles-back:hover{background:rgba(255,244,230,.92);color:#2a1a10;transform:translateY(-1px)}
+#piles-back:focus-visible{outline:2px solid #ffe9b8;outline-offset:3px}
+
+body.reading #piles{opacity:0;pointer-events:none}
+
+@media (max-width:700px){
+  #piles{padding:76px 12px 52px}
+  #piles-back{height:30px;font-size:9px;padding:0 11px}
+}
+@media (prefers-reduced-motion:reduce){
+  .pile-stack,.pile-sheet{animation:none!important;transition:none!important}
+}
