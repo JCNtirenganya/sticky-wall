@@ -1098,17 +1098,19 @@ body:not(.idle) #extras-toggle:hover,
   align-items:center;
   justify-content:center;
   gap:5px;
-  height:31px;
+  min-height:31px;
   min-width:0;
-  padding:0 8px;
+  padding:4px 7px;
   border:1px solid rgba(255,242,224,.14);
   border-radius:8px;
   background:rgba(255,244,230,.06);
   color:rgba(255,244,230,.78);
-  font:600 9.5px/1 var(--font-ui);
+  font:600 9.5px/1.15 var(--font-ui);
   letter-spacing:.06em;
+  text-align:center;
   text-transform:uppercase;
-  white-space:nowrap;
+  overflow-wrap:anywhere;
+  white-space:normal;
   cursor:pointer;
   transition:background .18s,color .18s,border-color .18s;
 }
