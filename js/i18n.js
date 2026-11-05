@@ -419,7 +419,7 @@
       "Waiting for the first answer": "Gutegereza igisubizo cya mbere",
       "As phones answer, the bars will start moving.": "Iyo telefone zisubiza, imirongo itangira kwimuka.",
       "Live": "Mu buryo bw'imbonankubone",
-      "Pause": "Hagarika",
+      "Pause": "Hagarika gato",
       "Play": "Tangiza",
       "Replay": "Subiramo",
       "Race progress": "Aho irushanwa rigeze",
