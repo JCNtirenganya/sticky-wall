@@ -277,7 +277,7 @@
       "Options": "Amahitamo",
       "+ Add option": "+ Ongeraho ihitamo",
       "Max choices": "Umubare ntarengwa w'amahitamo",
-      "Status": "Imiterere",
+      "Status": "Imimerere",
       "Results on phones": "Ibisubizo kuri telefone",
       "Cancel": "Hagarika",
       "Save poll": "Bika amatora",
