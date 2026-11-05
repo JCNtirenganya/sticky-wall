@@ -14,6 +14,7 @@
      Store.deletePoll(id) → Promise<void>
      Store.listVotes(pollId?) → Promise<vote[]>
      Store.submitVote(vote) → Promise<vote>
+     Store.submitVotes(votes) → Promise<vote[]>
      Store.resetVotes(pollId) → Promise<void>
      Store.subscribePolls({onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync})   */
 (function () {
@@ -164,6 +165,14 @@
           .select().single();
         if (error) throw error;
         return normVote(data);
+      },
+      async submitVotes(votes) {
+        if (!votes || !votes.length) return [];
+        const { data, error } = await sb.from("poll_votes")
+          .upsert(votes.map(voteRow), { onConflict: "poll_id,voter_key" })
+          .select();
+        if (error) throw error;
+        return (data || []).map(normVote);
       },
       async resetVotes(pollId) {
         const { error } = await sb.from("poll_votes").delete().eq("poll_id", pollId);
@@ -355,6 +364,11 @@
         bc && bc.postMessage({ type: "vote-save", vote: clean });
         window.dispatchEvent(new CustomEvent("sticky-local-vote-save", { detail: clean }));
         return clean;
+      },
+      async submitVotes(votes) {
+        const out = [];
+        for (const vote of votes || []) out.push(await this.submitVote(vote));
+        return out;
       },
       async resetVotes(pollId) {
         writeVotes(readVotes().filter(v => v.poll_id !== pollId));

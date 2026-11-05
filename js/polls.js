@@ -383,13 +383,14 @@ function pollSampleImage(emoji, bg) {
 }
 
 function pollSampleVotes(slug, pollId, start, step, rows) {
+  const key = pollId.replace(/^sample-/, "");
   return rows.map(([author, answer], index) => {
     const at = new Date(start + index * step).toISOString();
     const n = String(index + 1).padStart(2, "0");
     return normalisePollVote({
-      id: "sample-vote-" + slug + "-" + n,
+      id: "sample-vote-" + key + "-" + n,
       poll_id: pollId,
-      voter_key: "sample-" + slug + "-" + n,
+      voter_key: "sample-" + key + "-" + n,
       author,
       ...answer,
       created_at: at,
@@ -403,8 +404,9 @@ function pollSampleSet(now, batch) {
   const minute = 60000;
   const round = Math.max(0, Math.floor(Number(batch) || 0));
   const created = new Date(end - 75 * minute).toISOString();
+  const pid = slug => "sample-r" + round + "-" + slug;
   const make = (slug, position, raw) => normalisePoll({
-    id: "sample-" + slug,
+    id: pid(slug),
     created_at: created,
     updated_at: created,
     position: position + round * 100,
@@ -510,7 +512,7 @@ function pollSampleSet(now, batch) {
   ];
 
   const votes = [
-    ...pollSampleVotes("priorities", "sample-priorities", end - 14 * minute, 50 * 1000, [
+    ...pollSampleVotes("priorities", pid("priorities"), end - 14 * minute, 50 * 1000, [
       ["Amina", { choice_ids: ["training"] }],
       ["Tunde", { choice_ids: ["maps"] }],
       ["Lerato", { choice_ids: ["training"] }],
@@ -528,7 +530,7 @@ function pollSampleSet(now, batch) {
       ["Esi", { choice_ids: ["training"] }],
       ["Blaise", { choice_ids: ["maps"] }]
     ]),
-    ...pollSampleVotes("improvements", "sample-improvements", end - 12 * minute, 45 * 1000, [
+    ...pollSampleVotes("improvements", pid("improvements"), end - 12 * minute, 45 * 1000, [
       ["Amina", { choice_ids: ["wifi", "coffee"] }],
       ["Tunde", { choice_ids: ["childcare"] }],
       ["Lerato", { choice_ids: ["wifi"] }],
@@ -544,7 +546,7 @@ function pollSampleSet(now, batch) {
       ["Omar", { choice_ids: ["childcare"] }],
       ["Aya", { choice_ids: ["wifi", "quiet"] }]
     ]),
-    ...pollSampleVotes("open-data", "sample-open-data", end - 11.5 * minute, 55 * 1000, [
+    ...pollSampleVotes("open-data", pid("open-data"), end - 11.5 * minute, 55 * 1000, [
       ["Amina", { choice_ids: ["yes"] }],
       ["Tunde", { choice_ids: ["no"] }],
       ["Lerato", { choice_ids: ["yes"] }],
@@ -557,7 +559,7 @@ function pollSampleSet(now, batch) {
       ["Zola", { choice_ids: ["no"] }],
       ["Kofi", { choice_ids: ["yes"] }]
     ]),
-    ...pollSampleVotes("workshop", "sample-workshop", end - 11.5 * minute, 40 * 1000, [
+    ...pollSampleVotes("workshop", pid("workshop"), end - 11.5 * minute, 40 * 1000, [
       ["Amina", { rating: 5 }],
       ["Tunde", { rating: 4 }],
       ["Lerato", { rating: 5 }],
@@ -574,7 +576,7 @@ function pollSampleSet(now, batch) {
       ["Aya", { rating: 5 }],
       ["Esi", { rating: 1 }]
     ]),
-    ...pollSampleVotes("next-idea", "sample-next-idea", end - 8.5 * minute, 70 * 1000, [
+    ...pollSampleVotes("next-idea", pid("next-idea"), end - 8.5 * minute, 70 * 1000, [
       ["Amina", { text: "A monthly mapathon in every district." }],
       ["Tunde", { text: "Teach teachers how to use the map in class." }],
       ["Lerato", { text: "Publish a tiny starter kit for new mappers." }],
@@ -582,7 +584,7 @@ function pollSampleSet(now, batch) {
       ["Kwame", { text: "Add a French and Kinyarwanda guide." }],
       ["Nadia", { text: "Make a poster we can print for the library." }]
     ]),
-    ...pollSampleVotes("meetup-day", "sample-meetup-day", end - 10.2 * minute, 65 * 1000, [
+    ...pollSampleVotes("meetup-day", pid("meetup-day"), end - 10.2 * minute, 65 * 1000, [
       ["Amina", { choice_ids: ["saturday"] }],
       ["Tunde", { choice_ids: ["saturday"] }],
       ["Lerato", { choice_ids: ["sunday"] }],
@@ -592,7 +594,7 @@ function pollSampleSet(now, batch) {
       ["Ibrahim", { choice_ids: ["sunday"] }],
       ["Chen", { choice_ids: ["saturday"] }]
     ]),
-    ...pollSampleVotes("venue", "sample-venue", end - 9.8 * minute, 50 * 1000, [
+    ...pollSampleVotes("venue", pid("venue"), end - 9.8 * minute, 50 * 1000, [
       ["Amina", { choice_ids: ["library"] }],
       ["Tunde", { choice_ids: ["hub"] }],
       ["Lerato", { choice_ids: ["library"] }],
@@ -608,15 +610,8 @@ function pollSampleSet(now, batch) {
   /* Loading the samples again appends a fresh round with its own ids,
      positions and voter keys, so the earlier results stay untouched. */
   if (round > 0) {
-    const prefix = "b" + round + "-";
-    const remap = id => id.startsWith("sample-") ? "sample-" + prefix + id.slice(7) : id;
     polls.forEach(poll => {
-      poll.id = remap(poll.id);
       poll.question = "Round " + (round + 1) + " · " + poll.question;
-    });
-    votes.forEach(vote => {
-      vote.poll_id = remap(vote.poll_id);
-      vote.voter_key = vote.voter_key + "-" + prefix;
     });
   }
 

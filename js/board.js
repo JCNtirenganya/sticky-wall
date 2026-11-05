@@ -2664,16 +2664,12 @@
   let seedingSamples = false;
   const samplePollRound = () => polls.reduce((max, poll) => {
     if (!String(poll.id).startsWith("sample-")) return max;
-    const match = /^sample-b(\d+)-/.exec(poll.id);
+    const match = /^sample-r(\d+)-/.exec(poll.id);
     return Math.max(max, match ? Number(match[1]) : 0);
   }, -1) + 1;
 
   async function seedSamplePolls(options) {
     if (seedingSamples) return;
-    if (Store.mode !== "demo") {
-      flashPollStatus("Sample polls are only available in demo mode");
-      return;
-    }
     const reset = !!(options && options.reset === true);
     seedingSamples = true;
     const buttons = [...document.querySelectorAll("#poll-samples, #poll-empty-samples, #extras-demo-polls, #extras-demo-reset")];
@@ -2686,7 +2682,8 @@
       const round = reset ? 0 : samplePollRound();
       const set = pollSampleSet(Date.now(), round);
       for (const poll of set.polls) await Store.savePoll(poll);
-      for (const vote of set.votes) await Store.submitVote(vote);
+      if (typeof Store.submitVotes === "function") await Store.submitVotes(set.votes);
+      else for (const vote of set.votes) await Store.submitVote(vote);
       pollFilter = "all";
       await syncPolls();
       flashPollStatus(reset
