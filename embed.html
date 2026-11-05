@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Sticky Wall · Live results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/paper.css?v=20261105d">
+  <link rel="stylesheet" href="css/charts.css?v=20261105d">
+  <link rel="stylesheet" href="css/embed.css?v=20261105d">
+  <script>
+    try {
+      const lang = new URLSearchParams(location.search).get("lang");
+      if (lang && ["en", "rw", "fr"].includes(lang)) localStorage.setItem("sticky_lang", lang);
+    } catch (e) {}
+  </script>
+</head>
+<body class="embed">
+  <header class="embed-head">
+    <div class="embed-head__titles">
+      <p id="embed-kicker" class="embed-kicker">Live results</p>
+      <h1 id="embed-title">Sticky Wall</h1>
+    </div>
+    <div id="embed-status" class="embed-status">
+      <span class="embed-status__dot" aria-hidden="true"></span>
+      <span id="embed-count">Waiting…</span>
+    </div>
+  </header>
+
+  <main id="embed-main" class="embed-main" aria-live="polite">
+    <p class="embed-empty">Connecting…</p>
+  </main>
+
+  <footer class="embed-foot">
+    <span class="embed-foot__brand">Sticky Wall</span>
+    <span class="embed-foot__hint" id="embed-foot-hint">Updates live</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js?v=20261105d"></script>
+  <script src="js/i18n.js?v=20261105d"></script>
+  <script src="js/shared.js?v=20261105d"></script>
+  <script src="js/polls.js?v=20261105d"></script>
+  <script src="js/store.js?v=20261105d"></script>
+  <script src="js/charts.js?v=20261105d"></script>
+  <script src="js/embed.js?v=20261105d"></script>
+</body>
+</html>

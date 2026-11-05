@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105c"><link rel="stylesheet" href="css/postit.css?v=20261105c"><link rel="stylesheet" href="css/board.css?v=20261105c"><link rel="stylesheet" href="css/avatar.css?v=20261105c"><link rel="stylesheet" href="css/piles.css?v=20261105c"><link rel="stylesheet" href="css/qr.css?v=20261105c"><link rel="stylesheet" href="css/charts.css?v=20261105c">
+<link rel="stylesheet" href="css/paper.css?v=20261105d"><link rel="stylesheet" href="css/postit.css?v=20261105d"><link rel="stylesheet" href="css/board.css?v=20261105d"><link rel="stylesheet" href="css/avatar.css?v=20261105d"><link rel="stylesheet" href="css/piles.css?v=20261105d"><link rel="stylesheet" href="css/qr.css?v=20261105d"><link rel="stylesheet" href="css/charts.css?v=20261105d">
 </head>
 <body>
 <main id="board">
@@ -73,149 +73,206 @@
 <!-- presenter extras: washed-out dock, appears on pointer movement -->
 <div id="extras" aria-label="Board extras" data-i18n-aria="Board extras">
   <div id="extras-panel" class="extras-panel" role="dialog" aria-label="Presenter controls" data-i18n-aria="Presenter controls">
-    <p class="extras-kicker" data-i18n="Notes">Notes</p>
-    <div class="extras-grid">
-      <button id="extras-dashboard" class="extras-btn" type="button"><span data-i18n="Dashboard">Dashboard</span> <kbd>D</kbd></button>
-      <button id="extras-reset-view" class="extras-btn" type="button" data-i18n="Reset view">Reset view</button>
-      <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
-      <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
-    </div>
+    <header class="extras-head">
+      <div>
+        <p class="extras-kicker" data-i18n="Presenter controls">Presenter controls</p>
+        <p class="extras-head__hint" data-i18n="Everything in one place. Changes apply immediately.">Everything in one place. Changes apply immediately.</p>
+      </div>
+      <button id="extras-close" class="extras-close" type="button" aria-label="Close" data-i18n-aria="Close" title="Close (Esc)" data-i18n-title="Close (Esc)">×</button>
+    </header>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Polls">Polls</p>
-    <div class="extras-grid">
-      <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
-      <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
-      <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
-      <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
-      <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-    </div>
+    <div class="extras-cols">
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Demo data">Demo data</p>
-    <div class="extras-grid">
-      <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
-      <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
-      <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
-    </div>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Notes">Notes</h3>
+          <button id="extras-defaults-notes" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-dashboard" class="extras-btn" type="button"><span data-i18n="Dashboard">Dashboard</span> <kbd>D</kbd></button>
+          <button id="extras-reset-view" class="extras-btn" type="button" data-i18n="Reset view">Reset view</button>
+          <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
+          <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
+        </div>
+        <div class="extras-grid extras-grid--single">
+          <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
+        </div>
+        <details class="extras-advanced">
+          <summary data-i18n="Advanced">Advanced</summary>
+          <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
+            <input type="checkbox" data-extra="columns">
+            <span data-i18n="Categories in columns">Categories in columns</span>
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Note spacing">Note spacing</span> <output id="gap-out" data-for="gap">12</output><span class="extra-unit">px</span></span>
+            <input type="range" data-extra="gap" min="0" max="40" step="1" value="12">
+          </label>
+        </details>
+      </section>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Layout">Layout</p>
-    <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
-      <input type="checkbox" data-extra="columns">
-      <span data-i18n="Categories in columns">Categories in columns</span>
-    </label>
-    <label class="extra-range">
-      <span class="extra-range-head"><span data-i18n="Note spacing">Note spacing</span> <output id="gap-out" data-for="gap">12</output><span class="extra-unit">px</span></span>
-      <input type="range" data-extra="gap" min="0" max="40" step="1" value="12">
-    </label>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Polls">Polls</h3>
+          <button id="extras-defaults-polls" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
+          <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
+          <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
+          <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
+          <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
+        </div>
+        <div class="extras-grid">
+          <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
+          <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
+        </div>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Presentation">Presentation</p>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="autoplay" checked>
-      <span data-i18n="Autoplay in full screen">Autoplay in full screen</span>
-    </label>
-    <label class="extra-range">
-      <span class="extra-range-head"><span data-i18n="Start after">Start after</span> <output id="autoplay-delay-out" data-for="autoplayDelay">10</output><span class="extra-unit">s</span></span>
-      <input type="range" data-extra="autoplayDelay" min="0" max="60" step="1" value="10">
-    </label>
-    <label class="extra-range">
-      <span class="extra-range-head"><span data-i18n="Seconds per slide">Seconds per slide</span> <output id="autoplay-duration-out" data-for="autoplayDuration">6</output><span class="extra-unit">s</span></span>
-      <input type="range" data-extra="autoplayDuration" min="2" max="60" step="1" value="6">
-    </label>
+        <details class="extras-advanced" open>
+          <summary data-i18n="Charts">Charts</summary>
+          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
+          <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
+            <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
+            <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
+            <button type="button" data-chart-type="columns" data-i18n="Columns">Columns</button>
+            <button type="button" data-chart-type="donut" data-i18n="Donut">Donut</button>
+            <button type="button" data-chart-type="line" data-i18n="Trend">Trend</button>
+            <button type="button" data-chart-type="cloud" data-i18n="Word cloud">Word cloud</button>
+          </div>
+          <div class="chart-picks chart-picks--style" role="group" aria-label="Chart style" data-i18n-aria="Chart style">
+            <button type="button" data-chart-style="hand" data-i18n="Hand-drawn">Hand-drawn</button>
+            <button type="button" data-chart-style="clean" data-i18n="Standard">Standard</button>
+          </div>
+        </details>
+      </section>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="On the wall">On the wall</p>
-    <div class="extras-grid">
-      <button id="extras-event-title" class="extras-btn" type="button"><span data-i18n="Edit event name">Edit event name</span> <kbd>E</kbd></button>
-      <button id="extras-categories" class="extras-btn" type="button"><span data-i18n="Edit categories and colours">Edit categories and colours</span> <kbd>C</kbd></button>
-    </div>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="brand" checked>
-      <span data-i18n="Header &amp; logo">Header &amp; logo</span>
-    </label>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="mascot" checked>
-      <span data-i18n="Mascot">Mascot</span>
-    </label>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="qr" checked>
-      <span data-i18n="QR code">QR code</span>
-    </label>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="status" checked>
-      <span data-i18n="Note count">Note count</span>
-    </label>
-    <label class="extra-row">
-      <input type="checkbox" data-extra="filters" checked>
-      <span data-i18n="Filter bar">Filter bar</span>
-    </label>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Look">Look</h3>
+          <button id="extras-defaults-look" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-event-title" class="extras-btn" type="button"><span data-i18n="Edit event name">Edit event name</span> <kbd>E</kbd></button>
+          <button id="extras-categories" class="extras-btn" type="button"><span data-i18n="Edit categories and colours">Edit categories and colours</span> <kbd>C</kbd></button>
+        </div>
+        <p class="extras-kicker" data-i18n="On the wall">On the wall</p>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="brand" checked>
+          <span data-i18n="Header &amp; logo">Header &amp; logo</span>
+        </label>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="mascot" checked>
+          <span data-i18n="Mascot">Mascot</span>
+        </label>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="qr" checked>
+          <span data-i18n="QR code">QR code</span>
+        </label>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="status" checked>
+          <span data-i18n="Note count">Note count</span>
+        </label>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="filters" checked>
+          <span data-i18n="Filter bar">Filter bar</span>
+        </label>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Wall colour">Wall colour</p>
-    <div class="extra-swatches" id="extras-swatches" aria-label="Wall colour presets" data-i18n-aria="Wall colour presets">
-      <button type="button" data-wall="" style="--sw:#0b0b0c" aria-label="Default textured wall" data-i18n-aria="Default textured wall" title="Default textured wall" data-i18n-title="Default textured wall"></button>
-      <button type="button" data-wall="#000000" style="--sw:#000000" aria-label="Black wall" data-i18n-aria="Black wall" title="Black wall" data-i18n-title="Black wall"></button>
-      <button type="button" data-wall="#14171C" style="--sw:#14171C" aria-label="Charcoal wall" data-i18n-aria="Charcoal wall"></button>
-      <button type="button" data-wall="#1B2430" style="--sw:#1B2430" aria-label="Slate blue wall" data-i18n-aria="Slate blue wall"></button>
-      <button type="button" data-wall="#122420" style="--sw:#122420" aria-label="Deep green wall" data-i18n-aria="Deep green wall"></button>
-      <button type="button" data-wall="#2A1B22" style="--sw:#2A1B22" aria-label="Plum wall" data-i18n-aria="Plum wall"></button>
-      <button type="button" data-wall="#2B2114" style="--sw:#2B2114" aria-label="Warm brown wall" data-i18n-aria="Warm brown wall"></button>
-    </div>
-    <label class="extra-row extra-row--color">
-      <input type="color" data-extra="bgColor" value="#000000" aria-label="Custom wall colour" data-i18n-aria="Custom wall colour">
-      <span data-i18n="Custom colour">Custom colour</span>
-      <button id="extras-bg-color-reset" class="extra-mini" type="button" data-i18n="Reset">Reset</button>
-    </label>
-    <div class="extra-file-row">
-      <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background image…">Background image…</button>
-      <button id="extras-bg-clear" class="extras-btn" type="button" data-i18n="Remove image">Remove image</button>
-    </div>
-    <input id="extras-bg-file" type="file" accept="image/*" hidden>
-    <div class="extra-input-row">
-      <input id="extras-bg-url" type="url" inputmode="url" placeholder="…or paste an image URL" data-i18n-placeholder="…or paste an image URL" autocomplete="off">
-      <button id="extras-bg-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
-    </div>
-    <label class="extra-range">
-      <span class="extra-range-head"><span data-i18n="Image dim">Image dim</span> <output id="bgdim-out" data-for="bgDim">35</output><span class="extra-unit">%</span></span>
-      <input type="range" data-extra="bgDim" min="0" max="85" step="1" value="35">
-    </label>
+        <p class="extras-kicker" data-i18n="Wall colour">Wall colour</p>
+        <div class="extra-swatches" id="extras-swatches" aria-label="Wall colour presets" data-i18n-aria="Wall colour presets">
+          <button type="button" data-wall="" style="--sw:#0b0b0c" aria-label="Default textured wall" data-i18n-aria="Default textured wall" title="Default textured wall" data-i18n-title="Default textured wall"></button>
+          <button type="button" data-wall="#000000" style="--sw:#000000" aria-label="Black wall" data-i18n-aria="Black wall" title="Black wall" data-i18n-title="Black wall"></button>
+          <button type="button" data-wall="#14171C" style="--sw:#14171C" aria-label="Charcoal wall" data-i18n-aria="Charcoal wall"></button>
+          <button type="button" data-wall="#1B2430" style="--sw:#1B2430" aria-label="Slate blue wall" data-i18n-aria="Slate blue wall"></button>
+          <button type="button" data-wall="#122420" style="--sw:#122420" aria-label="Deep green wall" data-i18n-aria="Deep green wall"></button>
+          <button type="button" data-wall="#2A1B22" style="--sw:#2A1B22" aria-label="Plum wall" data-i18n-aria="Plum wall"></button>
+          <button type="button" data-wall="#2B2114" style="--sw:#2B2114" aria-label="Warm brown wall" data-i18n-aria="Warm brown wall"></button>
+        </div>
+        <label class="extra-row extra-row--color">
+          <input type="color" data-extra="bgColor" value="#000000" aria-label="Custom wall colour" data-i18n-aria="Custom wall colour">
+          <span data-i18n="Custom colour">Custom colour</span>
+          <button id="extras-bg-color-reset" class="extra-mini" type="button" data-i18n="Reset">Reset</button>
+        </label>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Logo">Logo</p>
-    <div class="extra-file-row">
-      <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logo…">Change logo…</button>
-      <button id="extras-logo-reset" class="extras-btn" type="button" data-i18n="Default logo">Default logo</button>
-    </div>
-    <input id="extras-logo-file" type="file" accept="image/*" hidden>
-    <div class="extra-input-row">
-      <input id="extras-logo-url" type="url" inputmode="url" placeholder="…or paste a logo URL" data-i18n-placeholder="…or paste a logo URL" autocomplete="off">
-      <button id="extras-logo-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
-    </div>
-    <label class="extra-range">
-      <span class="extra-range-head"><span data-i18n="Logo size">Logo size</span> <output id="logosize-out" data-for="logoSize">100</output><span class="extra-unit">%</span></span>
-      <input type="range" data-extra="logoSize" min="50" max="180" step="5" value="100">
-    </label>
+        <details class="extras-advanced">
+          <summary data-i18n="Advanced">Advanced</summary>
+          <div class="extra-file-row">
+            <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background image…">Background image…</button>
+            <button id="extras-bg-clear" class="extras-btn" type="button" data-i18n="Remove image">Remove image</button>
+          </div>
+          <input id="extras-bg-file" type="file" accept="image/*" hidden>
+          <div class="extra-input-row">
+            <input id="extras-bg-url" type="url" inputmode="url" placeholder="…or paste an image URL" data-i18n-placeholder="…or paste an image URL" autocomplete="off">
+            <button id="extras-bg-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
+          </div>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Image dim">Image dim</span> <output id="bgdim-out" data-for="bgDim">35</output><span class="extra-unit">%</span></span>
+            <input type="range" data-extra="bgDim" min="0" max="85" step="1" value="35">
+          </label>
+          <p class="extras-kicker" data-i18n="Logo">Logo</p>
+          <div class="extra-file-row">
+            <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logo…">Change logo…</button>
+            <button id="extras-logo-reset" class="extras-btn" type="button" data-i18n="Default logo">Default logo</button>
+          </div>
+          <input id="extras-logo-file" type="file" accept="image/*" hidden>
+          <div class="extra-input-row">
+            <input id="extras-logo-url" type="url" inputmode="url" placeholder="…or paste a logo URL" data-i18n-placeholder="…or paste a logo URL" autocomplete="off">
+            <button id="extras-logo-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
+          </div>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Logo size">Logo size</span> <output id="logosize-out" data-for="logoSize">100</output><span class="extra-unit">%</span></span>
+            <input type="range" data-extra="logoSize" min="50" max="180" step="5" value="100">
+          </label>
+        </details>
+      </section>
 
-    <div class="extras-sep" role="separator"></div>
-    <div class="extras-actions">
-      <button id="extras-notes-only" type="button" data-i18n="Notes only">Notes only</button>
-      <button id="extras-notes-manual" type="button" aria-pressed="false" title="Show the notes without autoplay (M)" data-i18n-title="Show the notes without autoplay (M)" data-i18n="No auto">No auto</button>
-      <button id="extras-show-all" type="button" data-i18n="Show all">Show all</button>
-    </div>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Presentation">Presentation</h3>
+          <button id="extras-defaults-presentation" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <label class="extra-row">
+          <input type="checkbox" data-extra="autoplay" checked>
+          <span data-i18n="Autoplay in full screen">Autoplay in full screen</span>
+        </label>
+        <label class="extra-range">
+          <span class="extra-range-head"><span data-i18n="Start after">Start after</span> <output id="autoplay-delay-out" data-for="autoplayDelay">10</output><span class="extra-unit">s</span></span>
+          <input type="range" data-extra="autoplayDelay" min="0" max="60" step="1" value="10">
+        </label>
+        <label class="extra-range">
+          <span class="extra-range-head"><span data-i18n="Seconds per slide">Seconds per slide</span> <output id="autoplay-duration-out" data-for="autoplayDuration">6</output><span class="extra-unit">s</span></span>
+          <input type="range" data-extra="autoplayDuration" min="2" max="60" step="1" value="6">
+        </label>
+        <div class="extras-actions">
+          <button id="extras-notes-only" type="button" data-i18n="Notes only">Notes only</button>
+          <button id="extras-notes-manual" type="button" aria-pressed="false" title="Show the notes without autoplay (M)" data-i18n-title="Show the notes without autoplay (M)" data-i18n="No auto">No auto</button>
+          <button id="extras-show-all" type="button" data-i18n="Show all">Show all</button>
+        </div>
+      </section>
 
-    <div class="extras-sep" role="separator"></div>
-    <p class="extras-kicker" data-i18n="Download">Download</p>
-    <div class="extras-grid">
-      <button id="extras-download-pdf" class="extras-btn" type="button"><span data-i18n="Wall summary PDF">Wall summary PDF</span></button>
-      <button id="extras-download-jpeg" class="extras-btn" type="button"><span data-i18n="Notes image JPEG">Notes image JPEG</span></button>
-    </div>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Share &amp; embed">Share &amp; embed</h3>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-share-wall" class="extras-btn" type="button"><span data-i18n="Live wall link">Live wall link</span></button>
+          <button id="extras-share-polls" class="extras-btn" type="button"><span data-i18n="Poll results link">Poll results link</span></button>
+        </div>
+        <p class="extras-note" data-i18n="Copy a read-only link or iframe. It updates live and needs no login.">Copy a read-only link or iframe. It updates live and needs no login.</p>
+      </section>
 
-    <div class="extras-sep" role="separator"></div>
-    <div class="extras-lang">
-      <span class="extras-kicker" data-i18n="Language">Language</span>
-      <div class="lang-switch" data-lang-switch></div>
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Data">Data</h3>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-download-pdf" class="extras-btn" type="button"><span data-i18n="Wall summary PDF">Wall summary PDF</span></button>
+          <button id="extras-download-jpeg" class="extras-btn" type="button"><span data-i18n="Notes image JPEG">Notes image JPEG</span></button>
+        </div>
+        <div class="extras-lang">
+          <span class="extras-kicker" data-i18n="Language">Language</span>
+          <div class="lang-switch" data-lang-switch></div>
+        </div>
+      </section>
+
     </div>
   </div>
   <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
@@ -379,6 +436,30 @@
       <span class="event-spacer"></span>
       <button id="category-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
       <button type="submit" class="event-btn" data-i18n="Save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: share a read-only live view -->
+<dialog id="share-dialog" class="event-dialog share-dialog">
+  <form id="share-form" method="dialog">
+    <p class="event-kicker" data-i18n="Share">Share</p>
+    <h2 id="share-title" data-i18n="Live results link">Live results link</h2>
+    <p id="share-lead" class="event-lead" data-i18n="Anyone with this link or embed sees the results update live.">Anyone with this link or embed sees the results update live.</p>
+    <label for="share-url" data-i18n="Link">Link</label>
+    <div class="share-row">
+      <input id="share-url" readonly autocomplete="off">
+      <button id="share-copy" class="event-btn" type="button" data-i18n="Copy">Copy</button>
+    </div>
+    <label for="share-embed" data-i18n="Embed code">Embed code</label>
+    <div class="share-row share-row--multi">
+      <textarea id="share-embed" rows="3" readonly></textarea>
+      <button id="share-copy-embed" class="event-btn" type="button" data-i18n="Copy">Copy</button>
+    </div>
+    <div class="event-actions">
+      <button id="share-open" type="button" class="event-btn event-btn--quiet" data-i18n="Open preview">Open preview</button>
+      <span class="event-spacer"></span>
+      <button type="button" class="event-btn" data-i18n="Done">Done</button>
     </div>
   </form>
 </dialog>
@@ -665,5 +746,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105c"></script><script src="js/i18n.js?v=20261105c"></script><script src="js/polls.js?v=20261105c"></script><script src="js/store.js?v=20261105c"></script><script src="js/shared.js?v=20261105c"></script><script src="js/charts.js?v=20261105c"></script><script src="js/qrcode.js?v=20261105c"></script><script src="js/export.js?v=20261105c"></script><script src="js/board.js?v=20261105c"></script>
+<script src="js/config.js?v=20261105d"></script><script src="js/i18n.js?v=20261105d"></script><script src="js/polls.js?v=20261105d"></script><script src="js/store.js?v=20261105d"></script><script src="js/shared.js?v=20261105d"></script><script src="js/charts.js?v=20261105d"></script><script src="js/qrcode.js?v=20261105d"></script><script src="js/export.js?v=20261105d"></script><script src="js/board.js?v=20261105d"></script>
 </body></html>

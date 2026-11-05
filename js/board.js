@@ -57,10 +57,14 @@
     logoSize: 100,
     autoplay: true,
     autoplayDelay: 10,
-    autoplayDuration: 6
+    autoplayDuration: 6,
+    chartType: "auto",
+    chartStyle: "hand"
   };
   const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration"]);
-  const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo"]);
+  const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo", "chartType", "chartStyle"]);
+  const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
+  const CHART_STYLE_KEYS = ["hand", "clean"];
   function loadPrefs() {
     try {
       const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
@@ -82,6 +86,8 @@
   prefs.autoplayDuration = Math.max(2, Math.min(120, prefs.autoplayDuration));
   prefs.bgColor = normaliseHex(prefs.bgColor) || "";
   prefs.bgImage = String(prefs.bgImage || "");
+  if (!CHART_TYPE_KEYS.includes(prefs.chartType)) prefs.chartType = "auto";
+  if (!CHART_STYLE_KEYS.includes(prefs.chartStyle)) prefs.chartStyle = "hand";
 
   function savePrefs() {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); return true; }
@@ -101,6 +107,16 @@
     });
     extrasPanel.querySelectorAll("#extras-swatches button").forEach(btn => {
       btn.classList.toggle("act", (btn.dataset.wall || "") === (prefs.bgColor || ""));
+    });
+    extrasPanel.querySelectorAll("[data-chart-type]").forEach(btn => {
+      const on = btn.dataset.chartType === prefs.chartType;
+      btn.classList.toggle("act", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    extrasPanel.querySelectorAll("[data-chart-style]").forEach(btn => {
+      const on = btn.dataset.chartStyle === prefs.chartStyle;
+      btn.classList.toggle("act", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
 
@@ -227,6 +243,79 @@
   eventDialog.addEventListener("click", e => { if (e.target === eventDialog) eventDialog.close(); });
   applyBrand();
   applyLook();
+
+  /* ── share: read-only live view + iframe embed ─────────────── */
+  function shareUrl(params) {
+    const url = new URL("embed.html", location.href);
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, value);
+    });
+    const lang = typeof I18N !== "undefined" && typeof I18N.lang === "function" ? I18N.lang() : "en";
+    if (lang && lang !== "en") url.searchParams.set("lang", lang);
+    return url.href;
+  }
+
+  let shareCurrentUrl = "";
+  function openShareDialog(kind, poll) {
+    const dialog = $("share-dialog");
+    const urlInput = $("share-url"), embedInput = $("share-embed");
+    if (!dialog || !urlInput || !embedInput) return;
+    const title = String(brandState.title || "").trim();
+    let url, heading;
+    if (kind === "poll" && poll) {
+      url = shareUrl({ module: "poll", id: poll.id, type: prefs.chartType, style: prefs.chartStyle, title: poll.question });
+      heading = t("Live results link");
+    } else if (kind === "polls") {
+      url = shareUrl({ module: "polls", type: prefs.chartType, style: prefs.chartStyle, title });
+      heading = t("Poll results link");
+    } else {
+      url = shareUrl({ module: "notes", title });
+      heading = t("Live wall link");
+    }
+    shareCurrentUrl = url;
+    const headingNode = $("share-title"), leadNode = $("share-lead");
+    if (headingNode) headingNode.textContent = heading;
+    if (leadNode) leadNode.textContent = t("Anyone with this link or embed sees the results update live.");
+    urlInput.value = url;
+    embedInput.value = '<iframe src="' + url + '" width="100%" height="640" style="border:0;max-width:100%" loading="lazy" allowfullscreen title="' +
+      (title || "Sticky Wall").replace(/"/g, "&quot;") + '"></iframe>';
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) dialog.showModal();
+    } else dialog.setAttribute("open", "");
+    setTimeout(() => { urlInput.focus(); urlInput.select(); }, 60);
+  }
+
+  async function copyShareText(text, button) {
+    if (!text) return false;
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch {
+      const helper = document.createElement("textarea");
+      helper.value = text;
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      document.body.append(helper);
+      helper.select();
+      try { ok = document.execCommand("copy"); } catch {}
+      helper.remove();
+    }
+    if (button) {
+      const label = button.textContent;
+      button.textContent = ok ? t("Copied") : label;
+      setTimeout(() => { button.textContent = label; }, 1600);
+    }
+    return ok;
+  }
+
+  $("extras-share-wall")?.addEventListener("click", () => openShareDialog("wall"));
+  $("extras-share-polls")?.addEventListener("click", () => openShareDialog("polls"));
+  $("share-copy")?.addEventListener("click", () => copyShareText($("share-url")?.value, $("share-copy")));
+  $("share-copy-embed")?.addEventListener("click", () => copyShareText($("share-embed")?.value, $("share-copy-embed")));
+  $("share-open")?.addEventListener("click", () => {
+    if (shareCurrentUrl) window.open(shareCurrentUrl, "_blank", "noopener");
+  });
 
   /* ── categories: presenter editor ──────────────────────────── */
   function uniqueKey(label, used) {
@@ -666,6 +755,13 @@
     }
 
     if (poll.type === "text") {
+      if (prefs.chartType === "cloud" && typeof pollChart === "function") {
+        const cloud = pollChart(poll, stats, { type: "cloud", style: prefs.chartStyle });
+        if (cloud) {
+          box.append(cloud);
+          return box;
+        }
+      }
       const list = pollNode("div", "poll-texts");
       stats.texts.slice(0, 6).forEach(vote => {
         const item = pollNode("div", "poll-text");
@@ -681,7 +777,9 @@
       return box;
     }
 
-    const chart = typeof pollHandChart === "function" ? pollHandChart(poll, stats) : null;
+    const chart = typeof pollChart === "function"
+      ? pollChart(poll, stats, { type: prefs.chartType, style: prefs.chartStyle })
+      : (typeof pollHandChart === "function" ? pollHandChart(poll, stats) : null);
     if (chart) {
       box.append(chart);
       return box;
@@ -764,6 +862,7 @@
     };
     action("edit", t("Edit"));
     action("race", t("Chart race"));
+    action("share", t("Live link"));
     action("duplicate", t("Duplicate"));
     action("toggle", poll.status === "open" ? t("Close poll") : t("Open poll"));
     action("reset", t("Reset votes"));
@@ -1652,6 +1751,7 @@
     const act = button.dataset.pollAct;
     if (act === "edit") openPollEditor(poll);
     else if (act === "race") openPollRace(poll);
+    else if (act === "share") openShareDialog("poll", poll);
     else if (act === "duplicate") duplicatePoll(poll);
     else if (act === "toggle") togglePollStatus(poll);
     else if (act === "reset") armButton(button, t("Confirm reset"), () => resetPollVotes(poll));
@@ -2300,6 +2400,45 @@
     setExtrasOpen(!extras.classList.contains("open"));
   });
 
+  $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
+
+  /* Per-card defaults: reset just the settings that belong to that module,
+     leaving the rest of the wall untouched. */
+  const EXTRAS_DEFAULTS = {
+    notes: ["columns", "gap"],
+    polls: ["chartType", "chartStyle"],
+    look: ["brand", "mascot", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
+    presentation: ["autoplay", "autoplayDelay", "autoplayDuration"]
+  };
+
+  function resetExtrasDefaults(module, button) {
+    const keys = EXTRAS_DEFAULTS[module];
+    if (!keys) return;
+    keys.forEach(key => { prefs[key] = PREF_DEFAULTS[key]; });
+    savePrefs();
+    applyPrefs(true);
+    if (module === "look") applyLook();
+    if (module === "polls") renderPollChrome();
+
+    if (button) {
+      if (!button.dataset.label) button.dataset.label = button.textContent;
+      button.textContent = t("Done");
+      button.classList.add("is-done");
+      clearTimeout(button._doneTimer);
+      button._doneTimer = setTimeout(() => {
+        button.textContent = button.dataset.label || t("Defaults");
+        button.classList.remove("is-done");
+      }, 1400);
+    }
+  }
+
+  [["notes", "extras-defaults-notes"],
+   ["polls", "extras-defaults-polls"],
+   ["look", "extras-defaults-look"],
+   ["presentation", "extras-defaults-presentation"]].forEach(([module, id]) => {
+    $(id)?.addEventListener("click", e => resetExtrasDefaults(module, e.currentTarget));
+  });
+
   function handleExtraInput(input) {
     const key = input?.dataset?.extra;
     if (!key || !(key in prefs)) return;
@@ -2418,6 +2557,16 @@
     prefs.bgColor = normaliseHex(btn.dataset.wall) || "";
     savePrefs();
     applyLook();
+  });
+
+  extrasPanel?.addEventListener("click", e => {
+    const typeBtn = e.target.closest("[data-chart-type]");
+    if (typeBtn) {
+      setChartType(typeBtn.dataset.chartType);
+      return;
+    }
+    const styleBtn = e.target.closest("[data-chart-style]");
+    if (styleBtn) setChartStyle(styleBtn.dataset.chartStyle);
   });
   $("extras-bg-color-reset")?.addEventListener("click", () => {
     prefs.bgColor = "";
@@ -2562,6 +2711,7 @@
       else if (pollsPresent && (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown")) { e.preventDefault(); stepPollStage(1); }
       else if (pollsPresent && (k === "arrowleft" || k === "arrowup" || k === "pageup")) { e.preventDefault(); stepPollStage(-1); }
       else if (k === "n") openPollEditor(null);
+      else if (k === "g") { e.preventDefault(); if (e.shiftKey) cycleChartStyle(); else cycleChartType(e.altKey ? -1 : 1); }
       else if (k === "s") seedSamplePolls();
       else if (k === "h") {
         if (pollsPresent) { setPollsPresentation(false); setExtrasOpen(true); }
@@ -2657,6 +2807,31 @@
       frag.appendChild(d);
     }
     ambient.replaceChildren(frag);
+  }
+
+  /* chart type/style: presenter choice is remembered locally, so the board
+     opens with the same look on the next session. */
+  function setChartType(type) {
+    if (!CHART_TYPE_KEYS.includes(type)) return;
+    prefs.chartType = type;
+    savePrefs();
+    syncPrefInputs();
+    renderPollChrome();
+  }
+  function setChartStyle(style) {
+    if (!CHART_STYLE_KEYS.includes(style)) return;
+    prefs.chartStyle = style;
+    savePrefs();
+    syncPrefInputs();
+    renderPollChrome();
+  }
+  function cycleChartType(step) {
+    const i = CHART_TYPE_KEYS.indexOf(prefs.chartType);
+    const next = CHART_TYPE_KEYS[(i + (step || 1) + CHART_TYPE_KEYS.length) % CHART_TYPE_KEYS.length];
+    setChartType(next);
+  }
+  function cycleChartStyle() {
+    setChartStyle(prefs.chartStyle === "hand" ? "clean" : "hand");
   }
 
   /* demo helpers: sample content loads in rounds, so the buttons and the
