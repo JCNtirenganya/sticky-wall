@@ -87,7 +87,8 @@
         return data.map(norm);
       },
       async add({ name, category, text }) {
-        const { error } = await sb.rpc("submit_note", { p_name: name, p_category: category, p_text: text });
+        const author = String(name || "").trim() || "Anonymous";
+        const { error } = await sb.rpc("submit_note", { p_name: author, p_category: category, p_text: text });
         if (error) throw error;
       },
       async getCategories() {

@@ -180,6 +180,7 @@
   send.onclick = async () => {
     const body = text.value.trim();
     if (!body || !cat || sending) return;
+    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
     const wait = (C.MIN_SECONDS_BETWEEN_NOTES || 6) * 1000 - (Date.now() - last);
     if (wait > 0) return toast(t("Easy! Wait {n}s", { n: Math.ceil(wait / 1000) }), true);
     sending = true;

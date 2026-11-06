@@ -85,7 +85,7 @@
       card.append(el("p", "embed-note__text", note.text || ""));
       const foot = el("footer", "embed-note__foot");
       foot.append(
-        el("span", "embed-note__author", note.author_name || t("Anonymous")),
+        el("span", "embed-note__author", note.author || note.author_name || t("Anonymous")),
         el("span", "embed-note__cat", t(note.category || "Note"))
       );
       card.append(foot);
