@@ -224,7 +224,11 @@
 
   /* ── event media: photo or short video ─────────────────────── */
   const mediaOpen = $("media-open"), mediaBack = $("media-back"), mediaFileInput = $("media-file");
-  const mediaPick = $("media-pick"), mediaPreview = $("media-preview"), mediaSend = $("media-send"), mediaNote = $("media-note");
+  const mediaPhotoInput = $("media-photo-file"), mediaVideoInput = $("media-video-file");
+  const mediaPhotoBtn = $("media-photo"), mediaVideoBtn = $("media-video");
+  const mediaSource = $("media-source"), mediaPick = $("media-pick");
+  const mediaPreview = $("media-preview"), mediaSend = $("media-send"), mediaNote = $("media-note");
+  const mediaInputs = [mediaFileInput, mediaPhotoInput, mediaVideoInput].filter(Boolean);
   const MAX_MEDIA = 50 * 1024 * 1024, MAX_VIDEO_SECONDS = 30;
   let mediaState = null, mediaSending = false;
 
@@ -232,10 +236,11 @@
     if (mediaState?.url) URL.revokeObjectURL(mediaState.url);
     mediaState = null;
     if (mediaPreview) { mediaPreview.replaceChildren(); mediaPreview.hidden = true; }
+    if (mediaSource) mediaSource.hidden = false;
     if (mediaPick) mediaPick.hidden = false;
     if (mediaSend) mediaSend.disabled = true;
     if (mediaNote) { mediaNote.textContent = ""; mediaNote.hidden = true; }
-    if (mediaFileInput) mediaFileInput.value = "";
+    mediaInputs.forEach(input => { input.value = ""; });
   }
 
   function readVideoMeta(file) {
@@ -321,6 +326,7 @@
 
     mediaPreview.append(node, badge, clear);
     mediaPreview.hidden = false;
+    if (mediaSource) mediaSource.hidden = true;
     mediaPick.hidden = true;
     mediaSend.disabled = !name || mediaSending;
   }
@@ -357,10 +363,16 @@
     show("s-media");
   });
   mediaBack?.addEventListener("click", () => { clearMediaSelection(); show("s-cat"); });
+  mediaPhotoBtn?.addEventListener("click", () => mediaPhotoInput?.click());
+  mediaVideoBtn?.addEventListener("click", () => mediaVideoInput?.click());
   mediaPick?.addEventListener("click", () => mediaFileInput?.click());
-  mediaFileInput?.addEventListener("change", () => {
-    const file = mediaFileInput.files?.[0];
-    chooseMedia(file);
+  mediaInputs.forEach(input => {
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      input.value = "";
+      chooseMedia(file);
+    });
   });
   mediaSend?.addEventListener("click", async () => {
     if (!mediaState || mediaSending) return;

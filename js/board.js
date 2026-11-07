@@ -26,6 +26,7 @@
   const racePlay = $("race-play"), raceReplay = $("race-replay"), raceClose = $("race-close");
   const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty"), mediaCount = $("media-count");
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
+  const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
   const polls = [], votes = [], media = [];
@@ -34,9 +35,11 @@
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
   let notesPresent = false, notesPresentSnapshot = null;
   let pollsPresent = false, pollStageMode = false, pollStageIndex = 0;
+  let mediaPresent = false, mediaStageIndex = 0;
   /* manual presentation: full screen, but the slides only move on command */
   let presentationManual = false;
   let autoplayIdle = 0, autoplayStep = 0, autoplayLive = false, autoplayTouched = 0;
+  let mediaAdvanceTimer = 0;
   let racePollId = null, raceData = null, raceIndex = 0, raceClockValue = 0;
   let racePlaying = false, raceSpeed = 1, raceRaf = 0, raceLastTick = 0;
   const raceRows = new Map();
@@ -989,23 +992,29 @@
   function clearAutoplay() {
     clearTimeout(autoplayIdle);
     clearInterval(autoplayStep);
+    clearTimeout(mediaAdvanceTimer);
     autoplayIdle = 0;
     autoplayStep = 0;
+    mediaAdvanceTimer = 0;
     autoplayLive = false;
   }
 
   /* Wait `autoplayDelay` seconds of quiet, then advance every `autoplayDuration`. */
   function armAutoplay() {
     clearAutoplay();
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent)) return;
+    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent && !mediaPresent)) return;
     autoplayIdle = setTimeout(startAutoplay, autoplaySeconds(prefs.autoplayDelay, 10) * 1000);
   }
 
   function startAutoplay() {
     autoplayIdle = 0;
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent)) return;
+    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent && !mediaPresent)) return;
     const every = Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6)) * 1000;
     autoplayLive = true;
+    if (mediaPresent) {
+      scheduleMediaAdvance();
+      return;
+    }
     if (notesPresent) {
       step(1);
       autoplayStep = setInterval(() => step(1), every);
@@ -1022,7 +1031,7 @@
 
   /* Any real interaction pauses the slideshow and re-arms the idle countdown. */
   function touchAutoplay() {
-    if (!notesPresent && !pollsPresent) return;
+    if (!notesPresent && !pollsPresent && !mediaPresent) return;
     if (!autoplayIdle && !autoplayLive) return;
     armAutoplay();
   }
@@ -1030,7 +1039,7 @@
   ["pointerdown", "wheel", "touchstart"].forEach(evt =>
     window.addEventListener(evt, () => touchAutoplay(), { passive: true, capture: true }));
   window.addEventListener("pointermove", () => {
-    if (!notesPresent && !pollsPresent) return;
+    if (!notesPresent && !pollsPresent && !mediaPresent) return;
     if (!autoplayIdle && !autoplayLive) return;
     const now = Date.now();
     if (now - autoplayTouched < 400) return;
@@ -1066,6 +1075,7 @@
     if (document.fullscreenElement) return;
     if (notesPresent) setNotesPresentation(false);
     if (pollsPresent) setPollsPresentation(false);
+    if (mediaPresent) setMediaPresentation(false);
   });
 
   /* Full-screen results view: all poll cards, or one slide at a time.
@@ -1723,6 +1733,7 @@
 
   function renderMediaWall() {
     if (!mediaGrid) return;
+    if (mediaPresent) { renderMediaStage(); return; }
     const list = mediaVisible();
     mediaGrid.replaceChildren(...list.map(mediaCard));
     if (mediaEmpty) mediaEmpty.hidden = list.length > 0;
@@ -1736,6 +1747,116 @@
       mediaGrid.style.removeProperty("--media-cols");
     } else {
       mediaGrid.style.setProperty("--media-cols", String(Math.min(4, Math.max(1, Math.ceil(Math.sqrt(list.length))))));
+    }
+  }
+
+  /* Full-screen album: one photo or video at a time, advanced by the same
+     autoplay timing the notes use (start after / seconds per slide). */
+  function mediaStageList() {
+    /* arrival order, like the notes slideshow (the grid stays newest-first) */
+    return mediaSorted().slice(-prefs.mediaMax);
+  }
+
+  function renderMediaStage() {
+    if (!mediaStageBody) return;
+    const list = mediaStageList();
+    if (!list.length) { setMediaPresentation(false); return; }
+    if (mediaStageIndex >= list.length) mediaStageIndex = 0;
+    if (mediaStageIndex < 0) mediaStageIndex = list.length - 1;
+    const item = list[mediaStageIndex];
+
+    mediaStageBody.replaceChildren();
+    const frame = document.createElement("figure");
+    frame.className = "media-stage__item media-stage__item--" + (item.kind === "video" ? "video" : "photo");
+
+    if (item.kind === "video") {
+      const video = document.createElement("video");
+      video.src = item.url;
+      video.muted = !!prefs.mediaMute;
+      video.loop = false;
+      video.playsInline = true;
+      video.preload = "auto";
+      video.setAttribute("playsinline", "");
+      const started = video.play();
+      if (started?.catch) started.catch(() => {});
+      video.addEventListener("click", () => {
+        if (video.paused) video.play().catch(() => {});
+        else video.pause();
+      });
+      video.addEventListener("playing", () => {
+        clearTimeout(mediaAdvanceTimer);
+        mediaAdvanceTimer = 0;
+      });
+      video.addEventListener("ended", () => {
+        if (mediaPresent && !presentationManual && prefs.autoplay) stepMediaStage(1);
+      });
+      frame.append(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.alt = item.caption || t("Shared photo");
+      img.decoding = "async";
+      frame.append(img);
+    }
+
+    const meta = document.createElement("figcaption");
+    meta.className = "media-stage__meta";
+    const author = document.createElement("b");
+    author.textContent = item.author || t("Guest");
+    const kind = document.createElement("span");
+    kind.textContent = item.kind === "video" ? t("Video") : t("Photo");
+    meta.append(author, kind);
+    mediaStageBody.append(frame, meta);
+
+    if (mediaStageCount) {
+      mediaStageCount.textContent = t("{i} of {n}", { i: mediaStageIndex + 1, n: list.length });
+    }
+    if (mediaStageAuto) mediaStageAuto.hidden = presentationManual || !prefs.autoplay;
+    scheduleMediaAdvance();
+  }
+
+  function scheduleMediaAdvance() {
+    clearTimeout(mediaAdvanceTimer);
+    mediaAdvanceTimer = 0;
+    if (!mediaPresent || presentationManual || !prefs.autoplay) return;
+    const video = mediaStageBody?.querySelector("video");
+    /* A playing video advances when it ends; anything else uses the timer. */
+    if (video && !video.paused) return;
+    const secs = Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6));
+    mediaAdvanceTimer = setTimeout(() => stepMediaStage(1), secs * 1000);
+  }
+
+  function stepMediaStage(d) {
+    const list = mediaStageList();
+    if (!list.length) return;
+    mediaStageIndex = (mediaStageIndex + d + list.length) % list.length;
+    if (mediaPresent) renderMediaStage();
+  }
+
+  function setMediaPresentation(on, manual) {
+    on = !!on && mediaOpenNow();
+    if (on && !mediaStageList().length) return;
+    if (!on && !mediaPresent) { presentationManual = false; return; }
+    const entering = on && !mediaPresent;
+    mediaPresent = on;
+    presentationManual = on ? !!manual : false;
+    document.body.classList.toggle("present-media", mediaPresent);
+    $("media-present")?.setAttribute("aria-pressed", mediaPresent && !presentationManual ? "true" : "false");
+    $("media-present-manual")?.setAttribute("aria-pressed", mediaPresent && presentationManual ? "true" : "false");
+    if (mediaStage) mediaStage.hidden = !mediaPresent;
+    if (mediaPresent) {
+      if (entering) mediaStageIndex = 0;
+      mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
+      document.activeElement?.blur?.();
+      goFullscreen();
+      renderMediaStage();
+      armAutoplay();
+    } else {
+      clearAutoplay();
+      mediaStageBody?.replaceChildren();
+      renderMediaWall();
+      applyMediaPrefs();
+      if (document.fullscreenElement) leaveFullscreen();
     }
   }
 
@@ -1806,6 +1927,10 @@
     if (notesPresent) setNotesPresentation(false);
     if (raceOpenNow()) closePollRace();
     setExtrasOpen(false);
+    mediaPresent = false;
+    presentationManual = false;
+    document.body.classList.remove("present-media");
+    if (mediaStage) mediaStage.hidden = true;
     mediaWall.setAttribute("aria-hidden", "false");
     document.body.classList.add("show-media");
     renderMediaWall();
@@ -1814,6 +1939,7 @@
 
   function closeMediaWall() {
     if (!mediaWall) return;
+    if (mediaPresent) setMediaPresentation(false);
     mediaWall.setAttribute("aria-hidden", "true");
     document.body.classList.remove("show-media");
     mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
@@ -1959,8 +2085,24 @@
   /* ── media wall controls ───────────────────────────────────── */
   $("extras-media-open")?.addEventListener("click", () => { setExtrasOpen(false); openMediaWall(); });
   $("extras-media-close")?.addEventListener("click", () => { setExtrasOpen(false); closeMediaWall(); });
+  $("extras-media-present")?.addEventListener("click", () => {
+    setExtrasOpen(false);
+    openMediaWall();
+    setMediaPresentation(true);
+  });
   $("extras-demo-media")?.addEventListener("click", event => seedSampleMedia(event.currentTarget));
   mediaClose?.addEventListener("click", closeMediaWall);
+  $("media-present")?.addEventListener("click", () => {
+    if (mediaPresent && !presentationManual) setMediaPresentation(false);
+    else setMediaPresentation(true);
+  });
+  $("media-present-manual")?.addEventListener("click", () => {
+    if (mediaPresent && presentationManual) setMediaPresentation(false);
+    else setMediaPresentation(true, true);
+  });
+  $("media-stage-prev")?.addEventListener("click", () => stepMediaStage(-1));
+  $("media-stage-next")?.addEventListener("click", () => stepMediaStage(1));
+  $("media-stage-exit")?.addEventListener("click", () => setMediaPresentation(false));
   mediaHideAll?.addEventListener("click", event => armButton(event.currentTarget, t("Confirm hide all"), hideAllMedia));
   mediaWall?.addEventListener("click", event => {
     if (event.target === mediaWall) closeMediaWall();
@@ -2982,7 +3124,20 @@
     const k = e.key.toLowerCase();
     touchAutoplay();
     if (mediaOpenNow()) {
+      if (mediaPresent) {
+        if (k === "escape" || k === "f") { e.preventDefault(); setMediaPresentation(false); }
+        else if (k === "v") { e.preventDefault(); closeMediaWall(); }
+        else if (k === "m") {
+          if (presentationManual) setMediaPresentation(false);
+          else setMediaPresentation(true, true);
+        }
+        else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); stepMediaStage(1); }
+        else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); stepMediaStage(-1); }
+        return;
+      }
       if (k === "escape" || k === "v") { e.preventDefault(); closeMediaWall(); }
+      else if (k === "f") { e.preventDefault(); setMediaPresentation(true); }
+      else if (k === "m") { e.preventDefault(); setMediaPresentation(true, true); }
       return;
     }
     if (k === "v") { e.preventDefault(); openMediaWall(); return; }
@@ -3307,7 +3462,11 @@
     Store.subscribeMedia({
       onAdd: item => {
         if (!item?.id) return;
-        if (!media.some(m => m.id === item.id)) media.push(item);
+        if (!media.some(m => m.id === item.id)) {
+          media.push(item);
+          /* live album: a new upload takes over the full-screen show */
+          if (mediaPresent && !presentationManual) mediaStageIndex = Math.max(0, mediaStageList().length - 1);
+        }
         renderMediaWall();
       },
       onUpdate: item => {

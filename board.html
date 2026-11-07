@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105f"><link rel="stylesheet" href="css/postit.css?v=20261105f"><link rel="stylesheet" href="css/board.css?v=20261105f"><link rel="stylesheet" href="css/avatar.css?v=20261105f"><link rel="stylesheet" href="css/piles.css?v=20261105f"><link rel="stylesheet" href="css/qr.css?v=20261105f"><link rel="stylesheet" href="css/charts.css?v=20261105f">
+<link rel="stylesheet" href="css/paper.css?v=20261105g"><link rel="stylesheet" href="css/postit.css?v=20261105g"><link rel="stylesheet" href="css/board.css?v=20261105g"><link rel="stylesheet" href="css/avatar.css?v=20261105g"><link rel="stylesheet" href="css/piles.css?v=20261105g"><link rel="stylesheet" href="css/qr.css?v=20261105g"><link rel="stylesheet" href="css/charts.css?v=20261105g">
 </head>
 <body>
 <main id="board">
@@ -153,6 +153,7 @@
         <div class="extras-grid">
           <button id="extras-media-open" class="extras-btn" type="button"><span data-i18n="Show media wall">Show media wall</span> <kbd>V</kbd></button>
           <button id="extras-media-close" class="extras-btn" type="button" data-i18n="Hide media wall">Hide media wall</button>
+          <button id="extras-media-present" class="extras-btn extras-btn--wide" type="button"><span data-i18n="Play media full screen">Play media full screen</span> <kbd>F</kbd></button>
         </div>
         <div class="extras-grid extras-grid--single">
           <button id="extras-demo-media" class="extras-btn" type="button" title="Add 3 sample photos" data-i18n-title="Add 3 sample photos"><span data-i18n="Add sample media">Add sample media</span></button>
@@ -370,12 +371,24 @@
           <span class="race-live__dot" aria-hidden="true"></span>
           <span data-i18n="Live">Live</span>
         </span>
+        <button id="media-present" class="poll-btn" type="button" aria-pressed="false" title="Play media full screen (F)" data-i18n-title="Play media full screen (F)"><span data-i18n="Play full screen">Play full screen</span> <kbd>F</kbd></button>
+        <button id="media-present-manual" class="poll-btn" type="button" aria-pressed="false" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
         <button id="media-hide-all" class="poll-btn" type="button" data-i18n="Hide all">Hide all</button>
         <button id="media-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
       </div>
     </header>
     <div id="media-grid" class="media-grid" aria-live="polite"></div>
     <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or video…">Waiting for the first photo or video…</p>
+    <div id="media-stage" class="media-stage" hidden aria-live="polite">
+      <div id="media-stage-body" class="media-stage__body"></div>
+      <div class="media-stage__bar">
+        <button id="media-stage-prev" class="media-stage__nav" type="button" aria-label="Previous" data-i18n-aria="Previous">‹</button>
+        <span id="media-stage-count" class="media-stage__count"></span>
+        <span id="media-stage-auto" class="media-stage__auto" hidden data-i18n="Autoplay">Autoplay</span>
+        <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">›</button>
+        <button id="media-stage-exit" class="poll-btn media-stage__exit" type="button"><span data-i18n="Exit full screen">Exit full screen</span> <kbd>Esc</kbd></button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -803,5 +816,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105f"></script><script src="js/i18n.js?v=20261105f"></script><script src="js/polls.js?v=20261105f"></script><script src="js/store.js?v=20261105f"></script><script src="js/shared.js?v=20261105f"></script><script src="js/charts.js?v=20261105f"></script><script src="js/qrcode.js?v=20261105f"></script><script src="js/export.js?v=20261105f"></script><script src="js/board.js?v=20261105f"></script>
+<script src="js/config.js?v=20261105g"></script><script src="js/i18n.js?v=20261105g"></script><script src="js/polls.js?v=20261105g"></script><script src="js/store.js?v=20261105g"></script><script src="js/shared.js?v=20261105g"></script><script src="js/charts.js?v=20261105g"></script><script src="js/qrcode.js?v=20261105g"></script><script src="js/export.js?v=20261105g"></script><script src="js/board.js?v=20261105g"></script>
 </body></html>

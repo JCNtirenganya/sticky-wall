@@ -7,7 +7,7 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105f"><link rel="stylesheet" href="css/mobile.css?v=20261105f"><link rel="stylesheet" href="css/charts.css?v=20261105f">
+<link rel="stylesheet" href="css/paper.css?v=20261105g"><link rel="stylesheet" href="css/mobile.css?v=20261105g"><link rel="stylesheet" href="css/charts.css?v=20261105g">
 </head>
 <body>
 <main class="app">
@@ -115,12 +115,36 @@
     <div class="media-scroll">
       <article class="media-paper">
         <p class="media-lead" data-i18n="Your photo or short video appears on the big screen. Phones never show the wall.">Your photo or short video appears on the big screen. Phones never show the wall.</p>
+        <input id="media-photo-file" type="file" accept="image/*" capture="environment" hidden>
+        <input id="media-video-file" type="file" accept="video/*" capture="environment" hidden>
         <input id="media-file" type="file" accept="image/*,video/*" hidden>
-        <button id="media-pick" class="media-pick" type="button">
-          <span class="media-pick__icon" aria-hidden="true">＋</span>
-          <b data-i18n="Choose a photo or video">Choose a photo or video</b>
-          <small data-i18n="Up to 50 MB · videos up to 30 seconds">Up to 50 MB · videos up to 30 seconds</small>
-        </button>
+        <div id="media-source" class="media-source">
+          <div class="media-cap">
+            <button id="media-photo" class="media-cap__btn media-cap__btn--photo" type="button">
+              <span class="media-cap__icon" aria-hidden="true">📷</span>
+              <span class="media-cap__copy">
+                <b data-i18n="Take a photo">Take a photo</b>
+                <small data-i18n="Opens your camera app">Opens your camera app</small>
+              </span>
+            </button>
+            <button id="media-video" class="media-cap__btn media-cap__btn--video" type="button">
+              <span class="media-cap__icon" aria-hidden="true">🎥</span>
+              <span class="media-cap__copy">
+                <b data-i18n="Record a video">Record a video</b>
+                <small data-i18n="Up to 30 seconds">Up to 30 seconds</small>
+              </span>
+            </button>
+          </div>
+          <p class="media-or" data-i18n="or">or</p>
+          <button id="media-pick" class="media-pick media-pick--browse" type="button">
+            <span class="media-pick__icon" aria-hidden="true">🖼️</span>
+            <span class="media-pick__copy">
+              <b data-i18n="Browse photos and videos">Browse photos and videos</b>
+              <small data-i18n="Pick a file from this device">Pick a file from this device</small>
+            </span>
+          </button>
+          <p class="media-effects" data-i18n="Use your camera app's filters, effects or AI editing, then capture or pick the result here.">Use your camera app's filters, effects or AI editing, then capture or pick the result here.</p>
+        </div>
         <div id="media-preview" class="media-preview" hidden></div>
         <button id="media-send" class="poll-submit media-send" type="button" disabled data-i18n="Send to the big screen">Send to the big screen</button>
         <p id="media-note" class="media-note" hidden></p>
@@ -170,6 +194,6 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105f"></script><script src="js/i18n.js?v=20261105f"></script><script src="js/polls.js?v=20261105f"></script><script src="js/store.js?v=20261105f"></script><script src="js/shared.js?v=20261105f"></script><script src="js/charts.js?v=20261105f"></script>
-<script src="js/mobile.js?v=20261105f"></script>
+<script src="js/config.js?v=20261105g"></script><script src="js/i18n.js?v=20261105g"></script><script src="js/polls.js?v=20261105g"></script><script src="js/store.js?v=20261105g"></script><script src="js/shared.js?v=20261105g"></script><script src="js/charts.js?v=20261105g"></script>
+<script src="js/mobile.js?v=20261105g"></script>
 </body></html>

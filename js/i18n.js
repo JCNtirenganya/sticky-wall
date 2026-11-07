@@ -530,7 +530,25 @@
       "Videos must be 30 seconds or shorter": "Videwo zigomba kuba zitageze ku masegonda 30",
       "Could not read this file": "Ntiyabashije gusoma iyi dosiye",
       "Sending…": "Kohereza…",
-      "Sent to the big screen": "Yoherejwe kuri ecran nini"
+      "Sent to the big screen": "Yoherejwe kuri ecran nini",
+
+      /* ── media capture picker ───────────────────────────────── */
+      "Take a photo": "Fata ifoto",
+      "Opens your camera app": "Ifungura porogaramu ya kamera",
+      "Record a video": "Fata videwo",
+      "Up to 30 seconds": "Kugeza ku masegonda 30",
+      "Browse photos and videos": "Shakisha amafoto na videwo",
+      "Pick a file from this device": "Hitamo dosiye kuri iki cyuma",
+      "Use your camera app's filters, effects or AI editing, then capture or pick the result here.": "Koresha amafirita, imiterere cyangwa AI yo guhindura muri kamera yawe, hanyuma ufate cyangwa uhitemo ibyavuye hano.",
+
+      /* ── media full-screen album ────────────────────────────── */
+      "Play full screen": "Tangiza kuri ecran yose",
+      "Exit full screen": "Sohoka kuri ecran yose",
+      "Play media full screen": "Tangiza amafoto na videwo kuri ecran yose",
+      "Play media full screen (F)": "Tangiza amafoto na videwo kuri ecran yose (F)",
+      "Autoplay": "Byikora",
+      "Previous": "Ibanza",
+      "Next": "Ikurikira"
     },
 
     fr: {
@@ -1037,7 +1055,26 @@
       "Videos must be 30 seconds or shorter": "Les vidéos doivent durer 30 secondes ou moins",
       "Could not read this file": "Impossible de lire ce fichier",
       "Sending…": "Envoi…",
-      "Sent to the big screen": "Envoyé au grand écran"
+      "Sent to the big screen": "Envoyé au grand écran",
+
+      /* ── media capture picker ───────────────────────────────── */
+      "or": "ou",
+      "Take a photo": "Prendre une photo",
+      "Opens your camera app": "Ouvre votre application photo",
+      "Record a video": "Enregistrer une vidéo",
+      "Up to 30 seconds": "Jusqu'à 30 secondes",
+      "Browse photos and videos": "Parcourir les photos et vidéos",
+      "Pick a file from this device": "Choisissez un fichier sur cet appareil",
+      "Use your camera app's filters, effects or AI editing, then capture or pick the result here.": "Utilisez les filtres, effets ou retouches IA de votre application photo, puis capturez ou choisissez le résultat ici.",
+
+      /* ── media full-screen album ────────────────────────────── */
+      "Play full screen": "Lire en plein écran",
+      "Exit full screen": "Quitter le plein écran",
+      "Play media full screen": "Lire les médias en plein écran",
+      "Play media full screen (F)": "Lire les médias en plein écran (F)",
+      "Autoplay": "Lecture auto",
+      "Previous": "Précédent",
+      "Next": "Suivant"
     }
   };
 
