@@ -1659,15 +1659,17 @@
     const frame = document.createElement("div");
     frame.className = "media-card__frame";
 
+    const previews = !!prefs.mediaAutoplay && mediaOpenNow();
     if (item.kind === "video") {
       const video = document.createElement("video");
       video.src = item.url;
       video.muted = !!prefs.mediaMute;
       video.loop = !!prefs.mediaLoop;
       video.playsInline = true;
-      video.preload = "metadata";
+      video.preload = previews ? "auto" : "metadata";
       video.setAttribute("playsinline", "");
-      if (prefs.mediaAutoplay) {
+      video.setAttribute("muted", "");
+      if (previews) {
         video.autoplay = true;
         const started = video.play();
         if (started?.catch) started.catch(() => {});
@@ -1677,7 +1679,7 @@
       play.textContent = "▶";
       video.addEventListener("play", () => play.classList.add("is-hidden"));
       video.addEventListener("pause", () => play.classList.remove("is-hidden"));
-      if (!prefs.mediaAutoplay) play.classList.remove("is-hidden");
+      if (!previews) play.classList.remove("is-hidden");
       video.addEventListener("click", () => {
         if (video.paused) video.play().catch(() => {});
         else video.pause();
@@ -1696,17 +1698,17 @@
     const kind = document.createElement("span");
     kind.className = "media-card__kind";
     kind.textContent = item.kind === "video" ? t("Video") : t("Photo");
-    frame.append(kind);
 
-    const foot = document.createElement("footer");
-    foot.className = "media-card__foot";
     const author = document.createElement("span");
     author.className = "media-card__author";
     author.textContent = item.author || t("Guest");
+    author.title = item.author || t("Guest");
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "media-card__remove";
     remove.textContent = t("Remove");
+    remove.title = t("Remove from wall");
     remove.setAttribute("aria-label", t("Remove from wall"));
     remove.addEventListener("click", () => {
       if (remove.dataset.armed !== "1") {
@@ -1726,8 +1728,8 @@
       removeMediaItem(item, remove);
     });
 
-    foot.append(author, remove);
-    card.append(frame, foot);
+    frame.append(kind, author, remove);
+    card.append(frame);
     return card;
   }
 
@@ -1745,8 +1747,13 @@
     if (!list.length) {
       /* no cards to style — the empty note takes over */
       mediaGrid.style.removeProperty("--media-cols");
+      mediaGrid.style.removeProperty("--media-gap");
     } else {
-      mediaGrid.style.setProperty("--media-cols", String(Math.min(4, Math.max(1, Math.ceil(Math.sqrt(list.length))))));
+      /* album squeeze: more uploads → more, smaller square tiles */
+      const n = list.length;
+      const cols = Math.min(8, n, Math.max(1, Math.ceil(Math.sqrt(n * 1.6))));
+      mediaGrid.style.setProperty("--media-cols", String(cols));
+      mediaGrid.style.setProperty("--media-gap", n > 16 ? "5px" : n > 8 ? "7px" : "clamp(8px,1.2vw,16px)");
     }
   }
 
@@ -1906,10 +1913,11 @@
 
   function applyMediaPrefs() {
     if (!mediaGrid) return;
+    const previews = !!prefs.mediaAutoplay && mediaOpenNow();
     mediaGrid.querySelectorAll("video").forEach(video => {
       video.muted = !!prefs.mediaMute;
       video.loop = !!prefs.mediaLoop;
-      if (prefs.mediaAutoplay) {
+      if (previews) {
         const started = video.play();
         if (started?.catch) started.catch(() => {});
       } else {
