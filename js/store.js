@@ -84,6 +84,57 @@
 
   if (live) {
     const sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
+
+    /* Tiny realtime bus for live-stream signalling. Broadcast messages are
+       ephemeral (nothing is stored) and are only used to exchange WebRTC
+       offers, answers and ICE candidates between phones and the board. */
+    const liveBus = (() => {
+      const listeners = new Set();
+      let channel = null, ready = null, subscribed = false;
+      function connect() {
+        if (ready) return ready;
+        ready = new Promise((resolve, reject) => {
+          channel = sb.channel("event-live", { config: { broadcast: { self: false } } });
+          channel.on("broadcast", { event: "live" }, payload => {
+            const data = payload?.payload;
+            if (!data) return;
+            for (const cb of [...listeners]) {
+              try { cb(data); } catch (err) { console.error("Live signal handler failed", err); }
+            }
+          });
+          channel.subscribe(status => {
+            if (status === "SUBSCRIBED") {
+              subscribed = true;
+              resolve(channel);
+            } else if (!subscribed) {
+              ready = null;
+              channel = null;
+              reject(new Error("Live channel " + String(status).toLowerCase()));
+            } else if (status === "CLOSED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              /* allow the next send to build a fresh channel */
+              ready = null;
+              channel = null;
+              subscribed = false;
+            }
+          });
+        });
+        return ready;
+      }
+      return {
+        ready: connect,
+        on(cb) {
+          listeners.add(cb);
+          connect().catch(() => {});
+          return () => listeners.delete(cb);
+        },
+        async send(msg) {
+          const ch = await connect();
+          const result = await ch.send({ type: "broadcast", event: "live", payload: msg });
+          if (result !== "ok") throw new Error("Live signal could not be sent");
+        }
+      };
+    })();
+
     const normMedia = r => ({
       id: r.id,
       created_at: r.created_at,
@@ -98,6 +149,7 @@
     });
     window.Store = {
       mode: "supabase",
+      liveBus,
       async list() {
         const { data, error } = await sb.from("notes").select("id,created_at,category,text,author_name,hidden")
           .eq("hidden", false).order("created_at", { ascending: true }).limit(2000);
@@ -379,8 +431,31 @@
     }
     if (bc) bc.onmessage = e => handleMessage(e.data || {});
 
+    /* demo signalling: phones and the board in this browser talk over a
+       separate BroadcastChannel, so live streaming can be tried locally. */
+    const liveBC = "BroadcastChannel" in window ? new BroadcastChannel("sticky_live") : null;
+    const liveListeners = new Set();
+    if (liveBC) liveBC.onmessage = e => {
+      const data = e.data;
+      if (!data) return;
+      for (const cb of [...liveListeners]) {
+        try { cb(data); } catch (err) { console.error("Live signal handler failed", err); }
+      }
+    };
+    const demoLiveBus = {
+      ready: () => Promise.resolve(true),
+      on(cb) {
+        liveListeners.add(cb);
+        return () => liveListeners.delete(cb);
+      },
+      async send(msg) {
+        liveBC?.postMessage(msg);
+      }
+    };
+
     window.Store = {
       mode: "demo",
+      liveBus: demoLiveBus,
       async list() { return readNotes(); },
       async add({ name, category, text }) {
         const n = {

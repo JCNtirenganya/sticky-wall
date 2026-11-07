@@ -27,9 +27,11 @@
   const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty"), mediaCount = $("media-count");
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
   const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
+  const mediaLiveStrip = $("media-live-strip"), mediaLiveGrid = $("media-live-grid"), mediaLiveCount = $("media-live-count");
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
   const polls = [], votes = [], media = [];
+  const liveStreams = new Map();
   let cats = new Set(categoryKeys()), focusId = null, moodTimer = 0, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
@@ -1738,12 +1740,7 @@
     if (mediaPresent) { renderMediaStage(); return; }
     const list = mediaVisible();
     mediaGrid.replaceChildren(...list.map(mediaCard));
-    if (mediaEmpty) mediaEmpty.hidden = list.length > 0;
-    if (mediaCount) {
-      mediaCount.textContent = list.length === 1
-        ? t("1 item")
-        : t("{n} items", { n: list.length });
-    }
+    updateMediaSummary(list.length);
     if (!list.length) {
       /* no cards to style — the empty note takes over */
       mediaGrid.style.removeProperty("--media-cols");
@@ -1754,6 +1751,129 @@
       const cols = Math.min(8, n, Math.max(1, Math.ceil(Math.sqrt(n * 1.6))));
       mediaGrid.style.setProperty("--media-cols", String(cols));
       mediaGrid.style.setProperty("--media-gap", n > 16 ? "5px" : n > 8 ? "7px" : "clamp(8px,1.2vw,16px)");
+    }
+  }
+
+  function updateMediaSummary(storedCount) {
+    const stored = Number.isFinite(storedCount) ? storedCount : mediaVisible().length;
+    const live = liveStreams.size;
+    if (mediaEmpty) mediaEmpty.hidden = stored > 0 || live > 0;
+    if (mediaCount) {
+      const parts = [];
+      if (live) parts.push(t("{n} live", { n: live }));
+      if (stored) parts.push(stored === 1 ? t("1 item") : t("{n} items", { n: stored }));
+      mediaCount.textContent = parts.join(" · ");
+    }
+  }
+
+  /* ── live streams from phones (WebRTC) ─────────────────────── */
+  function renderLiveStrip() {
+    if (!mediaLiveStrip) return;
+    mediaLiveStrip.hidden = liveStreams.size === 0;
+    if (mediaLiveCount) {
+      mediaLiveCount.textContent = liveStreams.size
+        ? t("{n} live", { n: liveStreams.size })
+        : "";
+    }
+  }
+
+  function paintLiveSound(entry) {
+    if (!entry?.button) return;
+    entry.button.textContent = entry.muted ? "🔇" : "🔊";
+    entry.button.title = entry.muted ? t("Unmute") : t("Mute");
+    entry.button.setAttribute("aria-label", entry.button.title);
+    entry.button.setAttribute("aria-pressed", entry.muted ? "false" : "true");
+  }
+
+  function toggleLiveSound(streamId) {
+    const entry = liveStreams.get(streamId);
+    if (!entry) return;
+    entry.muted = !entry.muted;
+    entry.video.muted = entry.muted;
+    paintLiveSound(entry);
+  }
+
+  function addLiveStream({ streamId, author, stream }) {
+    if (!mediaLiveGrid || !stream) return;
+    /* reconnects reuse the same id: replace the stale tile */
+    removeLiveStream(streamId);
+
+    const card = document.createElement("article");
+    card.className = "media-live-card";
+    card.dataset.live = streamId;
+
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.setAttribute("playsinline", "");
+    video.setAttribute("muted", "");
+    video.srcObject = stream;
+    video.addEventListener("loadedmetadata", () => {
+      const playing = video.play();
+      if (playing?.catch) playing.catch(() => {});
+    });
+    video.addEventListener("click", () => toggleLiveSound(streamId));
+
+    const badge = document.createElement("span");
+    badge.className = "media-live-card__badge";
+    const dot = document.createElement("i");
+    dot.setAttribute("aria-hidden", "true");
+    badge.append(dot, document.createTextNode(t("Live")));
+
+    const name = document.createElement("span");
+    name.className = "media-live-card__author";
+    name.textContent = author || t("Guest");
+    name.title = name.textContent;
+
+    const sound = document.createElement("button");
+    sound.type = "button";
+    sound.className = "media-live-card__sound";
+    sound.addEventListener("click", event => {
+      event.stopPropagation();
+      toggleLiveSound(streamId);
+    });
+
+    card.append(video, badge, name, sound);
+    mediaLiveGrid.append(card);
+
+    const entry = { el: card, video, button: sound, muted: true, author };
+    liveStreams.set(streamId, entry);
+    paintLiveSound(entry);
+    renderLiveStrip();
+    updateMediaSummary();
+    const playing = video.play();
+    if (playing?.catch) playing.catch(() => {});
+
+    /* A live phone is the whole point: bring the wall forward. */
+    if (mediaPresent) setMediaPresentation(false);
+    if (!mediaOpenNow()) openMediaWall();
+  }
+
+  function removeLiveStream(streamId) {
+    const entry = liveStreams.get(streamId);
+    if (!entry) return;
+    liveStreams.delete(streamId);
+    try {
+      entry.video.pause();
+      entry.video.srcObject = null;
+    } catch {}
+    entry.el.remove();
+    renderLiveStrip();
+    updateMediaSummary();
+  }
+
+  function startLiveHost() {
+    if (!window.StickyLive) return null;
+    try {
+      return StickyLive.host({
+        onStream: item => addLiveStream(item),
+        onEnd: streamId => removeLiveStream(streamId)
+      });
+    } catch (err) {
+      console.warn("Live streaming is not available", err);
+      return null;
     }
   }
 
@@ -3486,6 +3606,9 @@
       onRemove: id => removeMediaLocal(id),
       resync: syncMedia
     });
+
+    const liveHost = startLiveHost();
+    window.addEventListener("pagehide", () => liveHost?.stop());
   })();
 
   if (document.fonts?.ready) {

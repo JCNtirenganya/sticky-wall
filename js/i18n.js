@@ -548,7 +548,36 @@
       "Play media full screen (F)": "Tangiza amafoto na videwo kuri ecran yose (F)",
       "Autoplay": "Byikora",
       "Previous": "Ibanza",
-      "Next": "Ikurikira"
+      "Next": "Ikurikira",
+
+      /* ── live from a phone ─────────────────────────────────── */
+      "Go live from your phone": "Tanga live uhereye kuri telefoni yawe",
+      "Your camera on the event screen, live.": "Kamera yawe kuri ecran y'ibirori, mu buryo butaziguye.",
+      "Live from your phone": "Live uhereye kuri telefoni",
+      "Go live": "Tanga live",
+      "Only the event board sees your camera. Nothing is recorded.": "Ikibaho cy'ibirori gusa kibona kamera yawe. Nta kintu girekodiwe.",
+      "Your camera is off": "Kamera yawe irazimye",
+      "Start when you are ready.": "Tangira igihe witeguye.",
+      "Start live": "Tangiza live",
+      "Stop live": "Hagarika live",
+      "Flip camera": "Hindura kamera",
+      "Mute mic": "Hagarika ijwi",
+      "Unmute mic": "Fungura ijwi",
+      "Record a short video instead": "Fata videwo ngufi aho kugira",
+      "Works when a network blocks live video": "Bikora iyo network ibujije videwo live",
+      "Connecting…": "Guhuza…",
+      "Waiting for the board…": "Gutegereza ikibaho…",
+      "You're live": "Uri kuri live",
+      "Reconnecting…": "Kongera guhuza…",
+      "This network may block live video. Record a short video instead?": "Iyi network ishobora kubuza videwo live. Fata videwo ngufi aho kugira?",
+      "Live ended": "Live yarangiye",
+      "Could not start the camera": "Ntibyashobotse gutangiza kamera",
+      "Live video is not supported here": "Videwo live ntabwo ishyigikiwe hano",
+      "Camera off": "Kamera irazimye",
+      "Live from phones": "Live iturutse kuri telefoni",
+      "{n} live": "{n} live",
+      "Mute": "Hagarika ijwi",
+      "Unmute": "Fungura ijwi"
     },
 
     fr: {
@@ -1074,7 +1103,36 @@
       "Play media full screen (F)": "Lire les médias en plein écran (F)",
       "Autoplay": "Lecture auto",
       "Previous": "Précédent",
-      "Next": "Suivant"
+      "Next": "Suivant",
+
+      /* ── live from a phone ─────────────────────────────────── */
+      "Go live from your phone": "Diffusez en direct depuis votre téléphone",
+      "Your camera on the event screen, live.": "Votre caméra sur l'écran de l'événement, en direct.",
+      "Live from your phone": "En direct depuis votre téléphone",
+      "Go live": "Passer en direct",
+      "Only the event board sees your camera. Nothing is recorded.": "Seul l'écran de l'événement voit votre caméra. Rien n'est enregistré.",
+      "Your camera is off": "Votre caméra est éteinte",
+      "Start when you are ready.": "Démarrez quand vous êtes prêt.",
+      "Start live": "Démarrer le direct",
+      "Stop live": "Arrêter le direct",
+      "Flip camera": "Changer de caméra",
+      "Mute mic": "Couper le micro",
+      "Unmute mic": "Activer le micro",
+      "Record a short video instead": "Enregistrer plutôt une courte vidéo",
+      "Works when a network blocks live video": "Fonctionne si le réseau bloque la vidéo en direct",
+      "Connecting…": "Connexion…",
+      "Waiting for the board…": "En attente du tableau…",
+      "You're live": "Vous êtes en direct",
+      "Reconnecting…": "Reconnexion…",
+      "This network may block live video. Record a short video instead?": "Ce réseau peut bloquer la vidéo en direct. Enregistrer plutôt une courte vidéo ?",
+      "Live ended": "Direct terminé",
+      "Could not start the camera": "Impossible de démarrer la caméra",
+      "Live video is not supported here": "La vidéo en direct n'est pas prise en charge ici",
+      "Camera off": "Caméra éteinte",
+      "Live from phones": "En direct depuis les téléphones",
+      "{n} live": "{n} en direct",
+      "Mute": "Couper le son",
+      "Unmute": "Activer le son"
     }
   };
 

@@ -8,7 +8,8 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
   };
   let name = safe.get("sticky_name") || "", cat = null, last = 0, sending = false;
-  const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll", "s-media"];
+  let liveSession = null, liveStarting = false, liveFacing = "environment", liveMicOn = true;
+  const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll", "s-media", "s-live"];
 
   const voterKey = (() => {
     let key = safe.get("sticky_voter_key");
@@ -21,6 +22,7 @@
   })();
 
   const show = id => {
+    if (id !== "s-live" && liveSession) stopLive();
     IDS.forEach(s => $(s).classList.toggle("hidden", s !== id));
     if (id === "s-cat") {
       $("who").textContent = whoText();
@@ -400,6 +402,172 @@
       mediaSending = false;
       mediaSend.textContent = label;
       mediaSend.disabled = !mediaState;
+    }
+  });
+
+  /* ── live from the phone camera ────────────────────────────── */
+  const liveOpen = $("live-open"), liveBack = $("live-back");
+  const livePreview = $("live-preview"), livePlaceholder = $("live-placeholder");
+  const liveBadge = $("live-badge"), liveStatus = $("live-status");
+  const liveStart = $("live-start"), liveStop = $("live-stop");
+  const liveTools = $("live-tools"), liveFlip = $("live-flip"), liveMic = $("live-mic");
+  const liveFallback = $("live-fallback");
+
+  const LIVE_STATUS = {
+    idle: "Camera off",
+    starting: "Connecting…",
+    waiting: "Waiting for the board…",
+    live: "You're live",
+    reconnecting: "Reconnecting…",
+    trouble: "This network may block live video. Record a short video instead?",
+    ended: "Live ended",
+    error: "Could not start the camera",
+    unsupported: "Live video is not supported here"
+  };
+
+  function setLiveStatus(state) {
+    if (!liveStatus) return;
+    liveStatus.textContent = t(LIVE_STATUS[state] || state);
+    liveStatus.dataset.state = state;
+    if (liveBadge) liveBadge.hidden = state !== "live" && state !== "reconnecting";
+    if (liveFallback) {
+      liveFallback.hidden = !(state === "trouble" || state === "error" || state === "reconnecting" || state === "unsupported");
+    }
+  }
+
+  function syncLiveControls() {
+    const active = !!liveSession || liveStarting;
+    if (liveStart) liveStart.hidden = active;
+    if (liveStop) liveStop.hidden = !liveSession;
+    if (liveTools) liveTools.hidden = !liveSession;
+  }
+
+  function showLivePreview(on) {
+    if (livePreview) livePreview.hidden = !on;
+    if (livePlaceholder) livePlaceholder.hidden = on;
+  }
+
+  function applyLiveMic() {
+    if (!liveSession) return;
+    liveSession.stream.getAudioTracks().forEach(track => { track.enabled = liveMicOn; });
+    if (liveMic) {
+      const label = liveMic.querySelector("span") || liveMic;
+      label.textContent = t(liveMicOn ? "Mute mic" : "Unmute mic");
+      liveMic.setAttribute("aria-pressed", liveMicOn ? "true" : "false");
+      liveMic.classList.toggle("is-off", !liveMicOn);
+    }
+  }
+
+  async function startLive() {
+    if (liveStarting || liveSession) return;
+    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
+    if (!window.StickyLive || !navigator.mediaDevices?.getUserMedia) {
+      setLiveStatus("unsupported");
+      toast(t(LIVE_STATUS.unsupported), true);
+      return;
+    }
+    liveStarting = true;
+    if (liveStart) { liveStart.disabled = true; liveStart.textContent = t("Connecting…"); }
+    setLiveStatus("starting");
+    showLivePreview(true);
+    syncLiveControls();
+    try {
+      const session = await StickyLive.stream({
+        author: name,
+        facingMode: liveFacing,
+        onStatus: state => {
+          if (!liveSession && !liveStarting) return;
+          if (state === "live") setLiveStatus("live");
+          else if (state === "reconnecting") setLiveStatus("reconnecting");
+          else if (state === "trouble") setLiveStatus("trouble");
+          else if (state === "waiting" || state === "connecting") setLiveStatus("waiting");
+          else if (state === "ended") setLiveStatus("ended");
+        }
+      });
+      liveSession = session;
+      if (livePreview) {
+        livePreview.srcObject = session.stream;
+        livePreview.muted = true;
+        livePreview.classList.toggle("is-front", liveFacing === "user");
+        const started = livePreview.play();
+        if (started?.catch) started.catch(() => {});
+      }
+      showLivePreview(true);
+      setLiveStatus("waiting");
+      applyLiveMic();
+      syncLiveControls();
+      navigator.vibrate?.(12);
+    } catch (err) {
+      console.error("Could not go live", err);
+      showLivePreview(false);
+      setLiveStatus("error");
+      toast(t(LIVE_STATUS.error), true);
+    } finally {
+      liveStarting = false;
+      if (liveStart) { liveStart.disabled = false; liveStart.textContent = t("Start live"); }
+      syncLiveControls();
+    }
+  }
+
+  function stopLive() {
+    if (!liveSession) {
+      showLivePreview(false);
+      setLiveStatus("idle");
+      syncLiveControls();
+      return;
+    }
+    const session = liveSession;
+    liveSession = null;
+    try { session.stop(); } catch (err) { console.warn(err); }
+    if (livePreview) {
+      livePreview.srcObject = null;
+      livePreview.hidden = true;
+    }
+    showLivePreview(false);
+    setLiveStatus("ended");
+    syncLiveControls();
+  }
+
+  liveOpen?.addEventListener("click", () => {
+    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
+    if (liveSession) { show("s-live"); return; }
+    setLiveStatus("idle");
+    showLivePreview(false);
+    syncLiveControls();
+    show("s-live");
+  });
+  liveBack?.addEventListener("click", () => { stopLive(); show("s-cat"); });
+  liveStart?.addEventListener("click", startLive);
+  liveStop?.addEventListener("click", stopLive);
+  liveFlip?.addEventListener("click", async () => {
+    if (!liveSession || liveStarting) return;
+    const previous = liveSession;
+    liveSession = null;
+    try { previous.stop(); } catch {}
+    if (livePreview) livePreview.srcObject = null;
+    liveFacing = liveFacing === "environment" ? "user" : "environment";
+    await startLive();
+  });
+  liveMic?.addEventListener("click", () => {
+    liveMicOn = !liveMicOn;
+    applyLiveMic();
+  });
+  liveFallback?.addEventListener("click", () => {
+    stopLive();
+    clearMediaSelection();
+    show("s-media");
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && liveSession) {
+      stopLive();
+      toast(t(LIVE_STATUS.ended));
+    }
+  });
+  window.addEventListener("pagehide", () => {
+    if (liveSession) {
+      const session = liveSession;
+      liveSession = null;
+      try { session.stop(); } catch {}
     }
   });
 

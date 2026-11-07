@@ -7,7 +7,7 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105h"><link rel="stylesheet" href="css/mobile.css?v=20261105h"><link rel="stylesheet" href="css/charts.css?v=20261105h">
+<link rel="stylesheet" href="css/paper.css?v=20261105i"><link rel="stylesheet" href="css/mobile.css?v=20261105i"><link rel="stylesheet" href="css/charts.css?v=20261105i">
 </head>
 <body>
 <main class="app">
@@ -66,6 +66,15 @@
       <span class="media-cta__copy">
         <b data-i18n="Share a photo or video">Share a photo or video</b>
         <small data-i18n="It appears on the big screen, never on phones.">It appears on the big screen, never on phones.</small>
+      </span>
+      <span class="media-cta__go" aria-hidden="true">→</span>
+    </button>
+
+    <button id="live-open" class="media-cta media-cta--live" type="button">
+      <span class="media-cta__icon media-cta__icon--live" aria-hidden="true"><span class="live-dot"></span></span>
+      <span class="media-cta__copy">
+        <b data-i18n="Go live from your phone">Go live from your phone</b>
+        <small data-i18n="Your camera on the event screen, live.">Your camera on the event screen, live.</small>
       </span>
       <span class="media-cta__go" aria-hidden="true">→</span>
     </button>
@@ -152,7 +161,50 @@
     </div>
   </section>
 
-  <!-- 5 · live polls list -->
+  <!-- 5 · go live from the phone camera -->
+  <section id="s-live" class="screen media-screen live-screen hidden">
+    <header class="poll-head">
+      <button id="live-back" class="back" aria-label="Back to notes" data-i18n-aria="Back to notes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="poll-head__copy">
+        <p class="eyebrow" data-i18n="Live from your phone">Live from your phone</p>
+        <h1 data-i18n="Go live">Go live</h1>
+      </div>
+    </header>
+    <div class="media-scroll">
+      <article class="media-paper">
+        <p class="media-lead" data-i18n="Only the event board sees your camera. Nothing is recorded.">Only the event board sees your camera. Nothing is recorded.</p>
+        <div id="live-stage" class="live-stage">
+          <video id="live-preview" class="live-preview" playsinline autoplay muted hidden></video>
+          <div id="live-placeholder" class="live-placeholder">
+            <span aria-hidden="true">📹</span>
+            <b data-i18n="Your camera is off">Your camera is off</b>
+            <small data-i18n="Start when you are ready.">Start when you are ready.</small>
+          </div>
+          <span id="live-badge" class="live-badge" hidden><span class="live-badge__dot" aria-hidden="true"></span><span data-i18n="Live">Live</span></span>
+        </div>
+        <p id="live-status" class="live-status" role="status">Camera off</p>
+        <div class="live-actions">
+          <button id="live-start" class="poll-submit live-start" type="button" data-i18n="Start live">Start live</button>
+          <button id="live-stop" class="live-stop" type="button" hidden data-i18n="Stop live">Stop live</button>
+        </div>
+        <div id="live-tools" class="live-tools" hidden>
+          <button id="live-flip" class="live-tool" type="button" data-i18n="Flip camera">Flip camera</button>
+          <button id="live-mic" class="live-tool" type="button" aria-pressed="true"><span data-i18n="Mute mic">Mute mic</span></button>
+        </div>
+        <button id="live-fallback" class="media-pick media-pick--browse live-fallback" type="button" hidden>
+          <span class="media-pick__icon" aria-hidden="true">🎬</span>
+          <span class="media-pick__copy">
+            <b data-i18n="Record a short video instead">Record a short video instead</b>
+            <small data-i18n="Works when a network blocks live video">Works when a network blocks live video</small>
+          </span>
+        </button>
+      </article>
+    </div>
+  </section>
+
+  <!-- 6 · live polls list -->
   <section id="s-polls" class="screen poll-screen hidden">
     <header class="poll-head">
       <button id="poll-list-back" class="back" aria-label="Back to notes" data-i18n-aria="Back to notes">
@@ -194,6 +246,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105h"></script><script src="js/i18n.js?v=20261105h"></script><script src="js/polls.js?v=20261105h"></script><script src="js/store.js?v=20261105h"></script><script src="js/shared.js?v=20261105h"></script><script src="js/charts.js?v=20261105h"></script>
-<script src="js/mobile.js?v=20261105h"></script>
+<script src="js/config.js?v=20261105i"></script><script src="js/i18n.js?v=20261105i"></script><script src="js/polls.js?v=20261105i"></script><script src="js/store.js?v=20261105i"></script><script src="js/shared.js?v=20261105i"></script><script src="js/charts.js?v=20261105i"></script>
+<script src="js/live.js?v=20261105i"></script>
+<script src="js/mobile.js?v=20261105i"></script>
 </body></html>

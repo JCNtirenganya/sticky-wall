@@ -19,5 +19,14 @@ window.STICKY_CONFIG = {
   MOBILE_URL: "",
 
   MAX_CHARS: 200,
-  MIN_SECONDS_BETWEEN_NOTES: 6
+  MIN_SECONDS_BETWEEN_NOTES: 6,
+
+  // Live phone streaming uses WebRTC. STUN works on most home Wi-Fi; a TURN
+  // relay is what connects phones on strict mobile/CGNAT networks. Leave these
+  // empty to use the shared free Open Relay fallback, or point them at your own
+  // relay for reliability. Set LIVE_PUBLIC_TURN: false to disable the fallback.
+  TURN_URL: "",
+  TURN_USERNAME: "",
+  TURN_CREDENTIAL: "",
+  LIVE_PUBLIC_TURN: true
 };

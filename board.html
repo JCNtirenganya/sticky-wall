@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105h"><link rel="stylesheet" href="css/postit.css?v=20261105h"><link rel="stylesheet" href="css/board.css?v=20261105h"><link rel="stylesheet" href="css/avatar.css?v=20261105h"><link rel="stylesheet" href="css/piles.css?v=20261105h"><link rel="stylesheet" href="css/qr.css?v=20261105h"><link rel="stylesheet" href="css/charts.css?v=20261105h">
+<link rel="stylesheet" href="css/paper.css?v=20261105i"><link rel="stylesheet" href="css/postit.css?v=20261105i"><link rel="stylesheet" href="css/board.css?v=20261105i"><link rel="stylesheet" href="css/avatar.css?v=20261105i"><link rel="stylesheet" href="css/piles.css?v=20261105i"><link rel="stylesheet" href="css/qr.css?v=20261105i"><link rel="stylesheet" href="css/charts.css?v=20261105i">
 </head>
 <body>
 <main id="board">
@@ -377,6 +377,13 @@
         <button id="media-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
       </div>
     </header>
+    <div id="media-live-strip" class="media-live-strip" hidden>
+      <div class="media-live-strip__head">
+        <span class="media-live-strip__label"><span class="media-live-strip__dot" aria-hidden="true"></span><span data-i18n="Live from phones">Live from phones</span></span>
+        <span id="media-live-count" class="media-live-strip__count"></span>
+      </div>
+      <div id="media-live-grid" class="media-live-grid"></div>
+    </div>
     <div id="media-grid" class="media-grid" aria-live="polite"></div>
     <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or video…">Waiting for the first photo or video…</p>
     <div id="media-stage" class="media-stage" hidden aria-live="polite">
@@ -816,5 +823,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105h"></script><script src="js/i18n.js?v=20261105h"></script><script src="js/polls.js?v=20261105h"></script><script src="js/store.js?v=20261105h"></script><script src="js/shared.js?v=20261105h"></script><script src="js/charts.js?v=20261105h"></script><script src="js/qrcode.js?v=20261105h"></script><script src="js/export.js?v=20261105h"></script><script src="js/board.js?v=20261105h"></script>
+<script src="js/config.js?v=20261105i"></script><script src="js/i18n.js?v=20261105i"></script><script src="js/polls.js?v=20261105i"></script><script src="js/store.js?v=20261105i"></script><script src="js/shared.js?v=20261105i"></script><script src="js/charts.js?v=20261105i"></script><script src="js/qrcode.js?v=20261105i"></script><script src="js/export.js?v=20261105i"></script><script src="js/live.js?v=20261105i"></script><script src="js/board.js?v=20261105i"></script>
 </body></html>
