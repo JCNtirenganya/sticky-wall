@@ -8,7 +8,7 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
   };
   let name = safe.get("sticky_name") || "", cat = null, last = 0, sending = false;
-  const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll"];
+  const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll", "s-media"];
 
   const voterKey = (() => {
     let key = safe.get("sticky_voter_key");
@@ -221,6 +221,175 @@
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 2200);
   }
+
+  /* ── event media: photo or short video ─────────────────────── */
+  const mediaOpen = $("media-open"), mediaBack = $("media-back"), mediaFileInput = $("media-file");
+  const mediaPick = $("media-pick"), mediaPreview = $("media-preview"), mediaSend = $("media-send"), mediaNote = $("media-note");
+  const MAX_MEDIA = 50 * 1024 * 1024, MAX_VIDEO_SECONDS = 30;
+  let mediaState = null, mediaSending = false;
+
+  function clearMediaSelection() {
+    if (mediaState?.url) URL.revokeObjectURL(mediaState.url);
+    mediaState = null;
+    if (mediaPreview) { mediaPreview.replaceChildren(); mediaPreview.hidden = true; }
+    if (mediaPick) mediaPick.hidden = false;
+    if (mediaSend) mediaSend.disabled = true;
+    if (mediaNote) { mediaNote.textContent = ""; mediaNote.hidden = true; }
+    if (mediaFileInput) mediaFileInput.value = "";
+  }
+
+  function readVideoMeta(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        const meta = { duration: Number(video.duration) || 0, width: video.videoWidth || 0, height: video.videoHeight || 0 };
+        URL.revokeObjectURL(url);
+        resolve(meta);
+      };
+      video.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read this video")); };
+      video.src = url;
+    });
+  }
+
+  function shrinkImage(file) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 2400;
+        const scale = Math.min(1, max / Math.max(img.width || 1, img.height || 1));
+        if (scale === 1 && file.size < 2.4 * 1024 * 1024) {
+          URL.revokeObjectURL(url);
+          resolve({ file, width: img.width, height: img.height });
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(url);
+          if (!blob || blob.size >= file.size) {
+            resolve({ file, width: img.width, height: img.height });
+            return;
+          }
+          const base = String(file.name || "photo").replace(/\.[a-z0-9]+$/i, "") || "photo";
+          resolve({
+            file: new File([blob], base + ".jpg", { type: "image/jpeg" }),
+            width: canvas.width,
+            height: canvas.height
+          });
+        }, "image/jpeg", .86);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: 0, height: 0 }); };
+      img.src = url;
+    });
+  }
+
+  function paintMediaPreview() {
+    if (!mediaState || !mediaPreview) return;
+    mediaPreview.replaceChildren();
+    const node = document.createElement(mediaState.kind === "video" ? "video" : "img");
+    if (mediaState.kind === "video") {
+      node.muted = true;
+      node.loop = true;
+      node.autoplay = true;
+      node.playsInline = true;
+      node.setAttribute("playsinline", "");
+    } else {
+      node.alt = t("Preview");
+    }
+    node.src = mediaState.url;
+
+    const badge = document.createElement("span");
+    badge.className = "media-preview__badge";
+    const seconds = mediaState.kind === "video" && Number.isFinite(mediaState.duration)
+      ? Math.max(1, Math.round(mediaState.duration))
+      : 0;
+    badge.textContent = mediaState.kind === "video"
+      ? t("Video") + (seconds ? " · " + seconds + "s" : "")
+      : t("Photo");
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "media-preview__clear";
+    clear.textContent = "×";
+    clear.setAttribute("aria-label", t("Choose another"));
+    clear.addEventListener("click", () => clearMediaSelection());
+
+    mediaPreview.append(node, badge, clear);
+    mediaPreview.hidden = false;
+    mediaPick.hidden = true;
+    mediaSend.disabled = !name || mediaSending;
+  }
+
+  async function chooseMedia(file) {
+    if (!file) return;
+    const type = String(file.type || "");
+    const isVideo = /^video\//.test(type);
+    if (!isVideo && !/^image\//.test(type)) { toast(t("Choose a photo or video"), true); return; }
+    if (file.size > MAX_MEDIA) { toast(t("Too large. Choose a file under 50 MB."), true); return; }
+    mediaState = null;
+    try {
+      if (isVideo) {
+        const meta = await readVideoMeta(file);
+        if (meta.duration > MAX_VIDEO_SECONDS + .5) {
+          toast(t("Videos must be 30 seconds or shorter"), true);
+          return;
+        }
+        mediaState = { file, kind: "video", width: meta.width, height: meta.height, duration: meta.duration, url: URL.createObjectURL(file) };
+      } else {
+        const shrunk = await shrinkImage(file);
+        mediaState = { file: shrunk.file, kind: "photo", width: shrunk.width, height: shrunk.height, url: URL.createObjectURL(shrunk.file) };
+      }
+      paintMediaPreview();
+    } catch (err) {
+      console.error("Could not read the media file", err);
+      toast(t("Could not read this file"), true);
+    }
+  }
+
+  mediaOpen?.addEventListener("click", () => {
+    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
+    clearMediaSelection();
+    show("s-media");
+  });
+  mediaBack?.addEventListener("click", () => { clearMediaSelection(); show("s-cat"); });
+  mediaPick?.addEventListener("click", () => mediaFileInput?.click());
+  mediaFileInput?.addEventListener("change", () => {
+    const file = mediaFileInput.files?.[0];
+    chooseMedia(file);
+  });
+  mediaSend?.addEventListener("click", async () => {
+    if (!mediaState || mediaSending) return;
+    if (!name) { show("s-name"); return; }
+    mediaSending = true;
+    const label = mediaSend.textContent;
+    mediaSend.disabled = true;
+    mediaSend.textContent = t("Sending…");
+    try {
+      await Store.addMedia({
+        file: mediaState.file,
+        author: name,
+        kind: mediaState.kind,
+        width: mediaState.width,
+        height: mediaState.height
+      });
+      navigator.vibrate?.(14);
+      toast(t("Sent to the big screen"));
+      clearMediaSelection();
+      setTimeout(() => show("s-cat"), 700);
+    } catch (err) {
+      console.error("Could not send the media", err);
+      toast(t("Couldn't send — try again"), true);
+    } finally {
+      mediaSending = false;
+      mediaSend.textContent = label;
+      mediaSend.disabled = !mediaState;
+    }
+  });
 
   /* ── live polls ────────────────────────────────────────────── */
   const pollBanner = $("poll-banner");
@@ -660,6 +829,7 @@
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
+    if (mediaPreview && !$("s-media").classList.contains("hidden")) { clearMediaSelection(); show("s-cat"); return; }
     if (pollScreen && !pollScreen.classList.contains("hidden")) { show("s-polls"); return; }
     if (!$("s-polls").classList.contains("hidden")) { show("s-cat"); return; }
     if (!$("s-write").classList.contains("hidden")) { show("s-cat"); cat = null; }

@@ -16,7 +16,13 @@
      Store.submitVote(vote) → Promise<vote>
      Store.submitVotes(votes) → Promise<vote[]>
      Store.resetVotes(pollId) → Promise<void>
-     Store.subscribePolls({onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync})   */
+     Store.subscribePolls({onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync})
+
+     Store.listMedia() → Promise<media[]>
+     Store.addMedia({file, author, kind, width, height}) → Promise<media>
+     Store.hideMedia(id) → Promise<void>
+     Store.removeMedia(media) → Promise<void>
+     Store.subscribeMedia({onAdd, onRemove, onUpdate, resync})                                      */
 (function () {
   const C = window.STICKY_CONFIG || {};
   const live = !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY && window.supabase);
@@ -78,6 +84,18 @@
 
   if (live) {
     const sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
+    const normMedia = r => ({
+      id: r.id,
+      created_at: r.created_at,
+      kind: r.kind,
+      path: r.storage_path,
+      author: r.author || "Guest",
+      caption: r.caption || "",
+      width: r.width,
+      height: r.height,
+      hidden: !!r.hidden,
+      url: sb.storage.from("event-media").getPublicUrl(r.storage_path).data.publicUrl
+    });
     window.Store = {
       mode: "supabase",
       async list() {
@@ -195,11 +213,74 @@
           })
           .subscribe();
         if (resync) setInterval(resync, 20000);
+      },
+      async listMedia() {
+        const { data, error } = await sb.from("event_media").select("*")
+          .eq("hidden", false).order("created_at", { ascending: true }).limit(500);
+        if (error) throw error;
+        return (data || []).map(normMedia);
+      },
+      async addMedia({ file, author, kind, width, height }) {
+        if (!file) throw new Error("No file selected");
+        const type = String(file.type || "");
+        const isVideo = /^video\//.test(type) || kind === "video";
+        const ext = (String(file.name || "").match(/\.[a-z0-9]+$/i)?.[0] || (isVideo ? ".mp4" : ".jpg")).toLowerCase();
+        const unique = window.crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+        const path = `${Date.now()}-${unique}${ext}`;
+        const upload = await sb.storage.from("event-media").upload(path, file, {
+          contentType: type || undefined,
+          cacheControl: "3600",
+          upsert: false
+        });
+        if (upload.error) throw upload.error;
+        const { data, error } = await sb.from("event_media").insert({
+          kind: isVideo ? "video" : "photo",
+          storage_path: path,
+          author: String(author || "").trim() || "Guest",
+          caption: "",
+          width: Number(width) || null,
+          height: Number(height) || null
+        }).select().single();
+        if (error) {
+          await sb.storage.from("event-media").remove([path]);
+          throw error;
+        }
+        return normMedia(data);
+      },
+      async hideMedia(id) {
+        const { error } = await sb.from("event_media").update({ hidden: true }).eq("id", id);
+        if (error) throw error;
+      },
+      async removeMedia(media) {
+        if (!media?.id) return;
+        const { error } = await sb.from("event_media").delete().eq("id", media.id);
+        if (error) throw error;
+        if (media.path) {
+          const removed = await sb.storage.from("event-media").remove([media.path]);
+          if (removed.error) console.warn("Could not delete the media file", removed.error);
+        }
+      },
+      subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
+        sb.channel("media-feed")
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "event_media" }, p => {
+            if (!p.new.hidden) onAdd?.(normMedia(p.new));
+          })
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "event_media" }, p => {
+            if (p.new.hidden) onRemove?.(p.new.id);
+            else if (onUpdate) onUpdate(normMedia(p.new));
+            else onAdd?.(normMedia(p.new));
+          })
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "event_media" }, p => {
+            onRemove?.(p.old.id);
+          })
+          .subscribe();
+        if (resync) setInterval(resync, 20000);
       }
     };
   } else {
     const NOTE_KEY = "sticky_demo_notes", CAT_KEY = "sticky_categories";
     const POLL_KEY = "sticky_demo_polls", VOTE_KEY = "sticky_demo_votes";
+    const MEDIA_KEY = "sticky_demo_media";
     const bc = "BroadcastChannel" in window ? new BroadcastChannel("sticky_demo") : null;
     const readNotes = () => { try { return JSON.parse(localStorage.getItem(NOTE_KEY) || "[]"); } catch { return []; } };
     const writeNotes = list => {
@@ -229,6 +310,15 @@
     const writeVotes = list => {
       try { localStorage.setItem(VOTE_KEY, JSON.stringify(list)); } catch {}
     };
+    const readMedia = () => {
+      try {
+        const value = JSON.parse(localStorage.getItem(MEDIA_KEY) || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch { return []; }
+    };
+    const writeMedia = list => {
+      try { localStorage.setItem(MEDIA_KEY, JSON.stringify(list)); } catch {}
+    };
     const categoryHandlers = new Set();
     const notifyCategories = list => {
       const categories = normalize(list);
@@ -236,6 +326,7 @@
     };
     let noteHandlers = null;
     let pollHandlers = null;
+    let mediaHandlers = null;
 
     function emitAdd(note) {
       noteHandlers?.onAdd?.(note);
@@ -262,6 +353,12 @@
     function emitResetVotes(pollId) {
       pollHandlers?.onResetVotes?.(pollId);
     }
+    function emitMedia(media) {
+      mediaHandlers?.onAdd?.(media);
+    }
+    function removeMediaLocal(id) {
+      mediaHandlers?.onRemove?.(id);
+    }
 
     function handleMessage(m) {
       if (!m || typeof m !== "object") return;
@@ -275,7 +372,10 @@
       else if (m.type === "vote-save" && m.vote) emitVote(m.vote);
       else if (m.type === "vote-delete" && m.vote) emitVoteDelete(m.vote);
       else if (m.type === "votes-reset") emitResetVotes(m.pollId);
+      else if (m.type === "media-add" && m.media) emitMedia(m.media);
+      else if (m.type === "media-remove") removeMediaLocal(m.id);
       else if (m.type === "resync-polls") pollHandlers?.resync?.();
+      else if (m.type === "resync-media") mediaHandlers?.resync?.();
     }
     if (bc) bc.onmessage = e => handleMessage(e.data || {});
 
@@ -387,6 +487,54 @@
           else if (e.key === VOTE_KEY && !bc) resync?.();
         });
       },
+      async listMedia() {
+        return readMedia().slice().sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+      },
+      async addMedia({ file, author, kind, width, height }) {
+        if (!file) throw new Error("No file selected");
+        if (file.size > 4 * 1024 * 1024) throw new Error("Demo mode supports files up to 4 MB");
+        const url = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(reader.error || new Error("Could not read the file"));
+          reader.readAsDataURL(file);
+        });
+        const isVideo = /^video\//.test(String(file.type || "")) || kind === "video";
+        const item = {
+          id: window.crypto?.randomUUID ? crypto.randomUUID() : "m-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+          created_at: new Date().toISOString(),
+          kind: isVideo ? "video" : "photo",
+          author: String(author || "").trim() || "Guest",
+          caption: "",
+          width: Number(width) || null,
+          height: Number(height) || null,
+          url
+        };
+        const all = readMedia();
+        all.push(item);
+        writeMedia(all);
+        bc && bc.postMessage({ type: "media-add", media: item });
+        window.dispatchEvent(new CustomEvent("sticky-local-media-add", { detail: item }));
+        return item;
+      },
+      async hideMedia(id) {
+        const all = readMedia().filter(m => m.id !== id);
+        writeMedia(all);
+        bc && bc.postMessage({ type: "media-remove", id });
+        window.dispatchEvent(new CustomEvent("sticky-local-media-remove", { detail: id }));
+      },
+      async removeMedia(media) {
+        if (!media?.id) return;
+        await this.hideMedia(media.id);
+      },
+      subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
+        mediaHandlers = { onAdd, onRemove, onUpdate, resync };
+        window.addEventListener("sticky-local-media-add", e => emitMedia(e.detail));
+        window.addEventListener("sticky-local-media-remove", e => removeMediaLocal(e.detail));
+        window.addEventListener("storage", e => {
+          if (e.key === MEDIA_KEY && !bc) resync?.();
+        });
+      },
       subscribe({ onAdd, onRemove, onUpdate, onReassign, resync }) {
         noteHandlers = { onAdd, onRemove, onUpdate, onReassign, resync };
         window.addEventListener("sticky-local-add", e => emitAdd(e.detail));
@@ -399,6 +547,7 @@
       },
       clear() {
         localStorage.removeItem(NOTE_KEY);
+        localStorage.removeItem(MEDIA_KEY);
         bc && bc.postMessage({ type: "resync" });
       }
     };

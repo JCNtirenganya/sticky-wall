@@ -24,9 +24,11 @@
   const raceBox = $("poll-race"), raceStage = $("race-stage"), raceTitle = $("race-title"), raceSub = $("race-sub");
   const raceProgress = $("race-progress"), raceClock = $("race-clock"), raceLive = $("race-live");
   const racePlay = $("race-play"), raceReplay = $("race-replay"), raceClose = $("race-close");
+  const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty"), mediaCount = $("media-count");
+  const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
-  const polls = [], votes = [];
+  const polls = [], votes = [], media = [];
   let cats = new Set(categoryKeys()), focusId = null, moodTimer = 0, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
@@ -59,9 +61,13 @@
     autoplayDelay: 10,
     autoplayDuration: 6,
     chartType: "auto",
-    chartStyle: "hand"
+    chartStyle: "hand",
+    mediaAutoplay: true,
+    mediaMute: true,
+    mediaLoop: true,
+    mediaMax: 12
   };
-  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration"]);
+  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax"]);
   const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo", "chartType", "chartStyle"]);
   const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
   const CHART_STYLE_KEYS = ["hand", "clean"];
@@ -84,6 +90,7 @@
   prefs.logoSize = Math.max(50, Math.min(180, prefs.logoSize));
   prefs.autoplayDelay = Math.max(0, Math.min(120, prefs.autoplayDelay));
   prefs.autoplayDuration = Math.max(2, Math.min(120, prefs.autoplayDuration));
+  prefs.mediaMax = Math.max(1, Math.min(24, prefs.mediaMax));
   prefs.bgColor = normaliseHex(prefs.bgColor) || "";
   prefs.bgImage = String(prefs.bgImage || "");
   if (!CHART_TYPE_KEYS.includes(prefs.chartType)) prefs.chartType = "auto";
@@ -1621,6 +1628,279 @@
     startRace(true);
   }
 
+  /* ── event media wall (phones upload, board shows) ─────────── */
+  const mediaOpenNow = () => document.body.classList.contains("show-media");
+
+  function mediaSorted() {
+    return media.slice().sort((a, b) =>
+      String(a.created_at || "").localeCompare(String(b.created_at || ""))
+    );
+  }
+
+  function mediaVisible() {
+    return mediaSorted().slice(-prefs.mediaMax).reverse();
+  }
+
+  function mediaCard(item) {
+    const card = document.createElement("article");
+    card.className = "media-card media-card--" + (item.kind === "video" ? "video" : "photo");
+    card.dataset.media = item.id;
+
+    const frame = document.createElement("div");
+    frame.className = "media-card__frame";
+
+    if (item.kind === "video") {
+      const video = document.createElement("video");
+      video.src = item.url;
+      video.muted = !!prefs.mediaMute;
+      video.loop = !!prefs.mediaLoop;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("playsinline", "");
+      if (prefs.mediaAutoplay) {
+        video.autoplay = true;
+        const started = video.play();
+        if (started?.catch) started.catch(() => {});
+      }
+      const play = document.createElement("span");
+      play.className = "media-card__play";
+      play.textContent = "▶";
+      video.addEventListener("play", () => play.classList.add("is-hidden"));
+      video.addEventListener("pause", () => play.classList.remove("is-hidden"));
+      if (!prefs.mediaAutoplay) play.classList.remove("is-hidden");
+      video.addEventListener("click", () => {
+        if (video.paused) video.play().catch(() => {});
+        else video.pause();
+      });
+      frame.append(video, play);
+    } else {
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.alt = item.caption || t("Shared photo");
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", () => card.classList.add("is-broken"));
+      frame.append(img);
+    }
+
+    const kind = document.createElement("span");
+    kind.className = "media-card__kind";
+    kind.textContent = item.kind === "video" ? t("Video") : t("Photo");
+    frame.append(kind);
+
+    const foot = document.createElement("footer");
+    foot.className = "media-card__foot";
+    const author = document.createElement("span");
+    author.className = "media-card__author";
+    author.textContent = item.author || t("Guest");
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "media-card__remove";
+    remove.textContent = t("Remove");
+    remove.setAttribute("aria-label", t("Remove from wall"));
+    remove.addEventListener("click", () => {
+      if (remove.dataset.armed !== "1") {
+        remove.dataset.armed = "1";
+        remove.textContent = t("Sure?");
+        clearTimeout(remove._timer);
+        remove._timer = setTimeout(() => {
+          if (remove.dataset.armed === "1") {
+            delete remove.dataset.armed;
+            remove.textContent = t("Remove");
+          }
+        }, 3200);
+        return;
+      }
+      delete remove.dataset.armed;
+      clearTimeout(remove._timer);
+      removeMediaItem(item, remove);
+    });
+
+    foot.append(author, remove);
+    card.append(frame, foot);
+    return card;
+  }
+
+  function renderMediaWall() {
+    if (!mediaGrid) return;
+    const list = mediaVisible();
+    mediaGrid.replaceChildren(...list.map(mediaCard));
+    if (mediaEmpty) mediaEmpty.hidden = list.length > 0;
+    if (mediaCount) {
+      mediaCount.textContent = list.length === 1
+        ? t("1 item")
+        : t("{n} items", { n: list.length });
+    }
+    if (!list.length) {
+      /* no cards to style — the empty note takes over */
+      mediaGrid.style.removeProperty("--media-cols");
+    } else {
+      mediaGrid.style.setProperty("--media-cols", String(Math.min(4, Math.max(1, Math.ceil(Math.sqrt(list.length))))));
+    }
+  }
+
+  function removeMediaLocal(id) {
+    let changed = false;
+    for (let i = media.length - 1; i >= 0; i--) {
+      if (media[i].id === id) { media.splice(i, 1); changed = true; }
+    }
+    if (changed) renderMediaWall();
+  }
+
+  async function removeMediaItem(item, button) {
+    if (button) {
+      button.disabled = true;
+      button.textContent = t("Removing…");
+    }
+    try {
+      await Store.removeMedia(item);
+      removeMediaLocal(item.id);
+      if (button) {
+        button.disabled = false;
+        button.textContent = t("Remove");
+      }
+    } catch (err) {
+      console.error("Could not remove media", err);
+      if (button) {
+        button.disabled = false;
+        button.textContent = t("Could not remove");
+        setTimeout(() => { button.textContent = t("Remove"); }, 2200);
+      }
+    }
+  }
+
+  async function hideAllMedia() {
+    const ids = new Set(mediaVisible().map(item => item.id));
+    if (!ids.size) return;
+    try {
+      await Promise.all([...ids].map(id => Store.hideMedia(id)));
+      for (let i = media.length - 1; i >= 0; i--) {
+        if (ids.has(media[i].id)) media.splice(i, 1);
+      }
+      renderMediaWall();
+    } catch (err) {
+      console.error("Could not hide media", err);
+    }
+  }
+
+  function applyMediaPrefs() {
+    if (!mediaGrid) return;
+    mediaGrid.querySelectorAll("video").forEach(video => {
+      video.muted = !!prefs.mediaMute;
+      video.loop = !!prefs.mediaLoop;
+      if (prefs.mediaAutoplay) {
+        const started = video.play();
+        if (started?.catch) started.catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }
+
+  function openMediaWall() {
+    if (!mediaWall) return;
+    if (focusId) closeFocus();
+    if (dashboardOpen()) closeDashboard();
+    if (pollRoomOpenNow()) closePollRoom();
+    if (pollsPresent) setPollsPresentation(false);
+    if (notesPresent) setNotesPresentation(false);
+    if (raceOpenNow()) closePollRace();
+    setExtrasOpen(false);
+    mediaWall.setAttribute("aria-hidden", "false");
+    document.body.classList.add("show-media");
+    renderMediaWall();
+    mediaClose?.focus({ preventScroll: true });
+  }
+
+  function closeMediaWall() {
+    if (!mediaWall) return;
+    mediaWall.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("show-media");
+    mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
+  }
+
+  function toggleMediaWall() {
+    if (mediaOpenNow()) closeMediaWall();
+    else openMediaWall();
+  }
+
+  async function syncMedia() {
+    try {
+      const list = await Store.listMedia();
+      media.splice(0, media.length, ...(list || []));
+    } catch (err) {
+      console.warn("Could not load media. In live mode run supabase/migration-media.sql.", err);
+    }
+    renderMediaWall();
+  }
+
+  function sampleCanvas(index) {
+    const palettes = [
+      ["#0b1220", "#1f6feb", "#9ecbff"],
+      ["#2b1b12", "#e4572e", "#ffd166"],
+      ["#10251f", "#2a9d8f", "#e9f5db"]
+    ];
+    const [dark, mid, light] = palettes[index % palettes.length];
+    const canvas = document.createElement("canvas");
+    canvas.width = 1400;
+    canvas.height = 900;
+    const ctx = canvas.getContext("2d");
+    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    grad.addColorStop(0, dark);
+    grad.addColorStop(.55, mid);
+    grad.addColorStop(1, light);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.globalAlpha = .16;
+    for (let i = 0; i < 16; i++) {
+      ctx.beginPath();
+      ctx.arc((i * 173 + index * 311) % canvas.width, (i * 97 + index * 211) % canvas.height, 40 + (i % 5) * 31, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.fillRect(0, canvas.height - 230, canvas.width, 230);
+    ctx.fillStyle = "#fff";
+    ctx.font = "700 78px Caveat, 'Segoe UI', sans-serif";
+    ctx.fillText(t("Sample photo"), 70, canvas.height - 120);
+    ctx.font = "500 36px 'Segoe UI', sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.fillText(t("Shared from a phone at the event"), 70, canvas.height - 62);
+    return canvas;
+  }
+
+  async function seedSampleMedia(button) {
+    const label = button?.textContent || t("Add sample media");
+    if (button) {
+      button.disabled = true;
+      button.textContent = t("Adding…");
+    }
+    try {
+      for (let i = 0; i < 3; i++) {
+        const canvas = sampleCanvas(i);
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Could not draw the sample")), "image/jpeg", .9);
+        });
+        const file = new File([blob], `sample-media-${Date.now()}-${i}.jpg`, { type: "image/jpeg" });
+        await Store.addMedia({ file, author: t("Sample"), kind: "photo", width: 1400, height: 900 });
+      }
+      await syncMedia();
+      if (!mediaOpenNow()) openMediaWall();
+      if (button) button.textContent = t("Added 3 photos");
+    } catch (err) {
+      console.error("Could not seed media", err);
+      if (button) button.textContent = t("Could not add media");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        setTimeout(() => { button.textContent = label; }, 1900);
+      }
+    }
+  }
+
   /* ── exports: PDF summary + notes-only JPEG ───────────────── */
   function exportCategories() {
     return categoryList().map(cat => ({ key: cat.key, label: cat.label, color: cat.color }));
@@ -1675,6 +1955,16 @@
   raceClose?.addEventListener("click", closePollRace);
   racePlay?.addEventListener("click", toggleRacePlay);
   raceReplay?.addEventListener("click", replayRace);
+
+  /* ── media wall controls ───────────────────────────────────── */
+  $("extras-media-open")?.addEventListener("click", () => { setExtrasOpen(false); openMediaWall(); });
+  $("extras-media-close")?.addEventListener("click", () => { setExtrasOpen(false); closeMediaWall(); });
+  $("extras-demo-media")?.addEventListener("click", event => seedSampleMedia(event.currentTarget));
+  mediaClose?.addEventListener("click", closeMediaWall);
+  mediaHideAll?.addEventListener("click", event => armButton(event.currentTarget, t("Confirm hide all"), hideAllMedia));
+  mediaWall?.addEventListener("click", event => {
+    if (event.target === mediaWall) closeMediaWall();
+  });
   raceProgress?.addEventListener("input", () => {
     if (!raceData) return;
     const frames = raceFrames().length;
@@ -2408,7 +2698,8 @@
     notes: ["columns", "gap"],
     polls: ["chartType", "chartStyle"],
     look: ["brand", "mascot", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
-    presentation: ["autoplay", "autoplayDelay", "autoplayDuration"]
+    presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
+    media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax"]
   };
 
   function resetExtrasDefaults(module, button) {
@@ -2419,6 +2710,7 @@
     applyPrefs(true);
     if (module === "look") applyLook();
     if (module === "polls") renderPollChrome();
+    if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
     if (button) {
       if (!button.dataset.label) button.dataset.label = button.textContent;
@@ -2435,7 +2727,8 @@
   [["notes", "extras-defaults-notes"],
    ["polls", "extras-defaults-polls"],
    ["look", "extras-defaults-look"],
-   ["presentation", "extras-defaults-presentation"]].forEach(([module, id]) => {
+   ["presentation", "extras-defaults-presentation"],
+   ["media", "extras-defaults-media"]].forEach(([module, id]) => {
     $(id)?.addEventListener("click", e => resetExtrasDefaults(module, e.currentTarget));
   });
 
@@ -2455,6 +2748,7 @@
     else if (key === "bgDim" || key === "bgColor") applyLook();
     else if (key === "logoSize") { applyLook(); layout(); }
     else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") syncPrefInputs();
+    else if (String(key).startsWith("media")) { applyMediaPrefs(); renderMediaWall(); syncPrefInputs(); }
     else applyPrefs(true);
   }
 
@@ -2687,6 +2981,11 @@
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
     touchAutoplay();
+    if (mediaOpenNow()) {
+      if (k === "escape" || k === "v") { e.preventDefault(); closeMediaWall(); }
+      return;
+    }
+    if (k === "v") { e.preventDefault(); openMediaWall(); return; }
     if (raceOpenNow()) {
       if (k === "escape") { e.preventDefault(); closePollRace(); }
       else if (k === "r") { e.preventDefault(); replayRace(); }
@@ -3002,6 +3301,23 @@
       onVoteDelete: vote => { removeVoteLocal(vote); renderPollChrome(); },
       onResetVotes: id => { resetVotesLocal(id); renderPollChrome(); },
       resync: syncPolls
+    });
+
+    await syncMedia();
+    Store.subscribeMedia({
+      onAdd: item => {
+        if (!item?.id) return;
+        if (!media.some(m => m.id === item.id)) media.push(item);
+        renderMediaWall();
+      },
+      onUpdate: item => {
+        const i = media.findIndex(m => m.id === item.id);
+        if (i >= 0) media[i] = item;
+        else media.push(item);
+        renderMediaWall();
+      },
+      onRemove: id => removeMediaLocal(id),
+      resync: syncMedia
     });
   })();
 
