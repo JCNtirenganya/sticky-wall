@@ -28,10 +28,20 @@
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
   const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
   const mediaLiveStrip = $("media-live-strip"), mediaLiveGrid = $("media-live-grid"), mediaLiveCount = $("media-live-count");
+  const moduleHome = $("module-home"), splitStage = $("split-stage"), splitPanes = $("split-panes"), splitLabel = $("split-label");
+  const splitDialog = $("split-dialog"), splitOptions = $("split-options"), splitHint = $("split-hint");
+  const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty"), streamSub = $("stream-sub");
+  const liveFloat = $("live-float"), liveFloatGrid = $("live-float-grid");
+  const reactionDock = $("reaction-dock"), reactionQuick = $("reaction-quick"), reactionTarget = $("reaction-target");
+  const liveRequestDialog = $("live-request-dialog"), liveRequestList = $("live-request-list"), liveRequestEmpty = $("live-request-empty");
+  const statusLiveRequests = $("status-live-requests"), statusLiveCount = $("status-live-count");
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
   const polls = [], votes = [], media = [];
   const liveStreams = new Map();
+  const liveRequests = new Map();
+  const splitOrigins = new Map();
+  let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [], reactionTargetKey = "notes";
   let cats = new Set(categoryKeys()), focusId = null, moodTimer = 0, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
@@ -70,9 +80,11 @@
     mediaAutoplay: true,
     mediaMute: true,
     mediaLoop: true,
-    mediaMax: 12
+    mediaMax: 12,
+    mediaPhotoSeconds: 6,
+    mediaVideoRate: 1
   };
-  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax"]);
+  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]);
   const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo", "chartType", "chartStyle"]);
   const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
   const CHART_STYLE_KEYS = ["hand", "clean"];
@@ -96,6 +108,8 @@
   prefs.autoplayDelay = Math.max(0, Math.min(120, prefs.autoplayDelay));
   prefs.autoplayDuration = Math.max(2, Math.min(120, prefs.autoplayDuration));
   prefs.mediaMax = Math.max(1, Math.min(24, prefs.mediaMax));
+  prefs.mediaPhotoSeconds = Math.max(2, Math.min(60, prefs.mediaPhotoSeconds || 6));
+  prefs.mediaVideoRate = Math.max(0.5, Math.min(2, prefs.mediaVideoRate || 1));
   prefs.bgColor = normaliseHex(prefs.bgColor) || "";
   prefs.bgImage = String(prefs.bgImage || "");
   if (!CHART_TYPE_KEYS.includes(prefs.chartType)) prefs.chartType = "auto";
@@ -1107,6 +1121,11 @@
 
   function openPollRoom() {
     if (!pollRoom) return;
+    if (splitActive()) exitSplit(false);
+    closeModuleHome();
+    if (streamWallOpenNow()) closeStreamWall();
+    if (mediaOpenNow()) closeMediaWall();
+    activeModule = "poll";
     closeFocus();
     setDashboard(false);
     setExtrasOpen(false);
@@ -1767,6 +1786,14 @@
   }
 
   /* ── live streams from phones (WebRTC) ─────────────────────── */
+  const liveCount = () => liveStreams.size;
+
+  function liveHostFor(placement) {
+    if (placement === "media") return mediaLiveGrid;
+    if (placement === "float") return liveFloatGrid;
+    return streamGrid;
+  }
+
   function renderLiveStrip() {
     if (!mediaLiveStrip) return;
     mediaLiveStrip.hidden = liveStreams.size === 0;
@@ -1775,6 +1802,18 @@
         ? t("{n} live", { n: liveStreams.size })
         : "";
     }
+    if (streamEmpty) streamEmpty.hidden = liveStreams.size > 0;
+    if (streamSub) {
+      streamSub.textContent = liveStreams.size
+        ? t("{n} live from phones", { n: liveStreams.size })
+        : t("When someone asks to go live, approve the request and their camera appears here.");
+    }
+    if (liveFloat) {
+      const floating = [...liveStreams.values()].some(entry => entry.placement === "float");
+      liveFloat.hidden = !floating;
+    }
+    renderLiveRequestChrome();
+    updateMediaSummary();
   }
 
   function paintLiveSound(entry) {
@@ -1793,13 +1832,16 @@
     paintLiveSound(entry);
   }
 
-  function addLiveStream({ streamId, author, stream }) {
-    if (!mediaLiveGrid || !stream) return;
+  function addLiveStream({ streamId, author, stream, placement, requestId }) {
+    if (!stream) return;
+    const where = ["stream", "media", "float", "split"].includes(placement) ? placement : "stream";
+    const host = liveHostFor(where);
+    if (!host) return;
     /* reconnects reuse the same id: replace the stale tile */
     removeLiveStream(streamId);
 
     const card = document.createElement("article");
-    card.className = "media-live-card";
+    card.className = "media-live-card media-live-card--" + where;
     card.dataset.live = streamId;
 
     const video = document.createElement("video");
@@ -1836,19 +1878,30 @@
     });
 
     card.append(video, badge, name, sound);
-    mediaLiveGrid.append(card);
+    host.append(card);
 
-    const entry = { el: card, video, button: sound, muted: true, author };
+    const entry = { el: card, video, button: sound, muted: true, author, placement: where, requestId };
     liveStreams.set(streamId, entry);
     paintLiveSound(entry);
+    if (requestId) {
+      liveRequests.delete(requestId);
+      renderLiveRequests();
+    }
+
+    /* The presenter chose this placement when approving the request. */
+    if (where === "split") {
+      if (!splitActive() || !splitModules.includes("stream")) enterSplit(["stream", "media"]);
+    } else if (where === "stream") {
+      if (!splitActive()) openStreamWall();
+    } else if (where === "media") {
+      if (mediaPresent) setMediaPresentation(false);
+      if (!splitActive() && !mediaOpenNow()) openMediaWall();
+    } else if (where === "float") {
+      if (liveFloat) liveFloat.hidden = false;
+    }
     renderLiveStrip();
-    updateMediaSummary();
     const playing = video.play();
     if (playing?.catch) playing.catch(() => {});
-
-    /* A live phone is the whole point: bring the wall forward. */
-    if (mediaPresent) setMediaPresentation(false);
-    if (!mediaOpenNow()) openMediaWall();
   }
 
   function removeLiveStream(streamId) {
@@ -1861,7 +1914,6 @@
     } catch {}
     entry.el.remove();
     renderLiveStrip();
-    updateMediaSummary();
   }
 
   function startLiveHost() {
@@ -1869,12 +1921,136 @@
     try {
       return StickyLive.host({
         onStream: item => addLiveStream(item),
-        onEnd: streamId => removeLiveStream(streamId)
+        onEnd: streamId => removeLiveStream(streamId),
+        onRequest: item => addLiveRequest(item),
+        onCancel: requestId => {
+          liveRequests.delete(requestId);
+          renderLiveRequests();
+        }
       });
     } catch (err) {
       console.warn("Live streaming is not available", err);
       return null;
     }
+  }
+
+  /* ── go-live requests: only the presenter allows a camera ──── */
+  const livePlacementLabel = value => value === "media" ? t("Media wall")
+    : value === "float" ? t("Floating window")
+    : value === "split" ? t("Split with media")
+    : t("Stream page");
+
+  function renderLiveRequestChrome() {
+    const n = liveRequests.size;
+    if (statusLiveRequests) {
+      statusLiveRequests.hidden = n === 0;
+      if (statusLiveCount) statusLiveCount.textContent = String(n);
+      statusLiveRequests.title = t("{n} go-live requests", { n });
+    }
+    const streamButton = $("stream-requests");
+    const streamCount = $("stream-request-count");
+    const emptyButton = $("stream-empty-requests");
+    if (streamButton) streamButton.hidden = n === 0;
+    if (streamCount) streamCount.textContent = String(n);
+    if (emptyButton) emptyButton.hidden = n === 0;
+  }
+
+  function renderLiveRequests() {
+    renderLiveRequestChrome();
+    if (!liveRequestList) return;
+    if (liveRequestEmpty) liveRequestEmpty.hidden = liveRequests.size > 0;
+    const rows = [...liveRequests.values()].map(req => {
+      const row = document.createElement("div");
+      row.className = "live-request-row";
+      row.dataset.request = req.requestId;
+
+      const copy = document.createElement("div");
+      copy.className = "live-request-row__copy";
+      const who = document.createElement("b");
+      who.textContent = req.author || t("Guest");
+      const when = document.createElement("small");
+      when.textContent = t("Asking to go live");
+      copy.append(who, when);
+
+      const pick = document.createElement("select");
+      pick.className = "live-request-row__place";
+      pick.setAttribute("aria-label", t("Place the live window"));
+      ["stream", "split", "float", "media"].forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = livePlacementLabel(value);
+        pick.append(option);
+      });
+
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.className = "poll-btn poll-btn--primary live-request-row__allow";
+      approve.textContent = t("Allow");
+      approve.addEventListener("click", () => approveLiveRequest(req.requestId, pick.value));
+
+      const deny = document.createElement("button");
+      deny.type = "button";
+      deny.className = "poll-btn live-request-row__deny";
+      deny.textContent = t("Deny");
+      deny.addEventListener("click", () => denyLiveRequest(req.requestId));
+
+      row.append(copy, pick, approve, deny);
+      return row;
+    });
+    liveRequestList.replaceChildren(...rows);
+  }
+
+  function addLiveRequest({ requestId, author, at } = {}) {
+    if (!requestId) return;
+    if (liveRequests.has(requestId)) {
+      const existing = liveRequests.get(requestId);
+      if (author) existing.author = author;
+      if (at) existing.at = at;
+    } else {
+      liveRequests.set(requestId, {
+        requestId,
+        author: author || t("Guest"),
+        at: at || Date.now()
+      });
+      flashPollStatus(t("{n} go-live requests", { n: liveRequests.size }));
+    }
+    renderLiveRequests();
+  }
+
+  function openLiveRequestDialog() {
+    if (!liveRequestDialog) return;
+    renderLiveRequests();
+    if (liveRequestDialog.open) return;
+    if (typeof liveRequestDialog.showModal === "function") liveRequestDialog.showModal();
+    else liveRequestDialog.setAttribute("open", "");
+  }
+
+  function closeLiveRequestDialog() {
+    if (!liveRequestDialog?.open) return;
+    if (typeof liveRequestDialog.close === "function") liveRequestDialog.close();
+    else liveRequestDialog.removeAttribute("open");
+  }
+
+  function approveLiveRequest(requestId, placement) {
+    if (!requestId) return;
+    const where = ["stream", "media", "float", "split"].includes(placement) ? placement : "stream";
+    try { liveHost?.approve?.(requestId, where); } catch (err) { console.warn("Could not approve live request", err); }
+    liveRequests.delete(requestId);
+    renderLiveRequests();
+    flashPollStatus(t("Live approved · {where}", { where: livePlacementLabel(where) }));
+    if (where === "split") enterSplit(["stream", "media"]);
+    else if (where === "media") { if (!splitActive()) openMediaWall(); }
+    else if (where === "float") { if (liveFloat) liveFloat.hidden = false; }
+    else if (!splitActive()) openStreamWall();
+    closeLiveRequestDialog();
+  }
+
+  function denyLiveRequest(requestId) {
+    if (!requestId) return;
+    try { liveHost?.deny?.(requestId); } catch (err) { console.warn("Could not deny live request", err); }
+    liveRequests.delete(requestId);
+    renderLiveRequests();
+    flashPollStatus(t("Live request denied"));
   }
 
   /* Full-screen album: one photo or video at a time, advanced by the same
@@ -1903,6 +2079,7 @@
       video.loop = false;
       video.playsInline = true;
       video.preload = "auto";
+      video.playbackRate = Math.max(0.5, Math.min(2, Number(prefs.mediaVideoRate) || 1));
       video.setAttribute("playsinline", "");
       const started = video.play();
       if (started?.catch) started.catch(() => {});
@@ -1947,9 +2124,11 @@
     mediaAdvanceTimer = 0;
     if (!mediaPresent || presentationManual || !prefs.autoplay) return;
     const video = mediaStageBody?.querySelector("video");
-    /* A playing video advances when it ends; anything else uses the timer. */
+    /* A playing video advances when it ends; a photo uses its own timer. */
     if (video && !video.paused) return;
-    const secs = Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6));
+    const secs = video
+      ? Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6))
+      : Math.max(2, Number(prefs.mediaPhotoSeconds) || 6);
     mediaAdvanceTimer = setTimeout(() => stepMediaStage(1), secs * 1000);
   }
 
@@ -1961,7 +2140,13 @@
   }
 
   function setMediaPresentation(on, manual) {
-    on = !!on && mediaOpenNow();
+    /* Full-screen means the whole screen: step out of a split first. */
+    if (on && splitActive() && splitModules.includes("media")) {
+      exitSplit(false);
+      openMediaWall();
+    }
+    const shown = mediaOpenNow();
+    on = !!on && shown;
     if (on && !mediaStageList().length) return;
     if (!on && !mediaPresent) { presentationManual = false; return; }
     const entering = on && !mediaPresent;
@@ -2034,9 +2219,11 @@
   function applyMediaPrefs() {
     if (!mediaGrid) return;
     const previews = !!prefs.mediaAutoplay && mediaOpenNow();
+    const rate = Math.max(0.5, Math.min(2, Number(prefs.mediaVideoRate) || 1));
     mediaGrid.querySelectorAll("video").forEach(video => {
       video.muted = !!prefs.mediaMute;
       video.loop = !!prefs.mediaLoop;
+      video.playbackRate = rate;
       if (previews) {
         const started = video.play();
         if (started?.catch) started.catch(() => {});
@@ -2044,16 +2231,21 @@
         video.pause();
       }
     });
+    mediaStageBody?.querySelectorAll("video").forEach(video => { video.playbackRate = rate; });
   }
 
   function openMediaWall() {
     if (!mediaWall) return;
+    if (splitActive()) exitSplit(false);
+    closeModuleHome();
+    if (streamWallOpenNow()) closeStreamWall();
     if (focusId) closeFocus();
     if (dashboardOpen()) closeDashboard();
     if (pollRoomOpenNow()) closePollRoom();
     if (pollsPresent) setPollsPresentation(false);
     if (notesPresent) setNotesPresentation(false);
     if (raceOpenNow()) closePollRace();
+    activeModule = "media";
     setExtrasOpen(false);
     mediaPresent = false;
     presentationManual = false;
@@ -2086,6 +2278,328 @@
       console.warn("Could not load media. In live mode run supabase/migration-media.sql.", err);
     }
     renderMediaWall();
+  }
+
+  /* ── presenter modules: home, activation, split screen ─────── */
+  const MODULE_META = {
+    notes: { label: "Notes", icon: "📝", root: () => board },
+    media: { label: "Media", icon: "🖼️", root: () => mediaWall },
+    poll: { label: "Poll", icon: "▣", root: () => pollRoom },
+    stream: { label: "Stream", icon: "📹", root: () => streamWall }
+  };
+  const MODULE_KEYS = ["notes", "media", "poll", "stream"];
+  const moduleLabel = key => t(MODULE_META[key]?.label || "Notes");
+  const streamWallOpenNow = () => document.body.classList.contains("show-stream");
+  const splitActive = () => splitModules.length > 1 && !!splitStage && !splitStage.hidden;
+
+  function closeAllModules() {
+    if (mediaOpenNow()) closeMediaWall();
+    if (pollRoomOpenNow()) closePollRoom();
+    if (raceOpenNow()) closePollRace();
+    if (streamWallOpenNow()) closeStreamWall();
+    if (notesPresent) setNotesPresentation(false);
+    if (dashboardOpen()) closeDashboard();
+    closeFocus();
+  }
+
+  function openModuleHome() {
+    if (splitActive()) exitSplit(false);
+    closeAllModules();
+    moduleHomeOpen = true;
+    activeModule = null;
+    if (moduleHome) {
+      moduleHome.hidden = false;
+      moduleHome.setAttribute("aria-hidden", "false");
+    }
+    document.body.classList.add("show-modules");
+    setExtrasOpen(false);
+    setReactionDock(false);
+  }
+
+  function closeModuleHome() {
+    moduleHomeOpen = false;
+    if (moduleHome) {
+      moduleHome.hidden = true;
+      moduleHome.setAttribute("aria-hidden", "true");
+    }
+    document.body.classList.remove("show-modules");
+  }
+
+  function activateModule(name) {
+    if (!MODULE_META[name]) return;
+    if (splitActive()) exitSplit(false);
+    closeModuleHome();
+    closeAllModules();
+    activeModule = name;
+    if (name === "media") openMediaWall();
+    else if (name === "poll") openPollRoom();
+    else if (name === "stream") openStreamWall();
+    else { layout(); updateStatus(); }
+    document.body.dataset.module = name;
+    if (reactionDock && !reactionDock.hidden) syncReactionTargets(name);
+    setExtrasOpen(false);
+  }
+
+  function openStreamWall() {
+    if (!streamWall || streamWallOpenNow()) return;
+    if (splitActive()) return;
+    closeModuleHome();
+    closeFocus();
+    setDashboard(false);
+    if (pollRoomOpenNow()) closePollRoom();
+    if (pollsPresent) setPollsPresentation(false);
+    if (raceOpenNow()) closePollRace();
+    if (mediaOpenNow()) closeMediaWall();
+    if (notesPresent) setNotesPresentation(false);
+    activeModule = "stream";
+    streamWall.setAttribute("aria-hidden", "false");
+    document.body.classList.add("show-stream");
+    renderLiveStrip();
+    $("stream-close")?.focus?.({ preventScroll: true });
+  }
+
+  function closeStreamWall() {
+    if (!streamWall) return;
+    setStreamPresentation(false);
+    streamWall.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("show-stream");
+  }
+
+  function setStreamPresentation(on) {
+    /* Full-screen stream leaves a split so it can cover the whole screen. */
+    if (on && splitActive() && splitModules.includes("stream")) {
+      exitSplit(false);
+      openStreamWall();
+    }
+    document.body.classList.toggle("present-stream", !!on);
+    $("stream-present")?.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) { goFullscreen(); updateStreamGrid(); }
+    else if (document.fullscreenElement) leaveFullscreen();
+  }
+
+  function updateStreamGrid() {
+    if (!streamGrid) return;
+    const n = streamGrid.children.length;
+    streamGrid.dataset.count = String(n);
+    if (n) streamGrid.style.setProperty("--stream-cols", String(Math.min(3, n)));
+    else streamGrid.style.removeProperty("--stream-cols");
+  }
+
+  function enterSplit(list) {
+    if (!splitStage || !splitPanes) return;
+    const picked = [...new Set(list || [])].filter(key => MODULE_META[key]);
+    if (picked.length < 2) return;
+    if (splitActive()) exitSplit(false);
+    closeModuleHome();
+    closeAllModules();
+    splitOrigins.clear();
+    splitPanes.replaceChildren();
+    splitModules = picked;
+    splitModules.forEach(key => {
+      const root = MODULE_META[key].root();
+      if (!root) return;
+      splitOrigins.set(key, {
+        parent: root.parentNode,
+        next: root.nextSibling,
+        ariaHidden: root.getAttribute("aria-hidden")
+      });
+      const pane = document.createElement("section");
+      pane.className = "split-pane split-pane--" + key;
+      pane.dataset.module = key;
+      pane.setAttribute("aria-label", moduleLabel(key));
+      pane.append(root);
+      splitPanes.append(pane);
+      root.setAttribute("aria-hidden", "false");
+    });
+    splitStage.hidden = false;
+    splitPanes.dataset.count = String(splitModules.length);
+    splitLabel.textContent = splitModules.map(moduleLabel).join(" · ");
+    document.body.classList.add("split-mode");
+    activeModule = null;
+    updateStreamGrid();
+    renderMediaWall();
+    renderLiveStrip();
+    layout();
+    if (reactionDock && !reactionDock.hidden) syncReactionTargets(splitModules[0]);
+    setExtrasOpen(false);
+    goFullscreen();
+  }
+
+  function exitSplit(showHome = true) {
+    if (!splitActive()) return;
+    const wasFullscreen = !!document.fullscreenElement;
+    splitModules.forEach(key => {
+      const root = MODULE_META[key]?.root();
+      const origin = splitOrigins.get(key);
+      if (!root) return;
+      if (origin?.parent) {
+        const before = origin.next && origin.next.parentNode === origin.parent ? origin.next : null;
+        origin.parent.insertBefore(root, before);
+      } else {
+        document.body.append(root);
+      }
+      /* restore the accessibility state each module had before the split */
+      if (origin?.ariaHidden == null) root.removeAttribute("aria-hidden");
+      else root.setAttribute("aria-hidden", origin.ariaHidden);
+    });
+    splitOrigins.clear();
+    splitPanes.replaceChildren();
+    splitStage.hidden = true;
+    document.body.classList.remove("split-mode");
+    splitModules = [];
+    activeModule = null;
+    if (wasFullscreen) leaveFullscreen();
+    if (showHome) openModuleHome();
+    else { closeAllModules(); layout(); }
+  }
+
+  function openSplitDialog() {
+    if (!splitDialog) return;
+    if (splitHint) splitHint.textContent = "";
+    const chosen = splitActive() ? splitModules : (activeModule ? [activeModule, "media"] : ["notes", "media"]);
+    splitOptions?.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      input.checked = chosen.includes(input.value);
+    });
+    setExtrasOpen(false);
+    if (!splitDialog.open) {
+      if (typeof splitDialog.showModal === "function") splitDialog.showModal();
+      else splitDialog.setAttribute("open", "");
+    }
+  }
+
+  function closeSplitDialog() {
+    if (!splitDialog?.open) return;
+    if (typeof splitDialog.close === "function") splitDialog.close();
+    else splitDialog.removeAttribute("open");
+  }
+
+  /* ── presenter reactions on any displayed wall ─────────────── */
+  const REACTIONS = [
+    { emoji: "👍", label: "Nice" },
+    { emoji: "❤️", label: "Love" },
+    { emoji: "😂", label: "Funny" },
+    { emoji: "🎉", label: "Celebrate" },
+    { emoji: "👏", label: "Applause" },
+    { emoji: "🔥", label: "Fire" },
+    { emoji: "😮", label: "Wow" },
+    { emoji: "😢", label: "Sad" },
+    { emoji: "🚀", label: "Rocket" },
+    { emoji: "✨", label: "Sparkle" }
+  ];
+
+  function visibleModuleKeys() {
+    if (splitActive()) return splitModules.slice();
+    if (mediaOpenNow()) return ["media"];
+    if (pollRoomOpenNow()) return ["poll"];
+    if (streamWallOpenNow()) return ["stream"];
+    return ["notes"];
+  }
+
+  function syncReactionTargets(preferred) {
+    if (!reactionTarget) return;
+    const keys = visibleModuleKeys();
+    const current = MODULE_META[preferred] ? preferred : reactionTargetKey;
+    reactionTarget.replaceChildren(...keys.map(key => {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = moduleLabel(key);
+      return option;
+    }));
+    reactionTarget.value = keys.includes(current) ? current : keys[0];
+    reactionTargetKey = reactionTarget.value;
+  }
+
+  function buildReactionDock() {
+    if (!reactionQuick || reactionQuick.children.length) return;
+    reactionQuick.replaceChildren(...REACTIONS.map((item, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "reaction-btn";
+      button.dataset.reaction = String(index + 1);
+      button.textContent = item.emoji;
+      button.title = item.label + " (Shift+" + (index + 1) + ")";
+      button.setAttribute("aria-label", item.label);
+      button.addEventListener("click", () => fireReaction(index));
+      return button;
+    }));
+  }
+
+  function setReactionDock(open) {
+    if (!reactionDock) return;
+    if (open && moduleHomeOpen) {
+      flashPollStatus(t("Pick a module first"));
+      return;
+    }
+    if (open) {
+      buildReactionDock();
+      syncReactionTargets();
+    }
+    reactionDock.hidden = !open;
+    $("extras-reactions")?.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+
+  function toggleReactionDock() {
+    setReactionDock(!!reactionDock?.hidden);
+  }
+
+  function reactionLayer(root) {
+    let layer = root.querySelector(":scope > .reaction-layer");
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = "reaction-layer";
+      layer.setAttribute("aria-hidden", "true");
+      root.append(layer);
+    }
+    return layer;
+  }
+
+  function playReaction(root, item) {
+    if (!root || !item) return;
+    const layer = reactionLayer(root);
+    const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const burst = document.createElement("span");
+    burst.className = "reaction-burst";
+    burst.textContent = item.emoji;
+    burst.style.setProperty("--reaction-x", (34 + Math.random() * 32).toFixed(1) + "%");
+    burst.style.setProperty("--reaction-y", (34 + Math.random() * 26).toFixed(1) + "%");
+    layer.append(burst);
+    setTimeout(() => burst.remove(), quiet ? 900 : 1600);
+
+    const count = quiet ? 3 : 13;
+    for (let i = 0; i < count; i++) {
+      const dot = document.createElement("span");
+      dot.className = "reaction-particle";
+      dot.textContent = item.emoji;
+      dot.style.setProperty("--x", (6 + Math.random() * 88).toFixed(1) + "%");
+      dot.style.setProperty("--delay", (Math.random() * (quiet ? 0.2 : 0.65)).toFixed(2) + "s");
+      dot.style.setProperty("--size", (1.1 + Math.random() * (quiet ? 0.5 : 1.35)).toFixed(2));
+      dot.style.setProperty("--rotate", (Math.random() * 70 - 35).toFixed(0) + "deg");
+      dot.style.setProperty("--drift", (Math.random() * 80 - 40).toFixed(0) + "px");
+      layer.append(dot);
+      setTimeout(() => dot.remove(), quiet ? 1600 : 2600);
+    }
+  }
+
+  function fireReaction(index, overrideTarget) {
+    if (moduleHomeOpen) return;
+    const item = REACTIONS[index];
+    if (!item) return;
+    const keys = visibleModuleKeys();
+    let key = overrideTarget || reactionTargetKey;
+    if (!keys.includes(key)) key = reactionTarget?.value && keys.includes(reactionTarget.value) ? reactionTarget.value : keys[0];
+    reactionTargetKey = key;
+    const root = MODULE_META[key]?.root();
+    if (!root) return;
+    playReaction(root, item);
+    try {
+      liveHost?.react?.({
+        reactionId: "r-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6),
+        emoji: item.emoji,
+        label: item.label,
+        at: Date.now()
+      });
+    } catch (err) { console.warn("Could not share the reaction", err); }
+    navigator.vibrate?.(8);
   }
 
   function sampleCanvas(index) {
@@ -2235,6 +2749,43 @@
   mediaWall?.addEventListener("click", event => {
     if (event.target === mediaWall) closeMediaWall();
   });
+
+  /* ── module home, split screen, stream, reactions, requests ── */
+  moduleHome?.querySelectorAll(".module-card[data-module]").forEach(button => {
+    button.addEventListener("click", () => activateModule(button.dataset.module));
+  });
+  $("status-modules")?.addEventListener("click", openModuleHome);
+  $("extras-home")?.addEventListener("click", () => { setExtrasOpen(false); openModuleHome(); });
+  $("extras-split")?.addEventListener("click", openSplitDialog);
+  $("extras-stream-wall")?.addEventListener("click", () => { setExtrasOpen(false); activateModule("stream"); });
+  $("extras-reactions")?.addEventListener("click", () => { setExtrasOpen(false); setReactionDock(!!reactionDock?.hidden); });
+  $("split-cancel")?.addEventListener("click", closeSplitDialog);
+  $("split-exit")?.addEventListener("click", () => exitSplit(true));
+  $("split-home")?.addEventListener("click", () => openModuleHome());
+  $("split-form")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const picked = [...(splitOptions?.querySelectorAll('input[type="checkbox"]:checked') || [])].map(input => input.value);
+    if (picked.length < 2) {
+      if (splitHint) splitHint.textContent = t("Pick at least two modules.");
+      return;
+    }
+    if (splitHint) splitHint.textContent = "";
+    closeSplitDialog();
+    enterSplit(picked);
+  });
+  $("stream-close")?.addEventListener("click", closeStreamWall);
+  $("stream-present")?.addEventListener("click", () => {
+    setStreamPresentation(!document.body.classList.contains("present-stream"));
+  });
+  $("stream-empty-media")?.addEventListener("click", () => openMediaWall());
+  $("stream-requests")?.addEventListener("click", openLiveRequestDialog);
+  $("stream-empty-requests")?.addEventListener("click", openLiveRequestDialog);
+  $("status-live-requests")?.addEventListener("click", openLiveRequestDialog);
+  $("live-request-close")?.addEventListener("click", closeLiveRequestDialog);
+  $("live-float-close")?.addEventListener("click", () => { if (liveFloat) liveFloat.hidden = true; });
+  $("reaction-close")?.addEventListener("click", () => setReactionDock(false));
+  reactionTarget?.addEventListener("change", () => { reactionTargetKey = reactionTarget.value; });
+
   raceProgress?.addEventListener("input", () => {
     if (!raceData) return;
     const frames = raceFrames().length;
@@ -2472,7 +3023,9 @@
 
   function boardFrame() {
     const W = board.clientWidth || 1, H = board.clientHeight || 1;
-    const brandShown = !!(brand && !brand.classList.contains("hidden") && prefs.brand);
+    /* In a split pane the global brand is hidden, so notes use the pane. */
+    const inSplit = splitActive();
+    const brandShown = !inSplit && !!(brand && !brand.classList.contains("hidden") && prefs.brand);
     const brandBottom = brandShown ? brand.getBoundingClientRect().bottom : 0;
     const padTop = brandShown ? Math.max(64, brandBottom + 14) : 18;
     return {
@@ -2969,7 +3522,7 @@
     polls: ["chartType", "chartStyle"],
     look: ["brand", "mascot", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
-    media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax"]
+    media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
 
   function resetExtrasDefaults(module, button) {
@@ -3018,7 +3571,12 @@
     else if (key === "bgDim" || key === "bgColor") applyLook();
     else if (key === "logoSize") { applyLook(); layout(); }
     else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") syncPrefInputs();
-    else if (String(key).startsWith("media")) { applyMediaPrefs(); renderMediaWall(); syncPrefInputs(); }
+    else if (String(key).startsWith("media")) {
+      applyMediaPrefs();
+      if (mediaPresent) renderMediaStage();
+      else renderMediaWall();
+      syncPrefInputs();
+    }
     else applyPrefs(true);
   }
 
@@ -3246,11 +3804,54 @@
 
   /* ── keyboard (moderator at the laptop) ────────────────────── */
   document.addEventListener("keydown", e => {
-    if (eventDialog?.open || categoryDialog?.open || pollDialog?.open || /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
+    if (eventDialog?.open || categoryDialog?.open || pollDialog?.open || splitDialog?.open || liveRequestDialog?.open || /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
     /* let Space/Enter activate a focused button or note natively */
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
     touchAutoplay();
+
+    /* presenter reactions work over any wall, without stealing a module key */
+    if (e.shiftKey && k === "r") { e.preventDefault(); toggleReactionDock(); return; }
+    if (e.shiftKey && /^Digit[1-8]$/.test(e.code || "")) {
+      e.preventDefault();
+      fireReaction(Number(e.code.slice(-1)) - 1);
+      return;
+    }
+
+    if (moduleHomeOpen) {
+      if (/^[1-4]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }
+      else if (k === "v") { e.preventDefault(); activateModule("media"); }
+      else if (k === "p") { e.preventDefault(); activateModule("poll"); }
+      return;
+    }
+
+    if (splitActive()) {
+      if (k === "escape") { e.preventDefault(); exitSplit(true); }
+      else if (k === "0") { e.preventDefault(); openModuleHome(); }
+      else if (k === "f" && splitModules.includes("media")) {
+        e.preventDefault();
+        if (mediaPresent && !presentationManual) setMediaPresentation(false);
+        else setMediaPresentation(true);
+      }
+      else if (k === "f" && splitModules.includes("stream")) {
+        e.preventDefault();
+        setStreamPresentation(!document.body.classList.contains("present-stream"));
+      }
+      return;
+    }
+
+    if (streamWallOpenNow()) {
+      if (k === "escape") {
+        e.preventDefault();
+        if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
+        else closeStreamWall();
+      }
+      else if (k === "f") { e.preventDefault(); setStreamPresentation(!document.body.classList.contains("present-stream")); }
+      else if (k === "0") { e.preventDefault(); openModuleHome(); }
+      else if (k === "v") { e.preventDefault(); openMediaWall(); }
+      return;
+    }
+
     if (mediaOpenNow()) {
       if (mediaPresent) {
         if (k === "escape" || k === "f") { e.preventDefault(); setMediaPresentation(false); }
@@ -3343,7 +3944,7 @@
       } else fbar.classList.toggle("on");
     }
     else if (/^[0-9]$/.test(k)) {
-      if (k === "0") setFilter("all");
+      if (k === "0") openModuleHome();
       else {
         const cat = categoryList()[Number(k) - 1];
         if (cat) setFilter(cat.key);
@@ -3536,6 +4137,12 @@
   buildPiles(true);
   updateStatus();
 
+  /* The module home comes first; ?module=notes|media|poll|stream skips it. */
+  const bootModuleParam = new URLSearchParams(location.search).get("module");
+  const bootModuleTarget = MODULE_KEYS.includes(bootModuleParam) ? bootModuleParam : null;
+  if (bootModuleTarget) activateModule(bootModuleTarget);
+  else openModuleHome();
+
   (async () => {
     try {
       const saved = await Store.getCategories();
@@ -3607,7 +4214,8 @@
       resync: syncMedia
     });
 
-    const liveHost = startLiveHost();
+    liveHost = startLiveHost();
+    if (bootModuleTarget) activateModule(bootModuleTarget);
     window.addEventListener("pagehide", () => liveHost?.stop());
   })();
 

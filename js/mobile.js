@@ -8,7 +8,7 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
   };
   let name = safe.get("sticky_name") || "", cat = null, last = 0, sending = false;
-  let liveSession = null, liveStarting = false, liveFacing = "environment", liveMicOn = true;
+  let liveSession = null, liveStarting = false, livePendingCancel = null, liveFacing = "environment", liveMicOn = true;
   const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll", "s-media", "s-live"];
 
   const voterKey = (() => {
@@ -412,15 +412,20 @@
   const liveStart = $("live-start"), liveStop = $("live-stop");
   const liveTools = $("live-tools"), liveFlip = $("live-flip"), liveMic = $("live-mic");
   const liveFallback = $("live-fallback");
+  const liveReactions = $("live-reactions");
 
   const LIVE_STATUS = {
     idle: "Camera off",
-    starting: "Connecting…",
+    asking: "Asking the presenter…",
+    starting: "Opening the camera…",
     waiting: "Waiting for the board…",
     live: "You're live",
     reconnecting: "Reconnecting…",
     trouble: "This network may block live video. Record a short video instead?",
     ended: "Live ended",
+    denied: "The presenter did not allow the camera",
+    cancelled: "Request cancelled",
+    expired: "The request expired. Ask again.",
     error: "Could not start the camera",
     unsupported: "Live video is not supported here"
   };
@@ -433,13 +438,33 @@
     if (liveFallback) {
       liveFallback.hidden = !(state === "trouble" || state === "error" || state === "reconnecting" || state === "unsupported");
     }
+    const note = document.querySelector("#s-live .live-request-note");
+    if (note) {
+      note.hidden = !(state === "idle" || state === "asking" || state === "denied" || state === "cancelled" || state === "expired" || state === "unsupported");
+    }
   }
 
   function syncLiveControls() {
     const active = !!liveSession || liveStarting;
     if (liveStart) liveStart.hidden = active;
-    if (liveStop) liveStop.hidden = !liveSession;
+    if (liveStop) {
+      liveStop.hidden = !liveSession && !livePendingCancel;
+      liveStop.textContent = livePendingCancel ? t("Cancel request") : t("Stop live");
+    }
     if (liveTools) liveTools.hidden = !liveSession;
+  }
+
+  function showPhoneReaction(reaction) {
+    if (!liveReactions || !reaction?.emoji) return;
+    const item = document.createElement("span");
+    item.className = "live-reaction";
+    item.textContent = reaction.emoji;
+    item.style.setProperty("--x", (16 + Math.random() * 68).toFixed(1) + "%");
+    item.style.setProperty("--drift", (Math.random() * 44 - 22).toFixed(0) + "px");
+    item.style.setProperty("--scale", (1 + Math.random() * .5).toFixed(2));
+    liveReactions.append(item);
+    navigator.vibrate?.(10);
+    setTimeout(() => item.remove(), 2100);
   }
 
   function showLivePreview(on) {
@@ -467,24 +492,41 @@
       return;
     }
     liveStarting = true;
-    if (liveStart) { liveStart.disabled = true; liveStart.textContent = t("Connecting…"); }
-    setLiveStatus("starting");
-    showLivePreview(true);
+    livePendingCancel = null;
+    if (liveStart) { liveStart.disabled = true; liveStart.textContent = t("Asking…"); }
+    setLiveStatus("asking");
+    showLivePreview(false);
     syncLiveControls();
     try {
       const session = await StickyLive.stream({
         author: name,
         facingMode: liveFacing,
-        onStatus: state => {
+        onStatus: (state, detail) => {
+          if (state === "asking") {
+            livePendingCancel = detail?.cancel || null;
+            syncLiveControls();
+            setLiveStatus("asking");
+            return;
+          }
           if (!liveSession && !liveStarting) return;
-          if (state === "live") setLiveStatus("live");
+          if (state === "starting") {
+            /* approved: the cancel offer no longer applies */
+            livePendingCancel = null;
+            syncLiveControls();
+            setLiveStatus("starting");
+          }
+          else if (state === "live") setLiveStatus("live");
           else if (state === "reconnecting") setLiveStatus("reconnecting");
           else if (state === "trouble") setLiveStatus("trouble");
           else if (state === "waiting" || state === "connecting") setLiveStatus("waiting");
           else if (state === "ended") setLiveStatus("ended");
-        }
+          else if (state === "denied" || state === "cancelled" || state === "expired") setLiveStatus(state);
+        },
+        onReaction: showPhoneReaction
       });
       liveSession = session;
+      livePendingCancel = null;
+      showLivePreview(true);
       if (livePreview) {
         livePreview.srcObject = session.stream;
         livePreview.muted = true;
@@ -492,16 +534,22 @@
         const started = livePreview.play();
         if (started?.catch) started.catch(() => {});
       }
-      showLivePreview(true);
       setLiveStatus("waiting");
       applyLiveMic();
       syncLiveControls();
       navigator.vibrate?.(12);
     } catch (err) {
-      console.error("Could not go live", err);
+      const code = err?.code;
+      console.warn("Could not go live", err);
+      livePendingCancel = null;
       showLivePreview(false);
-      setLiveStatus("error");
-      toast(t(LIVE_STATUS.error), true);
+      if (code === "denied" || code === "cancelled" || code === "expired") {
+        setLiveStatus(code);
+        toast(t(LIVE_STATUS[code]), code !== "cancelled");
+      } else {
+        setLiveStatus("error");
+        toast(t(LIVE_STATUS.error), true);
+      }
     } finally {
       liveStarting = false;
       if (liveStart) { liveStart.disabled = false; liveStart.textContent = t("Start live"); }
@@ -511,8 +559,13 @@
 
   function stopLive() {
     if (!liveSession) {
+      if (livePendingCancel) {
+        const cancel = livePendingCancel;
+        livePendingCancel = null;
+        try { cancel(); } catch {}
+      }
       showLivePreview(false);
-      setLiveStatus("idle");
+      if (!livePendingCancel) setLiveStatus("idle");
       syncLiveControls();
       return;
     }
@@ -523,6 +576,7 @@
       livePreview.srcObject = null;
       livePreview.hidden = true;
     }
+    if (liveReactions) liveReactions.replaceChildren();
     showLivePreview(false);
     setLiveStatus("ended");
     syncLiveControls();
@@ -541,12 +595,22 @@
   liveStop?.addEventListener("click", stopLive);
   liveFlip?.addEventListener("click", async () => {
     if (!liveSession || liveStarting) return;
-    const previous = liveSession;
-    liveSession = null;
-    try { previous.stop(); } catch {}
-    if (livePreview) livePreview.srcObject = null;
-    liveFacing = liveFacing === "environment" ? "user" : "environment";
-    await startLive();
+    const next = liveFacing === "environment" ? "user" : "environment";
+    try {
+      const stream = await liveSession.swapCamera(next);
+      liveFacing = next;
+      if (livePreview) {
+        livePreview.srcObject = stream;
+        livePreview.muted = true;
+        livePreview.classList.toggle("is-front", liveFacing === "user");
+        const started = livePreview.play();
+        if (started?.catch) started.catch(() => {});
+      }
+      navigator.vibrate?.(8);
+    } catch (err) {
+      console.warn("Could not flip the live camera", err);
+      toast(t("Could not switch the camera"), true);
+    }
   });
   liveMic?.addEventListener("click", () => {
     liveMicOn = !liveMicOn;

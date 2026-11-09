@@ -43,39 +43,51 @@
   const getBus = () => window.Store?.liveBus || null;
   const serialiseCandidate = candidate => candidate?.toJSON ? candidate.toJSON() : candidate;
 
-  /* ── phone: camera → board ─────────────────────────────────── */
-  async function stream({ author, facingMode = "environment", mediaStream, onStatus } = {}) {
+  /* ── phone: ask first, then camera → board ─────────────────── */
+  async function stream({
+    author,
+    facingMode = "environment",
+    mediaStream,
+    onStatus,
+    onReaction,
+    askPresenter = true,
+    requestId: reuseRequestId = null
+  } = {}) {
     const bus = getBus();
     if (!bus) throw new Error("Live signalling is not available");
     if (!mediaStream && !navigator.mediaDevices?.getUserMedia) {
       throw new Error("This browser cannot open the camera");
     }
 
-    const owned = !mediaStream;
-    const local = mediaStream || await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: {
-        facingMode: { ideal: facingMode },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 30, max: 30 }
-      }
-    });
-    local.getVideoTracks().forEach(track => {
-      try { track.contentHint = "motion"; } catch {}
-    });
-
     const streamId = uniqueId();
+    const requestId = reuseRequestId || uniqueId();
     const emit = (state, detail) => { try { onStatus?.(state, detail); } catch {} };
+    let local = mediaStream || null;
+    let ownedTracks = new Set(mediaStream ? [] : []);
     let pc = null, answered = false, closed = false, remoteSet = false;
     let pendingIce = [], lastOfferAt = 0, offering = null;
     let announceTimer = 0, troubleTimer = 0, restartTimer = 0;
     let unlisten = null;
+    let approved = !askPresenter || !!mediaStream;
+    let settleApproval = null;
+
+    const approval = approved ? Promise.resolve() : new Promise((resolve, reject) => {
+      settleApproval = { resolve, reject };
+    });
 
     const send = msg => bus.send(msg).catch(err => {
       console.warn("Live signal could not be sent", err);
       return false;
     });
+
+    function cancelRequest() {
+      if (closed || approved) return;
+      closed = true;
+      try { send({ type: "request-cancel", requestId }); } catch {}
+      const err = new Error("Live request cancelled");
+      err.code = "cancelled";
+      settleApproval?.reject(err);
+    }
 
     function buildPeer() {
       if (pc) { try { pc.close(); } catch {} }
@@ -121,7 +133,7 @@
 
     function announce() {
       if (closed) return;
-      send({ type: "announce", streamId, author: author || "" });
+      send({ type: "announce", streamId, requestId, author: author || "" });
     }
 
     async function makeOffer() {
@@ -137,7 +149,7 @@
         lastOfferAt = Date.now();
         const description = pc.localDescription;
         const sdp = description ? { type: description.type, sdp: description.sdp } : null;
-        const ok = await send({ type: "offer", streamId, author: author || "", sdp });
+        const ok = await send({ type: "offer", streamId, requestId, author: author || "", sdp });
         if (ok === false) { buildPeer(); return; }
         if (!troubleTimer) {
           troubleTimer = setTimeout(() => {
@@ -157,7 +169,28 @@
     }
 
     async function handleSignal(msg) {
-      if (closed || !msg || msg.streamId !== streamId) return;
+      if (closed || !msg) return;
+
+      /* approval is addressed by request, before a camera exists */
+      if (msg.type === "request-approved" || msg.type === "request-denied") {
+        if (msg.requestId !== requestId) return;
+        if (msg.type === "request-approved") settleApproval?.resolve({ placement: msg.placement || "stream" });
+        else {
+          const err = new Error("The presenter did not allow the camera");
+          err.code = "denied";
+          settleApproval?.reject(err);
+        }
+        return;
+      }
+
+      /* presenter reactions reach the phone only while it is live */
+      if (msg.type === "reaction") {
+        if (!approved) return;
+        try { onReaction?.({ emoji: msg.emoji || "👍", label: msg.label || "", reactionId: msg.reactionId }); } catch {}
+        return;
+      }
+
+      if (msg.streamId !== streamId) return;
       if (msg.type === "board-ready") {
         if (!answered) offer();
       } else if (msg.type === "answer") {
@@ -180,9 +213,56 @@
       }
     }
 
-    emit("waiting");
+    emit(approved ? "waiting" : "asking", approved ? undefined : { cancel: cancelRequest });
     await bus.ready();
     unlisten = bus.on(handleSignal);
+
+    if (closed) {
+      unlisten?.(); unlisten = null;
+      const err = new Error("Live request cancelled");
+      err.code = "cancelled";
+      throw err;
+    }
+
+    if (!approved) {
+      const sent = await send({ type: "request", requestId, author: author || "" });
+      if (sent === false) {
+        unlisten?.(); unlisten = null;
+        throw new Error("Live signalling is not available");
+      }
+      try {
+        await approval;
+      } catch (err) {
+        closed = true;
+        unlisten?.(); unlisten = null;
+        emit(err.code === "denied" ? "denied" : "cancelled");
+        throw err;
+      }
+      approved = true;
+    }
+
+    emit("starting");
+    try {
+      local = mediaStream || await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30, max: 30 }
+        }
+      });
+    } catch (err) {
+      closed = true;
+      unlisten?.(); unlisten = null;
+      send({ type: "request-end", requestId, streamId });
+      throw err;
+    }
+    if (ownedTracks.size === 0 && !mediaStream) ownedTracks = new Set(local.getTracks());
+    local.getVideoTracks().forEach(track => {
+      try { track.contentHint = "motion"; } catch {}
+    });
+
     buildPeer();
     announce();
     announceTimer = setInterval(() => {
@@ -197,31 +277,85 @@
       clearTimeout(restartTimer); restartTimer = 0;
       unlisten?.(); unlisten = null;
       send({ type: "bye", streamId });
+      send({ type: "request-end", requestId, streamId });
       try { pc?.close(); } catch {}
       pc = null;
-      if (owned) local.getTracks().forEach(track => { try { track.stop(); } catch {} });
+      ownedTracks.forEach(track => { try { track.stop(); } catch {} });
+      ownedTracks = new Set();
       emit("ended");
+    }
+
+    /* Flip camera without asking the presenter again: replace the live
+       track on the existing peer connection and keep the same approval. */
+    async function swapCamera(nextFacing) {
+      if (closed || !navigator.mediaDevices?.getUserMedia) return local;
+      const next = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: nextFacing || "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30, max: 30 }
+        }
+      });
+      const track = next.getVideoTracks()[0];
+      if (!track) return local;
+      try { track.contentHint = "motion"; } catch {}
+      const sender = pc?.getSenders().find(item => item.track?.kind === "video");
+      if (sender) await sender.replaceTrack(track);
+      const old = local.getVideoTracks();
+      old.forEach(item => {
+        try { local.removeTrack(item); } catch {}
+        try { item.stop(); } catch {}
+        ownedTracks.delete(item);
+      });
+      ownedTracks.add(track);
+      local.addTrack(track);
+      return local;
     }
 
     return {
       streamId,
+      requestId,
       stream: local,
       stop,
+      swapCamera,
       get state() { return pc?.connectionState || "closed"; }
     };
   }
 
-  /* ── board: answer phones and hand back their streams ──────── */
-  function host({ onStream, onEnd, onStatus } = {}) {
+  /* ── board: approve requests, answer phones ─────────────────── */
+  function host({ onStream, onEnd, onRequest, onCancel, onStatus } = {}) {
     const bus = getBus();
     if (!bus) return { stop() {} };
 
     const peers = new Map();
+    const requests = new Map();
+    const approved = new Map();
+    /* A grant is only cleaned up if the phone never uses it; an event board
+       can stay open for hours, so keep unused grants for the day. */
+    const GRANT_TTL = 12 * 60 * 60 * 1000;
     let stopped = false;
 
     const send = msg => bus.send(msg).catch(err => {
       console.warn("Live signal could not be sent", err);
     });
+
+    function revoke(requestId) {
+      const grant = approved.get(requestId);
+      if (!grant) return;
+      clearTimeout(grant.timer);
+      approved.delete(requestId);
+    }
+
+    /* Keep a live phone's approval alive while it keeps talking to us. The
+       TTL only exists to clean up grants that were never used. */
+    function touchGrant(requestId) {
+      const grant = approved.get(requestId);
+      if (!grant) return;
+      clearTimeout(grant.timer);
+      grant.timer = setTimeout(() => revoke(requestId), GRANT_TTL);
+    }
 
     function closePeer(streamId, notify) {
       const peer = peers.get(streamId);
@@ -234,11 +368,21 @@
       }
     }
 
+    function grantFor(msg) {
+      return msg?.requestId ? approved.get(msg.requestId) : null;
+    }
+
     async function acceptOffer(msg) {
-      if (!msg.sdp || stopped) return;
+      const grant = grantFor(msg);
+      if (!grant || !msg.sdp || stopped) return;
+      touchGrant(msg.requestId);
       let peer = peers.get(msg.streamId);
-      if (peer && peer.pc.connectionState === "connected") return;
-      if (peer && ["failed", "closed", "disconnected"].includes(peer.pc.connectionState)) {
+      if (peer) {
+        if (peer.pc.connectionState === "connected") return;
+        const state = peer.pc.signalingState;
+        /* Ignore a duplicate while an answer is being built. A stable peer
+           that never connected is stale: the phone restarted, so rebuild. */
+        if (state === "have-remote-offer" || state === "have-local-offer") return;
         closePeer(msg.streamId, false);
         peer = null;
       }
@@ -248,7 +392,9 @@
         peer = {
           pc,
           streamId: msg.streamId,
-          author: msg.author || "",
+          requestId: msg.requestId,
+          placement: grant.placement,
+          author: msg.author || grant.author || "",
           remoteSet: false,
           pending: [],
           disconnectTimer: 0,
@@ -274,6 +420,8 @@
           try {
             onStream?.({
               streamId: msg.streamId,
+              requestId: msg.requestId,
+              placement: peer.placement,
               author: peer.author || msg.author || "",
               stream: remote
             });
@@ -315,12 +463,32 @@
 
     const unlisten = bus.on(msg => {
       if (stopped || !msg) return;
-      if (msg.type === "announce") {
+      if (msg.type === "request") {
+        if (!msg.requestId || requests.has(msg.requestId) || approved.has(msg.requestId)) return;
+        requests.set(msg.requestId, { author: msg.author || "", at: Date.now() });
+        try {
+          onRequest?.({
+            requestId: msg.requestId,
+            author: msg.author || "",
+            at: Date.now()
+          });
+        } catch (err) { console.error("Could not show a live request", err); }
+      } else if (msg.type === "request-cancel") {
+        requests.delete(msg.requestId);
+        revoke(msg.requestId);
+        try { onCancel?.(msg.requestId); } catch {}
+      } else if (msg.type === "request-end") {
+        requests.delete(msg.requestId);
+        revoke(msg.requestId);
+      } else if (msg.type === "announce") {
+        if (!grantFor(msg)) return;
+        touchGrant(msg.requestId);
         const peer = peers.get(msg.streamId);
         if (!peer || peer.pc.connectionState !== "connected") {
-          send({ type: "board-ready", streamId: msg.streamId, to: "phone" });
+          send({ type: "board-ready", streamId: msg.streamId, requestId: msg.requestId, to: "phone" });
         }
       } else if (msg.type === "offer") {
+        if (!grantFor(msg)) return;
         acceptOffer(msg);
       } else if (msg.type === "ice" && msg.from === "phone") {
         const peer = peers.get(msg.streamId);
@@ -337,10 +505,38 @@
       .catch(err => console.warn("Live channel is not ready", err));
 
     return {
+      /* Only the presenter calls these, after choosing a placement. */
+      approve(requestId, placement) {
+        if (stopped || !requestId) return;
+        const req = requests.get(requestId) || {};
+        const where = ["stream", "media", "float", "split"].includes(placement) ? placement : "stream";
+        const timer = setTimeout(() => revoke(requestId), GRANT_TTL);
+        approved.set(requestId, { placement: where, author: req.author || "", timer });
+        requests.delete(requestId);
+        send({ type: "request-approved", requestId, placement: where, to: "phone" });
+      },
+      deny(requestId) {
+        if (stopped || !requestId) return;
+        requests.delete(requestId);
+        revoke(requestId);
+        send({ type: "request-denied", requestId, to: "phone" });
+      },
+      react(reaction) {
+        if (stopped || !reaction) return;
+        send({
+          type: "reaction",
+          reactionId: reaction.reactionId || uniqueId(),
+          emoji: reaction.emoji || "👍",
+          label: reaction.label || "",
+          at: reaction.at || Date.now()
+        });
+      },
       stop() {
         stopped = true;
         unlisten?.();
         for (const streamId of [...peers.keys()]) closePeer(streamId, true);
+        for (const requestId of [...approved.keys()]) revoke(requestId);
+        requests.clear();
       }
     };
   }

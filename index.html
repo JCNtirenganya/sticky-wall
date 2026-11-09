@@ -7,7 +7,7 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105i"><link rel="stylesheet" href="css/mobile.css?v=20261105i"><link rel="stylesheet" href="css/charts.css?v=20261105i">
+<link rel="stylesheet" href="css/paper.css?v=20261108b"><link rel="stylesheet" href="css/mobile.css?v=20261108b"><link rel="stylesheet" href="css/charts.css?v=20261108b">
 </head>
 <body>
 <main class="app">
@@ -183,8 +183,10 @@
             <small data-i18n="Start when you are ready.">Start when you are ready.</small>
           </div>
           <span id="live-badge" class="live-badge" hidden><span class="live-badge__dot" aria-hidden="true"></span><span data-i18n="Live">Live</span></span>
+          <div id="live-reactions" class="live-reactions" aria-hidden="true"></div>
         </div>
-        <p id="live-status" class="live-status" role="status">Camera off</p>
+        <p id="live-status" class="live-status" role="status" data-i18n="Camera off">Camera off</p>
+        <p class="live-request-note" data-i18n="The presenter must allow your camera before it opens.">The presenter must allow your camera before it opens.</p>
         <div class="live-actions">
           <button id="live-start" class="poll-submit live-start" type="button" data-i18n="Start live">Start live</button>
           <button id="live-stop" class="live-stop" type="button" hidden data-i18n="Stop live">Stop live</button>
@@ -246,7 +248,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105i"></script><script src="js/i18n.js?v=20261105i"></script><script src="js/polls.js?v=20261105i"></script><script src="js/store.js?v=20261105i"></script><script src="js/shared.js?v=20261105i"></script><script src="js/charts.js?v=20261105i"></script>
-<script src="js/live.js?v=20261105i"></script>
-<script src="js/mobile.js?v=20261105i"></script>
+<script src="js/config.js?v=20261108b"></script><script src="js/i18n.js?v=20261108b"></script><script src="js/polls.js?v=20261108b"></script><script src="js/store.js?v=20261108b"></script><script src="js/shared.js?v=20261108b"></script><script src="js/charts.js?v=20261108b"></script>
+<script src="js/live.js?v=20261108b"></script>
+<script src="js/mobile.js?v=20261108b"></script>
 </body></html>

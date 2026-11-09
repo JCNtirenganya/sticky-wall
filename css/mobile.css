@@ -1536,3 +1536,47 @@ textarea:focus-visible{outline:2px solid rgba(255,236,200,.9);outline-offset:3px
 }
 .live-fallback b{font:700 13px/1.15 var(--font-hand)}
 .live-fallback small{font:500 10px/1.25 var(--font-ui);color:rgba(56,38,23,.55)}
+
+/* ── live: request permission, then receive reactions ───────── */
+.live-request-note{
+  margin:6px 0 0;
+  padding:8px 10px;
+  border:1px dashed rgba(56,38,23,.24);
+  border-radius:9px;
+  background:rgba(255,252,244,.55);
+  font:500 10.5px/1.4 var(--font-ui);
+  color:rgba(56,38,23,.6);
+  text-align:center;
+}
+.live-request-note[hidden]{display:none}
+.live-status[data-state="asking"]{color:#8a5a12}
+.live-status[data-state="denied"],
+.live-status[data-state="cancelled"],
+.live-status[data-state="expired"]{color:#8e2f2f}
+.live-stop{width:100%}
+.live-reactions{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  overflow:hidden;
+}
+.live-reaction{
+  position:absolute;
+  left:var(--x,50%);
+  bottom:8%;
+  font-size:34px;
+  line-height:1;
+  transform:scale(var(--scale,1));
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.42));
+  animation:phoneReaction 2.1s ease-out both;
+}
+@keyframes phoneReaction{
+  0%{opacity:0;transform:translateY(12px) scale(.4)}
+  14%{opacity:1;transform:translateY(0) scale(calc(var(--scale,1) * 1.2))}
+  72%{opacity:1}
+  100%{opacity:0;transform:translate(var(--drift,0px),-150px) scale(var(--scale,1)) rotate(6deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .live-reaction{animation-duration:1.1s}
+}

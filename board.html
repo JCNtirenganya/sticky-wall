@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261105i"><link rel="stylesheet" href="css/postit.css?v=20261105i"><link rel="stylesheet" href="css/board.css?v=20261105i"><link rel="stylesheet" href="css/avatar.css?v=20261105i"><link rel="stylesheet" href="css/piles.css?v=20261105i"><link rel="stylesheet" href="css/qr.css?v=20261105i"><link rel="stylesheet" href="css/charts.css?v=20261105i">
+<link rel="stylesheet" href="css/paper.css?v=20261108b"><link rel="stylesheet" href="css/postit.css?v=20261108b"><link rel="stylesheet" href="css/board.css?v=20261108b"><link rel="stylesheet" href="css/avatar.css?v=20261108b"><link rel="stylesheet" href="css/piles.css?v=20261108b"><link rel="stylesheet" href="css/qr.css?v=20261108b"><link rel="stylesheet" href="css/charts.css?v=20261108b">
 </head>
 <body>
 <main id="board">
@@ -67,8 +67,72 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button></div>
+<div id="status"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
 <button id="piles-back" type="button" hidden><span aria-hidden="true">←</span> <span data-i18n="All piles">All piles</span></button>
+
+<!-- presenter: first stop · choose which module fills the screen -->
+<section id="module-home" class="module-home" aria-label="Choose a module" data-i18n-aria="Choose a module" aria-hidden="false">
+  <div class="module-home__shell">
+    <header class="module-home__head">
+      <p class="poll-kicker" data-i18n="Presenter · modules">Presenter · modules</p>
+      <h2 data-i18n="What should fill the screen?">What should fill the screen?</h2>
+      <p data-i18n="Pick one module to activate. You can split the screen later.">Pick one module to activate. You can split the screen later.</p>
+    </header>
+    <div class="module-home__grid">
+      <button type="button" class="module-card module-card--notes" data-module="notes">
+        <kbd>1</kbd>
+        <span class="module-card__icon" aria-hidden="true">📝</span>
+        <b data-i18n="Notes">Notes</b>
+        <small data-i18n="Everything the room wrote, on the wall.">Everything the room wrote, on the wall.</small>
+      </button>
+      <button type="button" class="module-card module-card--media" data-module="media">
+        <kbd>2</kbd>
+        <span class="module-card__icon" aria-hidden="true">🖼️</span>
+        <b data-i18n="Media">Media</b>
+        <small data-i18n="Photos and short videos from phones.">Photos and short videos from phones.</small>
+      </button>
+      <button type="button" class="module-card module-card--poll" data-module="poll">
+        <kbd>3</kbd>
+        <span class="module-card__icon" aria-hidden="true">▣</span>
+        <b data-i18n="Poll">Poll</b>
+        <small data-i18n="Live questions and results.">Live questions and results.</small>
+      </button>
+      <button type="button" class="module-card module-card--stream" data-module="stream">
+        <kbd>4</kbd>
+        <span class="module-card__icon" aria-hidden="true">📹</span>
+        <b data-i18n="Stream">Stream</b>
+        <small data-i18n="Approved phone cameras, live.">Approved phone cameras, live.</small>
+      </button>
+    </div>
+    <footer class="module-home__foot">
+      <span><kbd>1</kbd>–<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
+      <span><kbd>0</kbd> <span data-i18n="opens this window">opens this window</span></span>
+    </footer>
+  </div>
+</section>
+
+<!-- presenter: two or more modules side by side -->
+<div id="split-stage" class="split-stage" hidden aria-label="Split screen" data-i18n-aria="Split screen">
+  <div class="split-stage__bar">
+    <span id="split-label" class="split-stage__label"></span>
+    <div class="split-stage__actions">
+      <button id="split-home" class="poll-btn" type="button"><span data-i18n="Modules">Modules</span> <kbd>0</kbd></button>
+      <button id="split-exit" class="poll-btn" type="button"><span data-i18n="Exit split">Exit split</span> <kbd>Esc</kbd></button>
+    </div>
+  </div>
+  <div id="split-panes" class="split-panes"></div>
+</div>
+
+<!-- presenter: quick reactions on any displayed wall -->
+<div id="reaction-dock" class="reaction-dock" role="toolbar" aria-label="Reactions" data-i18n-aria="Reactions" hidden>
+  <span class="reaction-dock__label" data-i18n="React">React</span>
+  <div id="reaction-quick" class="reaction-dock__quick"></div>
+  <label class="reaction-dock__target-wrap">
+    <span class="reaction-dock__target-label" data-i18n="Wall">Wall</span>
+    <select id="reaction-target" class="reaction-dock__target" aria-label="Reaction wall" data-i18n-aria="Reaction wall"></select>
+  </label>
+  <button id="reaction-close" class="reaction-dock__close" type="button" aria-label="Close reactions" data-i18n-aria="Close reactions">×</button>
+</div>
 
 <!-- presenter extras: washed-out dock, appears on pointer movement -->
 <div id="extras" aria-label="Board extras" data-i18n-aria="Board extras">
@@ -82,6 +146,19 @@
     </header>
 
     <div class="extras-cols">
+
+      <section class="extras-card">
+        <header class="extras-card__head">
+          <h3 data-i18n="Modules">Modules</h3>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-home" class="extras-btn" type="button"><span data-i18n="Module home">Module home</span> <kbd>0</kbd></button>
+          <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screen…">Split screen…</button>
+          <button id="extras-stream-wall" class="extras-btn" type="button" data-i18n="Live stream">Live stream</button>
+          <button id="extras-reactions" class="extras-btn" type="button"><span data-i18n="Reactions">Reactions</span> <kbd>⇧R</kbd></button>
+        </div>
+        <p class="extras-note" data-i18n="Choose what fills the screen, or show two or more modules side by side.">Choose what fills the screen, or show two or more modules side by side.</p>
+      </section>
 
       <section class="extras-card">
         <header class="extras-card__head">
@@ -172,6 +249,14 @@
           <label class="extra-row">
             <input type="checkbox" data-extra="mediaLoop" checked>
             <span data-i18n="Loop videos">Loop videos</span>
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Seconds per photo">Seconds per photo</span> <output id="media-photo-seconds-out" data-for="mediaPhotoSeconds">6</output><span class="extra-unit">s</span></span>
+            <input type="range" data-extra="mediaPhotoSeconds" min="2" max="60" step="1" value="6">
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">×</span></span>
+            <input type="range" data-extra="mediaVideoRate" min="0.5" max="2" step="0.25" value="1">
           </label>
           <label class="extra-range">
             <span class="extra-range-head"><span data-i18n="Most recent">Most recent</span> <output id="media-max-out" data-for="mediaMax">12</output><span class="extra-unit" data-i18n="items">items</span></span>
@@ -399,6 +484,44 @@
   </div>
 </section>
 
+<!-- presenter: live streams from phones -->
+<section id="stream-wall" class="stream-wall" aria-label="Live stream" data-i18n-aria="Live stream" aria-hidden="true">
+  <div class="stream-wall__shell">
+    <header class="stream-wall__head">
+      <div>
+        <p class="poll-kicker" data-i18n="Presenter · live stream">Presenter · live stream</p>
+        <h2 data-i18n="Live from phones">Live from phones</h2>
+        <p id="stream-sub" class="stream-wall__sub"></p>
+      </div>
+      <div class="stream-wall__actions">
+        <button id="stream-requests" class="poll-btn" type="button" hidden><span data-i18n="Requests">Requests</span> <span id="stream-request-count" class="extras-badge">0</span></button>
+        <button id="stream-present" class="poll-btn" type="button" aria-pressed="false" title="Present the stream full screen (F)" data-i18n-title="Present the stream full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
+        <button id="stream-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
+      </div>
+    </header>
+    <div id="stream-grid" class="stream-grid"></div>
+    <div id="stream-empty" class="stream-empty" hidden>
+      <p class="stream-empty__icon" aria-hidden="true">📹</p>
+      <h3 data-i18n="No live stream yet">No live stream yet</h3>
+      <p data-i18n="When someone asks to go live, approve the request and their camera appears here.">When someone asks to go live, approve the request and their camera appears here.</p>
+      <div class="stream-empty__actions">
+        <button id="stream-empty-requests" class="poll-btn" type="button" hidden data-i18n="Review requests">Review requests</button>
+        <button id="stream-empty-media" class="poll-btn" type="button" data-i18n="Open media wall">Open media wall</button>
+      </div>
+    </div>
+    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> · <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
+  </div>
+</section>
+
+<!-- floating live window: presenter chooses this placement on approval -->
+<div id="live-float" class="live-float" hidden>
+  <div class="live-float__head">
+    <span class="media-live-strip__label"><span class="media-live-strip__dot" aria-hidden="true"></span><span data-i18n="Live from phones">Live from phones</span></span>
+    <button id="live-float-close" class="live-float__close" type="button" aria-label="Close live window" data-i18n-aria="Close live window">×</button>
+  </div>
+  <div id="live-float-grid" class="live-float__grid"></div>
+</div>
+
 <!-- presenter: live bar-chart race -->
 <section id="poll-race" class="poll-race" aria-label="Live chart race" data-i18n-aria="Live chart race" aria-hidden="true">
   <div class="poll-race__shell">
@@ -513,6 +636,43 @@
       <span class="event-spacer"></span>
       <button id="category-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
       <button type="submit" class="event-btn" data-i18n="Save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: choose two or more modules for the split screen -->
+<dialog id="split-dialog" class="event-dialog split-dialog">
+  <form id="split-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 data-i18n="Split screen">Split screen</h2>
+    <p class="event-lead" data-i18n="Pick two or more modules to show side by side. Use this when the screen or projector is large enough.">Pick two or more modules to show side by side. Use this when the screen or projector is large enough.</p>
+    <div id="split-options" class="split-options" role="group" aria-label="Modules" data-i18n-aria="Modules">
+      <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">📝</span><b data-i18n="Notes">Notes</b></label>
+      <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">🖼️</span><b data-i18n="Media">Media</b></label>
+      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">▣</span><b data-i18n="Poll">Poll</b></label>
+      <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">📹</span><b data-i18n="Stream">Stream</b></label>
+    </div>
+    <p id="split-hint" class="split-hint" role="status"></p>
+    <div class="event-actions">
+      <button id="split-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
+      <span class="event-spacer"></span>
+      <button type="submit" class="event-btn" id="split-apply" data-i18n="Show split">Show split</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: go-live requests from phones -->
+<dialog id="live-request-dialog" class="event-dialog live-request-dialog">
+  <form id="live-request-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 data-i18n="Go-live requests">Go-live requests</h2>
+    <p class="event-lead" data-i18n="Only you can allow a phone to go live, and you choose where it appears.">Only you can allow a phone to go live, and you choose where it appears.</p>
+    <div id="live-request-list" class="live-request-list"></div>
+    <p id="live-request-empty" class="live-request-empty" hidden data-i18n="No pending requests.">No pending requests.</p>
+    <div class="event-actions">
+      <button id="live-request-close" type="button" class="event-btn event-btn--quiet" data-i18n="Close">Close</button>
+      <span class="event-spacer"></span>
+      <button type="submit" class="event-btn" data-i18n="Done">Done</button>
     </div>
   </form>
 </dialog>
@@ -823,5 +983,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261105i"></script><script src="js/i18n.js?v=20261105i"></script><script src="js/polls.js?v=20261105i"></script><script src="js/store.js?v=20261105i"></script><script src="js/shared.js?v=20261105i"></script><script src="js/charts.js?v=20261105i"></script><script src="js/qrcode.js?v=20261105i"></script><script src="js/export.js?v=20261105i"></script><script src="js/live.js?v=20261105i"></script><script src="js/board.js?v=20261105i"></script>
+<script src="js/config.js?v=20261108b"></script><script src="js/i18n.js?v=20261108b"></script><script src="js/polls.js?v=20261108b"></script><script src="js/store.js?v=20261108b"></script><script src="js/shared.js?v=20261108b"></script><script src="js/charts.js?v=20261108b"></script><script src="js/qrcode.js?v=20261108b"></script><script src="js/export.js?v=20261108b"></script><script src="js/live.js?v=20261108b"></script><script src="js/board.js?v=20261108b"></script>
 </body></html>
