@@ -9,7 +9,7 @@
   };
   let name = safe.get("sticky_name") || "", cat = null, last = 0, sending = false;
   let liveSession = null, liveStarting = false, livePendingCancel = null, liveFacing = "environment", liveMicOn = true;
-  const IDS = ["s-name", "s-cat", "s-write", "s-polls", "s-poll", "s-media", "s-live"];
+  const IDS = ["s-name", "s-home", "s-cat", "s-write", "s-polls", "s-poll", "s-media", "s-live"];
 
   const voterKey = (() => {
     let key = safe.get("sticky_voter_key");
@@ -21,18 +21,26 @@
     return key;
   })();
 
+  const whoText = () => t("Posting as {name} · change", {
+    name: name.length > 22 ? name.slice(0, 21) + "…" : name
+  });
+  const syncWho = () => {
+    const label = whoText();
+    ["who", "home-who"].forEach(id => {
+      const el = $(id);
+      if (el) el.textContent = label;
+    });
+  };
+
   const show = id => {
     if (id !== "s-live" && liveSession) stopLive();
     IDS.forEach(s => $(s).classList.toggle("hidden", s !== id));
-    if (id === "s-cat") {
-      $("who").textContent = whoText();
+    if (id === "s-home" || id === "s-cat") {
+      syncWho();
       updatePollBanner();
     }
     if (id === "s-polls") renderPollList();
   };
-  const whoText = () => t("Posting as {name} · change", {
-    name: name.length > 22 ? name.slice(0, 21) + "…" : name
-  });
 
   const demoNote = $("demo-note");
   if (demoNote) demoNote.hidden = Store.mode !== "demo";
@@ -110,15 +118,20 @@
     if (!v) return;
     name = v;
     safe.set("sticky_name", name);
-    $("who").textContent = whoText();
-    show("s-cat");
+    syncWho();
+    show("s-home");
   });
   $("who").onclick = () => {
     show("s-name");
     setTimeout(() => $("name").focus(), 80);
   };
+  $("home-who")?.addEventListener("click", () => {
+    show("s-name");
+    setTimeout(() => $("name").focus(), 80);
+  });
 
   $("back").onclick = () => { show("s-cat"); cat = null; };
+  $("cat-back")?.addEventListener("click", () => { cat = null; show("s-home"); });
 
   /* ── writing ───────────────────────────────────────────────── */
   const text = $("text"), count = $("count"), send = $("send");
@@ -225,7 +238,7 @@
   }
 
   /* ── event media: photo or short video ─────────────────────── */
-  const mediaOpen = $("media-open"), mediaBack = $("media-back"), mediaFileInput = $("media-file");
+  const mediaBack = $("media-back"), mediaFileInput = $("media-file");
   const mediaPhotoInput = $("media-photo-file"), mediaVideoInput = $("media-video-file");
   const mediaPhotoBtn = $("media-photo"), mediaVideoBtn = $("media-video");
   const mediaSource = $("media-source"), mediaPick = $("media-pick");
@@ -359,12 +372,7 @@
     }
   }
 
-  mediaOpen?.addEventListener("click", () => {
-    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
-    clearMediaSelection();
-    show("s-media");
-  });
-  mediaBack?.addEventListener("click", () => { clearMediaSelection(); show("s-cat"); });
+  mediaBack?.addEventListener("click", () => { clearMediaSelection(); show("s-home"); });
   mediaPhotoBtn?.addEventListener("click", () => mediaPhotoInput?.click());
   mediaVideoBtn?.addEventListener("click", () => mediaVideoInput?.click());
   mediaPick?.addEventListener("click", () => mediaFileInput?.click());
@@ -394,7 +402,7 @@
       navigator.vibrate?.(14);
       toast(t("Sent to the big screen"));
       clearMediaSelection();
-      setTimeout(() => show("s-cat"), 700);
+      setTimeout(() => show("s-home"), 700);
     } catch (err) {
       console.error("Could not send the media", err);
       toast(t("Couldn't send — try again"), true);
@@ -406,7 +414,7 @@
   });
 
   /* ── live from the phone camera ────────────────────────────── */
-  const liveOpen = $("live-open"), liveBack = $("live-back");
+  const liveBack = $("live-back");
   const livePreview = $("live-preview"), livePlaceholder = $("live-placeholder");
   const liveBadge = $("live-badge"), liveStatus = $("live-status");
   const liveStart = $("live-start"), liveStop = $("live-stop");
@@ -582,7 +590,15 @@
     syncLiveControls();
   }
 
-  liveOpen?.addEventListener("click", () => {
+  /* ── module home navigation ────────────────────────────────── */
+  $("home-notes")?.addEventListener("click", () => { cat = null; show("s-cat"); });
+  $("home-media")?.addEventListener("click", () => {
+    if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
+    clearMediaSelection();
+    show("s-media");
+  });
+  $("home-poll")?.addEventListener("click", () => show("s-polls"));
+  $("home-stream")?.addEventListener("click", () => {
     if (!name) { show("s-name"); setTimeout(() => $("name").focus(), 80); return; }
     if (liveSession) { show("s-live"); return; }
     setLiveStatus("idle");
@@ -590,7 +606,8 @@
     syncLiveControls();
     show("s-live");
   });
-  liveBack?.addEventListener("click", () => { stopLive(); show("s-cat"); });
+
+  liveBack?.addEventListener("click", () => { stopLive(); show("s-home"); });
   liveStart?.addEventListener("click", startLive);
   liveStop?.addEventListener("click", stopLive);
   liveFlip?.addEventListener("click", async () => {
@@ -1067,29 +1084,33 @@
   }
 
   pollBanner?.addEventListener("click", () => show("s-polls"));
-  $("poll-list-back")?.addEventListener("click", () => show("s-cat"));
+  $("poll-list-back")?.addEventListener("click", () => show("s-home"));
   $("poll-back")?.addEventListener("click", () => show("s-polls"));
   $("poll-submit")?.addEventListener("click", submitPollAnswer);
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    if (mediaPreview && !$("s-media").classList.contains("hidden")) { clearMediaSelection(); show("s-cat"); return; }
+    if (mediaPreview && !$("s-media").classList.contains("hidden")) { clearMediaSelection(); show("s-home"); return; }
+    if (!$("s-live").classList.contains("hidden")) { show("s-home"); return; }
     if (pollScreen && !pollScreen.classList.contains("hidden")) { show("s-polls"); return; }
-    if (!$("s-polls").classList.contains("hidden")) { show("s-cat"); return; }
-    if (!$("s-write").classList.contains("hidden")) { show("s-cat"); cat = null; }
+    if (!$("s-polls").classList.contains("hidden")) { show("s-home"); return; }
+    if (!$("s-write").classList.contains("hidden")) { show("s-cat"); cat = null; return; }
+    if (!$("s-cat").classList.contains("hidden")) { show("s-home"); cat = null; }
   });
 
   /* ── boot: load the presenter's category plan ──────────────── */
   applyCategories(DEFAULT_CATEGORIES);
   renderCategories();
   update();
-  if (name) { $("who").textContent = whoText(); show("s-cat"); } else show("s-name");
+  if (name) { syncWho(); show("s-home"); } else show("s-name");
 
   Store.getCategories().then(list => {
     applyCategories(list);
     renderCategories();
-    if (cat && !CATS[cat]) { cat = null; show("s-cat"); }
-    else if (cat) paintWrite(CATS[cat]);
+    if (cat && !CATS[cat]) {
+      cat = null;
+      if (!$("s-write").classList.contains("hidden")) show("s-cat");
+    } else if (cat) paintWrite(CATS[cat]);
   }).catch(err => console.error("Could not load categories", err));
 
   Store.subscribeCategories(list => {
@@ -1097,7 +1118,7 @@
     renderCategories();
     if (cat && !CATS[cat]) {
       cat = null;
-      show("s-cat");
+      if (!$("s-write").classList.contains("hidden")) show("s-cat");
     } else if (cat) {
       paintWrite(CATS[cat]);
     }

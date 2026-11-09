@@ -48,6 +48,13 @@
       "Note categories": "Ibyiciro by'inyandiko",
       "Demo mode · notes stay in this browser": "Uburyo bwa demo · inyandiko ziguma muri iyi mushakisha",
       "Posting as {name} · change": "Woherereje nka {name} · hindura",
+      "What do you want to do?": "Ushaka gukora iki?",
+      "Pick one to start. You can switch anytime.": "Hitamo kimwe kugira ngo utangire. Ushobora guhindura igihe icyo ari cyo.",
+      "Write a note for the wall.": "Andika inyandiko ku rukuta.",
+      "Share a photo or short video.": "Sangiza ifoto cyangwa videwo ngufi.",
+      "Answer live polls.": "Subiza amatora ari kubera aho.",
+      "Go live from your camera.": "Tanga live ukoresheje kamera yawe.",
+      "Back to modules": "Subira kuri moduli",
 
       /* ── phone · write ──────────────────────────────────────── */
       "Back": "Subira inyuma",
@@ -682,6 +689,13 @@
       "Note categories": "Catégories de notes",
       "Demo mode · notes stay in this browser": "Mode démo · les notes restent dans ce navigateur",
       "Posting as {name} · change": "Publication en tant que {name} · changer",
+      "What do you want to do?": "Que voulez-vous faire ?",
+      "Pick one to start. You can switch anytime.": "Choisissez-en un pour commencer. Vous pouvez changer à tout moment.",
+      "Write a note for the wall.": "Écrivez une note pour le mur.",
+      "Share a photo or short video.": "Partagez une photo ou une courte vidéo.",
+      "Answer live polls.": "Répondez aux sondages en direct.",
+      "Go live from your camera.": "Passez en direct avec votre caméra.",
+      "Back to modules": "Retour aux modules",
 
       /* ── phone · write ──────────────────────────────────────── */
       "Back": "Retour",
