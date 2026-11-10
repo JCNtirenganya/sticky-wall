@@ -1006,7 +1006,8 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   position:fixed;
   left:50%;
   bottom:clamp(14px,2.2vh,24px);
-  z-index:65;
+  /* above module walls and split view, below modal dialogs (top layer) */
+  z-index:170;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -1075,6 +1076,13 @@ body:not(.idle) #extras-toggle:hover,
   pointer-events:auto;
   transform:translateX(-50%) translateY(0) scale(1);
 }
+/* Hide the whole dock, panel included, on views that must stay clickable.
+   Without display:none the panel's own visibility rules win over the
+   parent's hidden state and it keeps covering the screen under the cursor. */
+body.show-modules #extras,
+body.show-dashboard #extras,
+body.show-race #extras,
+body.reading #extras{display:none!important}
 .extras-kicker{
   margin:0 0 4px;
   padding:0 6px;
@@ -3210,7 +3218,6 @@ body.show-modules #focus{opacity:0;visibility:hidden;pointer-events:none}
 .split-pane .media-stage__item video{max-height:calc(100% - 4px)}
 body.split-mode #brand,
 body.split-mode #status,
-body.split-mode #extras,
 body.split-mode #qr-card,
 body.split-mode #avatar,
 body.split-mode #filters,
@@ -3331,7 +3338,6 @@ body.show-stream .stream-wall{opacity:1;visibility:visible;pointer-events:auto}
 .stream-foot kbd{padding:2px 5px;border-radius:4px;background:rgba(255,244,230,.1);font:600 8.5px/1 var(--font-ui)}
 body.show-stream #brand,
 body.show-stream #status,
-body.show-stream #extras,
 body.show-stream #qr-card,
 body.show-stream #avatar,
 body.show-stream #filters,
@@ -3621,3 +3627,27 @@ body.present-stream .stream-grid{gap:8px}
   .reaction-dock{flex-wrap:wrap;justify-content:center;border-radius:18px}
   .live-float{width:min(340px,78vw)}
 }
+
+/* Presenter controls stay reachable on every module wall and in split view. */
+body.show-media #extras,
+body.show-stream #extras,
+body.split-mode #extras{opacity:1;visibility:visible;pointer-events:auto}
+body.show-media #extras-toggle,
+body.show-stream #extras-toggle,
+body.split-mode #extras-toggle{opacity:.7}
+body.show-media #extras.open #extras-toggle,
+body.show-media #extras-toggle:hover,
+body.show-media #extras-toggle:focus-visible,
+body.show-stream #extras.open #extras-toggle,
+body.show-stream #extras-toggle:hover,
+body.show-stream #extras-toggle:focus-visible,
+body.split-mode #extras.open #extras-toggle,
+body.split-mode #extras-toggle:hover,
+body.split-mode #extras-toggle:focus-visible{opacity:1}
+
+/* Full-screen presentations stay chrome-free: exit them before opening Extras. */
+body.present-media #extras,
+body.present-stream #extras,
+body.present-polls #extras,
+body.present-notes #extras{display:none!important}
+

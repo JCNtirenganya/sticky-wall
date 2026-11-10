@@ -42,6 +42,13 @@
   const liveRequests = new Map();
   const splitOrigins = new Map();
   let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [], reactionTargetKey = "notes";
+  /* Sample material stays out of the way until the presenter asks for it.
+     Production may still contain rows created by earlier sample buttons. */
+  const SAMPLE_POLL_PREFIX = "sample-";
+  let samplesVisible = false;
+  let samplePollRoundSeen = 0;
+  const isSamplePoll = poll => String(poll?.id || "").startsWith(SAMPLE_POLL_PREFIX);
+  const isSampleMedia = item => String(item?.author || "").trim().toLowerCase() === "sample";
   let cats = new Set(categoryKeys()), focusId = null, moodTimer = 0, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
@@ -1427,8 +1434,18 @@
   async function syncPolls() {
     try {
       const [freshPolls, freshVotes] = await Promise.all([Store.listPolls(), Store.listVotes()]);
-      polls.splice(0, polls.length, ...normalisePolls(freshPolls));
-      votes.splice(0, votes.length, ...normalisePollVotes(freshVotes));
+      const allPolls = normalisePolls(freshPolls);
+      /* Remember the highest sample round even while samples are hidden,
+         so a new batch never overwrites an older one. */
+      allPolls.forEach(poll => {
+        const match = /^sample-r(\d+)-/.exec(String(poll.id || ""));
+        if (match) samplePollRoundSeen = Math.max(samplePollRoundSeen, Number(match[1]) + 1);
+      });
+      const shownPolls = samplesVisible ? allPolls : allPolls.filter(poll => !isSamplePoll(poll));
+      polls.splice(0, polls.length, ...shownPolls);
+      const shownIds = new Set(shownPolls.map(poll => poll.id));
+      votes.splice(0, votes.length, ...normalisePollVotes(freshVotes)
+        .filter(vote => samplesVisible || shownIds.has(vote.poll_id)));
       pollSyncWarned = false;
     } catch (err) {
       if (!pollSyncWarned) {
@@ -2273,7 +2290,8 @@
   async function syncMedia() {
     try {
       const list = await Store.listMedia();
-      media.splice(0, media.length, ...(list || []));
+      const shown = samplesVisible ? (list || []) : (list || []).filter(item => !isSampleMedia(item));
+      media.splice(0, media.length, ...shown);
     } catch (err) {
       console.warn("Could not load media. In live mode run supabase/migration-media.sql.", err);
     }
@@ -2307,6 +2325,7 @@
     closeAllModules();
     moduleHomeOpen = true;
     activeModule = null;
+    delete document.body.dataset.module;
     if (moduleHome) {
       moduleHome.hidden = false;
       moduleHome.setAttribute("aria-hidden", "false");
@@ -2448,6 +2467,7 @@
     document.body.classList.remove("split-mode");
     splitModules = [];
     activeModule = null;
+    delete document.body.dataset.module;
     if (wasFullscreen) leaveFullscreen();
     if (showHome) openModuleHome();
     else { closeAllModules(); layout(); }
@@ -2642,6 +2662,7 @@
 
   async function seedSampleMedia(button) {
     const label = button?.textContent || t("Add sample media");
+    samplesVisible = true;
     if (button) {
       button.disabled = true;
       button.textContent = t("Adding…");
@@ -2653,7 +2674,8 @@
           canvas.toBlob(b => b ? resolve(b) : reject(new Error("Could not draw the sample")), "image/jpeg", .9);
         });
         const file = new File([blob], `sample-media-${Date.now()}-${i}.jpg`, { type: "image/jpeg" });
-        await Store.addMedia({ file, author: t("Sample"), kind: "photo", width: 1400, height: 900 });
+        /* Keep the marker stable across languages, so samples stay hidden by default. */
+        await Store.addMedia({ file, author: "Sample", kind: "photo", width: 1400, height: 900 });
       }
       await syncMedia();
       if (!mediaOpenNow()) openMediaWall();
@@ -2811,7 +2833,7 @@
   $("poll-close")?.addEventListener("click", closePollRoom);
   $("poll-new")?.addEventListener("click", () => openPollEditor(null));
   $("poll-samples")?.addEventListener("click", () => seedSamplePolls());
-  $("extras-demo-notes")?.addEventListener("click", () => seedNotes());
+  $("extras-demo-notes")?.addEventListener("click", () => { showNotesWall(); seedNotes(); });
   $("extras-demo-polls")?.addEventListener("click", () => seedSamplePolls());
   $("extras-demo-reset")?.addEventListener("click", event =>
     armButton(event.currentTarget, t("Confirm reset"), () => seedSamplePolls({ reset: true })));
@@ -3495,22 +3517,19 @@
   });
 
   /* ── presenter extras dock ─────────────────────────────────── */
+  const EXTRAS_TOGGLES = ["extras-toggle", "poll-controls", "media-controls", "stream-controls", "split-controls"];
   function setExtrasOpen(open) {
     if (!extras) return;
     extras.classList.toggle("open", !!open);
-    extrasToggle?.setAttribute("aria-expanded", open ? "true" : "false");
-    $("poll-controls")?.setAttribute("aria-expanded", open ? "true" : "false");
+    EXTRAS_TOGGLES.forEach(id => $(id)?.setAttribute("aria-expanded", open ? "true" : "false"));
   }
 
-  extrasToggle?.addEventListener("click", e => {
-    e.stopPropagation();
-    setExtrasOpen(!extras.classList.contains("open"));
-  });
-
-  /* The Poll Room uses the same dock, so its own button opens it too. */
-  $("poll-controls")?.addEventListener("click", e => {
-    e.stopPropagation();
-    setExtrasOpen(!extras.classList.contains("open"));
+  /* Every module has its own Extras button, all driving the same dock. */
+  EXTRAS_TOGGLES.forEach(id => {
+    $(id)?.addEventListener("click", e => {
+      e.stopPropagation();
+      setExtrasOpen(!extras.classList.contains("open"));
+    });
   });
 
   $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
@@ -3644,7 +3663,21 @@
     });
   }
 
-  $("extras-dashboard")?.addEventListener("click", () => openDashboard());
+  /* Notes controls can be used from any module: show the notes wall first. */
+  const showNotesWall = () => {
+    if (moduleHomeOpen || activeModule !== "notes" || splitActive() || mediaOpenNow() || pollRoomOpenNow() || streamWallOpenNow()) {
+      activateModule("notes");
+    }
+  };
+  $("extras-notes-wall")?.addEventListener("click", () => {
+    setExtrasOpen(false);
+    showNotesWall();
+  });
+  $("extras-dashboard")?.addEventListener("click", () => {
+    setExtrasOpen(false);
+    showNotesWall();
+    openDashboard();
+  });
   $("extras-event-title")?.addEventListener("click", () => {
     setExtrasOpen(false);
     openEventEditor();
@@ -3654,11 +3687,19 @@
     openCategoryEditor();
   });
   $("dash-back")?.addEventListener("click", closeDashboard);
-  $("extras-reset-view")?.addEventListener("click", resetView);
+  $("extras-reset-view")?.addEventListener("click", () => {
+    showNotesWall();
+    resetView();
+  });
   $("dash-reset")?.addEventListener("click", resetView);
-  $("extras-restore")?.addEventListener("click", restoreAll);
+  $("extras-restore")?.addEventListener("click", () => {
+    showNotesWall();
+    restoreAll();
+  });
   $("dash-restore")?.addEventListener("click", restoreAll);
-  $("extras-clear")?.addEventListener("click", e => armButton(e.currentTarget, t("Confirm clear"), clearWall));
+  $("extras-clear")?.addEventListener("click", e => {
+    armButton(e.currentTarget, t("Confirm clear"), () => { showNotesWall(); clearWall(); });
+  });
   $("dash-clear")?.addEventListener("click", e => armButton(e.currentTarget, t("Confirm clear"), clearWall));
 
   dashNotes?.addEventListener("click", e => {
@@ -3784,13 +3825,15 @@
     }
   }
 
-  extrasNotesOnly?.addEventListener("click", () => setNotesPresentation(true));
+  extrasNotesOnly?.addEventListener("click", () => { showNotesWall(); setNotesPresentation(true); });
   $("extras-notes-manual")?.addEventListener("click", () => {
+    showNotesWall();
     if (notesPresent && presentationManual) setNotesPresentation(false);
     else setNotesPresentation(true, true);
   });
 
   extrasShowAll?.addEventListener("click", () => {
+    showNotesWall();
     setNotesPresentation(false);
     ["brand", "mascot", "qr", "status", "filters"].forEach(key => { prefs[key] = true; });
     savePrefs();
@@ -3822,6 +3865,65 @@
       if (/^[1-4]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }
       else if (k === "v") { e.preventDefault(); activateModule("media"); }
       else if (k === "p") { e.preventDefault(); activateModule("poll"); }
+      return;
+    }
+
+    /* Esc always dismisses Extras before it leaves the module underneath. */
+    if (k === "escape" && extras?.classList.contains("open")) {
+      e.preventDefault();
+      setExtrasOpen(false);
+      return;
+    }
+
+    /* The Extras shortcuts stay available in every module, not only Notes. */
+    if (k === "h") {
+      e.preventDefault();
+      if (notesPresent) setNotesPresentation(false);
+      if (pollsPresent) setPollsPresentation(false);
+      if (mediaPresent) setMediaPresentation(false);
+      if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
+      if (raceOpenNow()) closePollRace();
+      if (dashboardOpen()) closeDashboard();
+      if (focusId) closeFocus();
+      setExtrasOpen(!extras?.classList.contains("open"));
+      return;
+    }
+    if (k === "w") { e.preventDefault(); showNotesWall(); setExtrasOpen(false); return; }
+    if (k === "d") {
+      e.preventDefault();
+      if (dashboardOpen()) closeDashboard();
+      else { showNotesWall(); openDashboard(); }
+      setExtrasOpen(false);
+      return;
+    }
+    if (k === "e") { e.preventDefault(); setExtrasOpen(false); openEventEditor(); return; }
+    if (k === "c") { e.preventDefault(); setExtrasOpen(false); openCategoryEditor(); return; }
+    if (k === "n") { e.preventDefault(); setExtrasOpen(false); openPollEditor(null); return; }
+    if (k === "p") {
+      e.preventDefault();
+      if (pollRoomOpenNow()) closePollRoom();
+      else openPollRoom();
+      return;
+    }
+    if (k === "v") {
+      e.preventDefault();
+      if (mediaOpenNow()) closeMediaWall();
+      else openMediaWall();
+      return;
+    }
+    if (k === "0") { e.preventDefault(); openModuleHome(); return; }
+    if (k === "g") {
+      e.preventDefault();
+      if (!pollRoomOpenNow()) openPollRoom();
+      if (e.shiftKey) cycleChartStyle();
+      else cycleChartType(e.altKey ? -1 : 1);
+      return;
+    }
+    if (k === "o") {
+      e.preventDefault();
+      if (!pollRoomOpenNow()) openPollRoom();
+      if (pollsPresent && pollStageMode) setPollsPresentation(false);
+      else setPollsPresentation(true, "one");
       return;
     }
 
@@ -4020,22 +4122,25 @@
   /* demo helpers: sample content loads in rounds, so the buttons and the
      S shortcut keep adding material instead of replacing the wall */
   let seedingSamples = false;
-  const samplePollRound = () => polls.reduce((max, poll) => {
-    if (!String(poll.id).startsWith("sample-")) return max;
+  const samplePollRound = () => Math.max(samplePollRoundSeen, polls.reduce((max, poll) => {
+    if (!isSamplePoll(poll)) return max;
     const match = /^sample-r(\d+)-/.exec(poll.id);
-    return Math.max(max, match ? Number(match[1]) : 0);
-  }, -1) + 1;
+    return Math.max(max, match ? Number(match[1]) + 1 : 1);
+  }, 0));
 
   async function seedSamplePolls(options) {
     if (seedingSamples) return;
     const reset = !!(options && options.reset === true);
     seedingSamples = true;
+    samplesVisible = true;
     const buttons = [...document.querySelectorAll("#poll-samples, #poll-empty-samples, #extras-demo-polls, #extras-demo-reset")];
     buttons.forEach(button => { button.disabled = true; });
     try {
       if (reset) {
-        const existing = polls.filter(p => p.id.startsWith("sample-")).map(p => p.id);
+        const allPolls = await Store.listPolls();
+        const existing = allPolls.map(p => p.id).filter(id => String(id).startsWith(SAMPLE_POLL_PREFIX));
         for (const id of existing) await Store.deletePoll(id);
+        samplePollRoundSeen = 0;
       }
       const round = reset ? 0 : samplePollRound();
       const set = pollSampleSet(Date.now(), round);
@@ -4185,9 +4290,17 @@
 
     await syncPolls();
     Store.subscribePolls({
-      onPoll: poll => { upsertPollLocal(poll); renderPollChrome(); },
+      onPoll: poll => {
+        if (!samplesVisible && isSamplePoll(poll)) return;
+        upsertPollLocal(poll);
+        renderPollChrome();
+      },
       onDelete: id => { removePollLocal(id); renderPollChrome(); },
-      onVote: vote => { upsertVoteLocal(vote); renderPollChrome(); },
+      onVote: vote => {
+        if (!samplesVisible && !polls.some(poll => poll.id === vote.poll_id)) return;
+        upsertVoteLocal(vote);
+        renderPollChrome();
+      },
       onVoteDelete: vote => { removeVoteLocal(vote); renderPollChrome(); },
       onResetVotes: id => { resetVotesLocal(id); renderPollChrome(); },
       resync: syncPolls
@@ -4197,6 +4310,7 @@
     Store.subscribeMedia({
       onAdd: item => {
         if (!item?.id) return;
+        if (!samplesVisible && isSampleMedia(item)) return;
         if (!media.some(m => m.id === item.id)) {
           media.push(item);
           /* live album: a new upload takes over the full-screen show */
@@ -4205,6 +4319,7 @@
         renderMediaWall();
       },
       onUpdate: item => {
+        if (!samplesVisible && isSampleMedia(item)) return;
         const i = media.findIndex(m => m.id === item.id);
         if (i >= 0) media[i] = item;
         else media.push(item);
