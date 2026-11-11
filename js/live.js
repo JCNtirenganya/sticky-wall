@@ -43,13 +43,33 @@
   const getBus = () => window.Store?.liveBus || null;
   const serialiseCandidate = candidate => candidate?.toJSON ? candidate.toJSON() : candidate;
 
+  /* ── anyone with a phone: send a reaction to the board ─────── */
+  async function react({ emoji, label, author, reactionId, at } = {}) {
+    const bus = getBus();
+    if (!bus || !emoji) return false;
+    try {
+      await bus.ready();
+      await bus.send({
+        type: "reaction",
+        reactionId: reactionId || uniqueId(),
+        emoji: String(emoji).slice(0, 12),
+        label: String(label || "").slice(0, 40),
+        author: String(author || "").slice(0, 60),
+        at: at || Date.now()
+      });
+      return true;
+    } catch (err) {
+      console.warn("Could not send the reaction", err);
+      return false;
+    }
+  }
+
   /* ── phone: ask first, then camera → board ─────────────────── */
   async function stream({
     author,
     facingMode = "environment",
     mediaStream,
     onStatus,
-    onReaction,
     askPresenter = true,
     requestId: reuseRequestId = null
   } = {}) {
@@ -183,12 +203,8 @@
         return;
       }
 
-      /* presenter reactions reach the phone only while it is live */
-      if (msg.type === "reaction") {
-        if (!approved) return;
-        try { onReaction?.({ emoji: msg.emoji || "👍", label: msg.label || "", reactionId: msg.reactionId }); } catch {}
-        return;
-      }
+      /* reactions are broadcast by phones and shown on the board */
+      if (msg.type === "reaction") return;
 
       if (msg.streamId !== streamId) return;
       if (msg.type === "board-ready") {
@@ -325,7 +341,7 @@
   }
 
   /* ── board: approve requests, answer phones ─────────────────── */
-  function host({ onStream, onEnd, onRequest, onCancel, onStatus } = {}) {
+  function host({ onStream, onEnd, onRequest, onCancel, onReaction } = {}) {
     const bus = getBus();
     if (!bus) return { stop() {} };
 
@@ -463,6 +479,19 @@
 
     const unlisten = bus.on(msg => {
       if (stopped || !msg) return;
+      if (msg.type === "reaction") {
+        if (!msg.emoji) return;
+        try {
+          onReaction?.({
+            reactionId: msg.reactionId || uniqueId(),
+            emoji: String(msg.emoji).slice(0, 12),
+            label: String(msg.label || "").slice(0, 40),
+            author: String(msg.author || "").slice(0, 60),
+            at: msg.at || Date.now()
+          });
+        } catch (err) { console.error("Could not show a reaction", err); }
+        return;
+      }
       if (msg.type === "request") {
         if (!msg.requestId || requests.has(msg.requestId) || approved.has(msg.requestId)) return;
         requests.set(msg.requestId, { author: msg.author || "", at: Date.now() });
@@ -521,16 +550,6 @@
         revoke(requestId);
         send({ type: "request-denied", requestId, to: "phone" });
       },
-      react(reaction) {
-        if (stopped || !reaction) return;
-        send({
-          type: "reaction",
-          reactionId: reaction.reactionId || uniqueId(),
-          emoji: reaction.emoji || "👍",
-          label: reaction.label || "",
-          at: reaction.at || Date.now()
-        });
-      },
       stop() {
         stopped = true;
         unlisten?.();
@@ -541,5 +560,5 @@
     };
   }
 
-  window.StickyLive = { stream, host, iceServers };
+  window.StickyLive = { stream, host, react, iceServers };
 })();

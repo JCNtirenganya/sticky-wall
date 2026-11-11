@@ -32,7 +32,6 @@
   const splitDialog = $("split-dialog"), splitOptions = $("split-options"), splitHint = $("split-hint");
   const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty"), streamSub = $("stream-sub");
   const liveFloat = $("live-float"), liveFloatGrid = $("live-float-grid");
-  const reactionDock = $("reaction-dock"), reactionQuick = $("reaction-quick"), reactionTarget = $("reaction-target");
   const liveRequestDialog = $("live-request-dialog"), liveRequestList = $("live-request-list"), liveRequestEmpty = $("live-request-empty");
   const statusLiveRequests = $("status-live-requests"), statusLiveCount = $("status-live-count");
   const C = window.STICKY_CONFIG || {};
@@ -41,7 +40,7 @@
   const liveStreams = new Map();
   const liveRequests = new Map();
   const splitOrigins = new Map();
-  let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [], reactionTargetKey = "notes";
+  let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [];
   /* Sample material stays out of the way until the presenter asks for it.
      Production may still contain rows created by earlier sample buttons. */
   const SAMPLE_POLL_PREFIX = "sample-";
@@ -1940,6 +1939,7 @@
         onStream: item => addLiveStream(item),
         onEnd: streamId => removeLiveStream(streamId),
         onRequest: item => addLiveRequest(item),
+        onReaction: item => playReaction(item),
         onCancel: requestId => {
           liveRequests.delete(requestId);
           renderLiveRequests();
@@ -2332,7 +2332,6 @@
     }
     document.body.classList.add("show-modules");
     setExtrasOpen(false);
-    setReactionDock(false);
   }
 
   function closeModuleHome() {
@@ -2355,7 +2354,6 @@
     else if (name === "stream") openStreamWall();
     else { layout(); updateStatus(); }
     document.body.dataset.module = name;
-    if (reactionDock && !reactionDock.hidden) syncReactionTargets(name);
     setExtrasOpen(false);
   }
 
@@ -2439,7 +2437,6 @@
     renderMediaWall();
     renderLiveStrip();
     layout();
-    if (reactionDock && !reactionDock.hidden) syncReactionTargets(splitModules[0]);
     setExtrasOpen(false);
     goFullscreen();
   }
@@ -2493,93 +2490,29 @@
     else splitDialog.removeAttribute("open");
   }
 
-  /* ── presenter reactions on any displayed wall ─────────────── */
-  const REACTIONS = [
-    { emoji: "👍", label: "Nice" },
-    { emoji: "❤️", label: "Love" },
-    { emoji: "😂", label: "Funny" },
-    { emoji: "🎉", label: "Celebrate" },
-    { emoji: "👏", label: "Applause" },
-    { emoji: "🔥", label: "Fire" },
-    { emoji: "😮", label: "Wow" },
-    { emoji: "😢", label: "Sad" },
-    { emoji: "🚀", label: "Rocket" },
-    { emoji: "✨", label: "Sparkle" }
-  ];
-
-  function visibleModuleKeys() {
-    if (splitActive()) return splitModules.slice();
-    if (mediaOpenNow()) return ["media"];
-    if (pollRoomOpenNow()) return ["poll"];
-    if (streamWallOpenNow()) return ["stream"];
-    return ["notes"];
-  }
-
-  function syncReactionTargets(preferred) {
-    if (!reactionTarget) return;
-    const keys = visibleModuleKeys();
-    const current = MODULE_META[preferred] ? preferred : reactionTargetKey;
-    reactionTarget.replaceChildren(...keys.map(key => {
-      const option = document.createElement("option");
-      option.value = key;
-      option.textContent = moduleLabel(key);
-      return option;
-    }));
-    reactionTarget.value = keys.includes(current) ? current : keys[0];
-    reactionTargetKey = reactionTarget.value;
-  }
-
-  function buildReactionDock() {
-    if (!reactionQuick || reactionQuick.children.length) return;
-    reactionQuick.replaceChildren(...REACTIONS.map((item, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "reaction-btn";
-      button.dataset.reaction = String(index + 1);
-      button.textContent = item.emoji;
-      button.title = item.label + " (Shift+" + (index + 1) + ")";
-      button.setAttribute("aria-label", item.label);
-      button.addEventListener("click", () => fireReaction(index));
-      return button;
-    }));
-  }
-
-  function setReactionDock(open) {
-    if (!reactionDock) return;
-    if (open && moduleHomeOpen) {
-      flashPollStatus(t("Pick a module first"));
-      return;
-    }
-    if (open) {
-      buildReactionDock();
-      syncReactionTargets();
-    }
-    reactionDock.hidden = !open;
-    $("extras-reactions")?.setAttribute("aria-pressed", open ? "true" : "false");
-  }
-
-  function toggleReactionDock() {
-    setReactionDock(!!reactionDock?.hidden);
-  }
-
-  function reactionLayer(root) {
-    let layer = root.querySelector(":scope > .reaction-layer");
+  /* ── participant reactions on any displayed wall ───────────── */
+  function reactionLayer() {
+    let layer = document.getElementById("reaction-layer");
     if (!layer) {
       layer = document.createElement("div");
+      layer.id = "reaction-layer";
       layer.className = "reaction-layer";
       layer.setAttribute("aria-hidden", "true");
-      root.append(layer);
+      document.body.append(layer);
     }
     return layer;
   }
 
-  function playReaction(root, item) {
-    if (!root || !item) return;
-    const layer = reactionLayer(root);
+  function playReaction(item) {
+    if (!item?.emoji) return;
+    const layer = reactionLayer();
+    /* a busy room should still feel lively without flooding the screen */
+    if (layer.childElementCount > 90) return;
+    const emoji = String(item.emoji).slice(0, 12);
     const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const burst = document.createElement("span");
     burst.className = "reaction-burst";
-    burst.textContent = item.emoji;
+    burst.textContent = emoji;
     burst.style.setProperty("--reaction-x", (34 + Math.random() * 32).toFixed(1) + "%");
     burst.style.setProperty("--reaction-y", (34 + Math.random() * 26).toFixed(1) + "%");
     layer.append(burst);
@@ -2589,7 +2522,7 @@
     for (let i = 0; i < count; i++) {
       const dot = document.createElement("span");
       dot.className = "reaction-particle";
-      dot.textContent = item.emoji;
+      dot.textContent = emoji;
       dot.style.setProperty("--x", (6 + Math.random() * 88).toFixed(1) + "%");
       dot.style.setProperty("--delay", (Math.random() * (quiet ? 0.2 : 0.65)).toFixed(2) + "s");
       dot.style.setProperty("--size", (1.1 + Math.random() * (quiet ? 0.5 : 1.35)).toFixed(2));
@@ -2598,28 +2531,6 @@
       layer.append(dot);
       setTimeout(() => dot.remove(), quiet ? 1600 : 2600);
     }
-  }
-
-  function fireReaction(index, overrideTarget) {
-    if (moduleHomeOpen) return;
-    const item = REACTIONS[index];
-    if (!item) return;
-    const keys = visibleModuleKeys();
-    let key = overrideTarget || reactionTargetKey;
-    if (!keys.includes(key)) key = reactionTarget?.value && keys.includes(reactionTarget.value) ? reactionTarget.value : keys[0];
-    reactionTargetKey = key;
-    const root = MODULE_META[key]?.root();
-    if (!root) return;
-    playReaction(root, item);
-    try {
-      liveHost?.react?.({
-        reactionId: "r-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6),
-        emoji: item.emoji,
-        label: item.label,
-        at: Date.now()
-      });
-    } catch (err) { console.warn("Could not share the reaction", err); }
-    navigator.vibrate?.(8);
   }
 
   function sampleCanvas(index) {
@@ -2780,7 +2691,6 @@
   $("extras-home")?.addEventListener("click", () => { setExtrasOpen(false); openModuleHome(); });
   $("extras-split")?.addEventListener("click", openSplitDialog);
   $("extras-stream-wall")?.addEventListener("click", () => { setExtrasOpen(false); activateModule("stream"); });
-  $("extras-reactions")?.addEventListener("click", () => { setExtrasOpen(false); setReactionDock(!!reactionDock?.hidden); });
   $("split-cancel")?.addEventListener("click", closeSplitDialog);
   $("split-exit")?.addEventListener("click", () => exitSplit(true));
   $("split-home")?.addEventListener("click", () => openModuleHome());
@@ -2805,8 +2715,6 @@
   $("status-live-requests")?.addEventListener("click", openLiveRequestDialog);
   $("live-request-close")?.addEventListener("click", closeLiveRequestDialog);
   $("live-float-close")?.addEventListener("click", () => { if (liveFloat) liveFloat.hidden = true; });
-  $("reaction-close")?.addEventListener("click", () => setReactionDock(false));
-  reactionTarget?.addEventListener("change", () => { reactionTargetKey = reactionTarget.value; });
 
   raceProgress?.addEventListener("input", () => {
     if (!raceData) return;
@@ -3852,14 +3760,6 @@
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
     touchAutoplay();
-
-    /* presenter reactions work over any wall, without stealing a module key */
-    if (e.shiftKey && k === "r") { e.preventDefault(); toggleReactionDock(); return; }
-    if (e.shiftKey && /^Digit[1-8]$/.test(e.code || "")) {
-      e.preventDefault();
-      fireReaction(Number(e.code.slice(-1)) - 1);
-      return;
-    }
 
     if (moduleHomeOpen) {
       if (/^[1-4]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }

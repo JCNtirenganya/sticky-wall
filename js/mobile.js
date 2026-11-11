@@ -34,6 +34,7 @@
 
   const show = id => {
     if (id !== "s-live" && liveSession) stopLive();
+    setReactionTray(false);
     IDS.forEach(s => $(s).classList.toggle("hidden", s !== id));
     if (id === "s-home" || id === "s-cat") {
       syncWho();
@@ -420,7 +421,10 @@
   const liveStart = $("live-start"), liveStop = $("live-stop");
   const liveTools = $("live-tools"), liveFlip = $("live-flip"), liveMic = $("live-mic");
   const liveFallback = $("live-fallback");
-  const liveReactions = $("live-reactions");
+  const phoneReactions = $("phone-reactions");
+  const reactFab = $("react-fab"), reactOpen = $("react-open"), reactTray = $("react-tray");
+  const REACTION_CHOICES = ["👍", "❤️", "😂", "🎉", "👏", "🔥"];
+  let reactTrayTimer = 0;
 
   const LIVE_STATUS = {
     idle: "Camera off",
@@ -463,16 +467,55 @@
   }
 
   function showPhoneReaction(reaction) {
-    if (!liveReactions || !reaction?.emoji) return;
+    if (!phoneReactions || !reaction?.emoji) return;
     const item = document.createElement("span");
-    item.className = "live-reaction";
+    item.className = "phone-reaction";
     item.textContent = reaction.emoji;
     item.style.setProperty("--x", (16 + Math.random() * 68).toFixed(1) + "%");
     item.style.setProperty("--drift", (Math.random() * 44 - 22).toFixed(0) + "px");
     item.style.setProperty("--scale", (1 + Math.random() * .5).toFixed(2));
-    liveReactions.append(item);
+    phoneReactions.append(item);
     navigator.vibrate?.(10);
     setTimeout(() => item.remove(), 2100);
+  }
+
+  function setReactionTray(open) {
+    if (!reactTray || !reactOpen) return;
+    clearTimeout(reactTrayTimer);
+    reactTray.hidden = !open;
+    reactOpen.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      reactTrayTimer = setTimeout(() => setReactionTray(false), 5000);
+    }
+  }
+
+  function buildReactionTray() {
+    if (!reactTray || reactTray.children.length) return;
+    reactTray.replaceChildren(...REACTION_CHOICES.map(emoji => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "react-tray__item";
+      button.textContent = emoji;
+      button.addEventListener("click", () => sendReaction(emoji));
+      return button;
+    }));
+  }
+
+  async function sendReaction(emoji) {
+    if (!window.StickyLive?.react) {
+      toast(t("Couldn't send — try again"), true);
+      return;
+    }
+    showPhoneReaction({ emoji });
+    clearTimeout(reactTrayTimer);
+    reactTrayTimer = setTimeout(() => setReactionTray(false), 2600);
+    try {
+      const sent = await window.StickyLive.react({ emoji, author: name });
+      if (!sent) toast(t("Couldn't send — try again"), true);
+    } catch (err) {
+      console.warn("Could not send the reaction", err);
+      toast(t("Couldn't send — try again"), true);
+    }
   }
 
   function showLivePreview(on) {
@@ -529,8 +572,7 @@
           else if (state === "waiting" || state === "connecting") setLiveStatus("waiting");
           else if (state === "ended") setLiveStatus("ended");
           else if (state === "denied" || state === "cancelled" || state === "expired") setLiveStatus(state);
-        },
-        onReaction: showPhoneReaction
+        }
       });
       liveSession = session;
       livePendingCancel = null;
@@ -584,7 +626,7 @@
       livePreview.srcObject = null;
       livePreview.hidden = true;
     }
-    if (liveReactions) liveReactions.replaceChildren();
+    if (phoneReactions) phoneReactions.replaceChildren();
     showLivePreview(false);
     setLiveStatus("ended");
     syncLiveControls();
@@ -637,6 +679,14 @@
     stopLive();
     clearMediaSelection();
     show("s-media");
+  });
+  reactOpen?.addEventListener("click", () => {
+    buildReactionTray();
+    setReactionTray(!!reactTray?.hidden);
+  });
+  document.addEventListener("click", event => {
+    if (!reactTray || reactTray.hidden) return;
+    if (!event.target.closest?.("#react-fab")) setReactionTray(false);
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && liveSession) {
@@ -1090,6 +1140,7 @@
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
+    if (reactTray && !reactTray.hidden) { setReactionTray(false); return; }
     if (mediaPreview && !$("s-media").classList.contains("hidden")) { clearMediaSelection(); show("s-home"); return; }
     if (!$("s-live").classList.contains("hidden")) { show("s-home"); return; }
     if (pollScreen && !pollScreen.classList.contains("hidden")) { show("s-polls"); return; }

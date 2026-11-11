@@ -7,7 +7,7 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261110a"><link rel="stylesheet" href="css/mobile.css?v=20261110a"><link rel="stylesheet" href="css/charts.css?v=20261110a">
+<link rel="stylesheet" href="css/paper.css?v=20261111a"><link rel="stylesheet" href="css/mobile.css?v=20261111a"><link rel="stylesheet" href="css/charts.css?v=20261111a">
 </head>
 <body>
 <main class="app">
@@ -227,7 +227,6 @@
             <small data-i18n="Start when you are ready.">Start when you are ready.</small>
           </div>
           <span id="live-badge" class="live-badge" hidden><span class="live-badge__dot" aria-hidden="true"></span><span data-i18n="Live">Live</span></span>
-          <div id="live-reactions" class="live-reactions" aria-hidden="true"></div>
         </div>
         <p id="live-status" class="live-status" role="status" data-i18n="Camera off">Camera off</p>
         <p class="live-request-note" data-i18n="The presenter must allow your camera before it opens.">The presenter must allow your camera before it opens.</p>
@@ -289,10 +288,19 @@
       </article>
     </div>
   </section>
+
+  <!-- reactions: always available, whatever the board is showing -->
+  <div id="phone-reactions" class="phone-reactions" aria-hidden="true"></div>
+  <div id="react-fab" class="react-fab">
+    <div id="react-tray" class="react-tray" role="toolbar" aria-label="Reactions" data-i18n-aria="Reactions" hidden></div>
+    <button id="react-open" class="react-fab__button" type="button" aria-label="React" data-i18n-aria="React" aria-expanded="false" aria-controls="react-tray">
+      <span aria-hidden="true">😊</span>
+    </button>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261110a"></script><script src="js/i18n.js?v=20261110a"></script><script src="js/polls.js?v=20261110a"></script><script src="js/store.js?v=20261110a"></script><script src="js/shared.js?v=20261110a"></script><script src="js/charts.js?v=20261110a"></script>
-<script src="js/live.js?v=20261110a"></script>
-<script src="js/mobile.js?v=20261110a"></script>
+<script src="js/config.js?v=20261111a"></script><script src="js/i18n.js?v=20261111a"></script><script src="js/polls.js?v=20261111a"></script><script src="js/store.js?v=20261111a"></script><script src="js/shared.js?v=20261111a"></script><script src="js/charts.js?v=20261111a"></script>
+<script src="js/live.js?v=20261111a"></script>
+<script src="js/mobile.js?v=20261111a"></script>
 </body></html>
