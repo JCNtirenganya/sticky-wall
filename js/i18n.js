@@ -223,8 +223,7 @@
       "Show or hide presenter controls (H)": "Erekana cyangwa hisha igenzura ry'uyobora (H)",
 
       /* ── board · QR ─────────────────────────────────────────── */
-      "Scan to add a note from your phone": "Soma ukoresheje telefone yawe maze wongereho inyandiko",
-      "Scan to add your note": "Soma winjize inyandiko yawe",
+      "Scan to take part": "Sikana winjire",
       "Open {url}": "Fungura {url}",
 
       /* ── board · poll room ──────────────────────────────────── */
@@ -880,8 +879,7 @@
       "Show or hide presenter controls (H)": "Afficher ou masquer les contrôles du présentateur (H)",
 
       /* ── board · QR ─────────────────────────────────────────── */
-      "Scan to add a note from your phone": "Scannez pour ajouter une note depuis votre téléphone",
-      "Scan to add your note": "Scannez pour ajouter votre note",
+      "Scan to take part": "Scannez pour participer",
       "Open {url}": "Ouvrir {url}",
 
       /* ── board · poll room ──────────────────────────────────── */

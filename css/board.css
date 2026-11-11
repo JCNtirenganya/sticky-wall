@@ -1986,6 +1986,26 @@ body.present-notes #avatar,
 body.present-notes #piles-back,
 body.present-notes .empty-hint{display:none!important}
 
+/* ── presentation by default ──────────────────────────────── */
+/* The board opens straight into the wall with no in-app chrome:
+   header, status, QR, filters, mascot and the Extras dock. H (or
+   Escape) brings them back; H again returns to the clean wall. */
+/* The cursor disappears on the projected notes wall, but stays usable
+   inside the poll, media and stream rooms (and split view). */
+body.chrome-free:not(.show-polls):not(.show-media):not(.show-stream):not(.split-mode),
+body.chrome-free:not(.show-polls):not(.show-media):not(.show-stream):not(.split-mode) *{cursor:none!important}
+body.chrome-free #extras:not(.open),
+body.chrome-free #brand,
+body.chrome-free #status,
+body.chrome-free #qr-card,
+body.chrome-free #filters,
+body.chrome-free #hot,
+body.chrome-free #avatar,
+body.chrome-free #piles-back,
+body.chrome-free .empty-hint,
+body.chrome-free #focus-meta,
+body.chrome-free #focus-ui{display:none!important}
+
 body.present-polls .poll-room{padding:clamp(10px,1.6vw,22px)}
 body.present-polls .poll-room__head,
 body.present-polls #poll-filters,

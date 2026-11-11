@@ -3,12 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1b120d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sticky Wall">
+<link rel="manifest" href="manifest-board.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261111e"><link rel="stylesheet" href="css/postit.css?v=20261111e"><link rel="stylesheet" href="css/board.css?v=20261111e"><link rel="stylesheet" href="css/avatar.css?v=20261111e"><link rel="stylesheet" href="css/piles.css?v=20261111e"><link rel="stylesheet" href="css/qr.css?v=20261111e"><link rel="stylesheet" href="css/charts.css?v=20261111e">
+<link rel="stylesheet" href="css/paper.css?v=20261111g"><link rel="stylesheet" href="css/postit.css?v=20261111g"><link rel="stylesheet" href="css/board.css?v=20261111g"><link rel="stylesheet" href="css/avatar.css?v=20261111g"><link rel="stylesheet" href="css/piles.css?v=20261111g"><link rel="stylesheet" href="css/qr.css?v=20261111g"><link rel="stylesheet" href="css/charts.css?v=20261111g">
 </head>
-<body>
+<body class="chrome-free">
 <main id="board">
   <div id="wall-image" aria-hidden="true"></div>
   <div id="ambient" aria-hidden="true"></div>
@@ -415,9 +422,9 @@
 </div>
 
 <!-- presentation QR: opens the phone page -->
-<aside id="qr-card" aria-label="Scan to add a note from your phone" data-i18n-aria="Scan to add a note from your phone">
+<aside id="qr-card" aria-label="Scan to take part" data-i18n-aria="Scan to take part">
   <div id="qr-code" class="qr-code"></div>
-  <p class="qr-caption" data-i18n="Scan to add your note">Scan to add your note</p>
+  <p class="qr-caption" data-i18n="Scan to take part">Scan to take part</p>
 </aside>
 
 <!-- presenter: live poll room -->
@@ -1015,5 +1022,6 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261111e"></script><script src="js/i18n.js?v=20261111e"></script><script src="js/polls.js?v=20261111e"></script><script src="js/store.js?v=20261111e"></script><script src="js/shared.js?v=20261111e"></script><script src="js/charts.js?v=20261111e"></script><script src="js/qrcode.js?v=20261111e"></script><script src="js/export.js?v=20261111e"></script><script src="js/live.js?v=20261111e"></script><script src="js/board.js?v=20261111e"></script>
+<script src="js/config.js?v=20261111g"></script><script src="js/i18n.js?v=20261111g"></script><script src="js/polls.js?v=20261111g"></script><script src="js/store.js?v=20261111g"></script><script src="js/shared.js?v=20261111g"></script><script src="js/charts.js?v=20261111g"></script><script src="js/qrcode.js?v=20261111g"></script><script src="js/export.js?v=20261111g"></script><script src="js/live.js?v=20261111g"></script><script src="js/board.js?v=20261111g"></script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>
