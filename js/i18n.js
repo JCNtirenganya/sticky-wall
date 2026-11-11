@@ -658,6 +658,22 @@
       "Cancel request": "Hagarika icyifuzo",
       "Could not switch the camera": "Ntibyashobotse guhindura kamera",
 
+      /* presenter: passphrase reset */
+      "Start fresh": "Tangira bushya",
+      "Clear all submissions": "Hanagura ibyoherejwe byose",
+      "Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.": "Isiba inyandiko zose, amatora, amajwi n'amafoto cyangwa videwo kuri bose. Bisaba ijambo ry'ibanga ry'uyobora.",
+      "Clear all submissions?": "Guhanagura ibyoherejwe byose?",
+      "This permanently deletes every note, poll, vote, and media file. It cannot be undone.": "Ibi bisiba burundu inyandiko zose, amatora, amajwi n'amafoto cyangwa videwo. Ntibishobora kugarurwa.",
+      "Presenter passphrase": "Ijambo ry'ibanga ry'uyobora",
+      "Delete everything": "Siba byose",
+      "Enter the presenter passphrase.": "Andika ijambo ry'ibanga ry'uyobora.",
+      "Clearing…": "Birahanagurwa…",
+      "Wrong passphrase. Try again.": "Ijambo ry'ibanga siryo. Gerageza tena.",
+      "Too many attempts. Try again later.": "Wagerageje kenshi. Gerageza nyuma.",
+      "Presenter reset is not set up yet.": "Igenamiterere ryo guhanagura ntirirakorwa.",
+      "Could not clear submissions. Try again.": "Ntibyakunze guhanagura ibyoherejwe. Ongera ugerageze.",
+      "All submissions cleared": "Ibyoherejwe byose byahanaguwe",
+
       "Mute": "Hagarika ijwi",
       "Unmute": "Fungura ijwi"
     },
@@ -1294,6 +1310,22 @@
       "The request expired. Ask again.": "La demande a expiré. Demandez à nouveau.",
       "Cancel request": "Annuler la demande",
       "Could not switch the camera": "Impossible de changer de caméra",
+
+      /* presenter: passphrase reset */
+      "Start fresh": "Repartir à zéro",
+      "Clear all submissions": "Effacer toutes les contributions",
+      "Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.": "Supprime toutes les notes, sondages, votes et fichiers média pour tout le monde. Nécessite le mot de passe du présentateur.",
+      "Clear all submissions?": "Effacer toutes les contributions ?",
+      "This permanently deletes every note, poll, vote, and media file. It cannot be undone.": "Cela supprime définitivement toutes les notes, sondages, votes et fichiers média. Action irréversible.",
+      "Presenter passphrase": "Mot de passe du présentateur",
+      "Delete everything": "Tout supprimer",
+      "Enter the presenter passphrase.": "Saisissez le mot de passe du présentateur.",
+      "Clearing…": "Suppression…",
+      "Wrong passphrase. Try again.": "Mot de passe incorrect. Réessayez.",
+      "Too many attempts. Try again later.": "Trop de tentatives. Réessayez plus tard.",
+      "Presenter reset is not set up yet.": "La réinitialisation du présentateur n'est pas encore configurée.",
+      "Could not clear submissions. Try again.": "Impossible d'effacer les contributions. Réessayez.",
+      "All submissions cleared": "Toutes les contributions ont été effacées.",
 
       /* pre-existing gaps mirrored from the Kinyarwanda table */
       "+ New poll": "+ Nouveau sondage",
