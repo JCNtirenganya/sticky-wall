@@ -58,8 +58,6 @@
   let notesPresent = false, notesPresentSnapshot = null;
   let pollsPresent = false, pollStageMode = false, pollStageIndex = 0;
   let mediaPresent = false, mediaStageIndex = 0;
-  /* the default board look: wall only, no in-app chrome, real fullscreen */
-  let chromeFree = document.body.classList.contains("chrome-free");
   /* manual presentation: full screen, but the slides only move on command */
   let presentationManual = false;
   let autoplayIdle = 0, autoplayStep = 0, autoplayLive = false, autoplayTouched = 0;
@@ -1098,16 +1096,9 @@
     } catch {}
   }
 
-  /* Chrome-free presentation: hide every in-app control so the wall is the
-     whole screen. The class lives on <body>; CSS does the hiding. */
-  function setChromeFree(on) {
-    chromeFree = !!on;
-    document.body.classList.toggle("chrome-free", chromeFree);
-    if (chromeFree) setExtrasOpen(false);
-  }
-
   /* The first real gesture asks for true fullscreen, which also removes the
-     browser tabs, address bar and taskbar where the browser allows it. */
+     browser tabs, address bar and taskbar where the browser allows it.
+     It leaves the board's own controls untouched. */
   let fullscreenAsked = false;
   function askFullscreenOnce(event) {
     if (fullscreenAsked) return;
@@ -1124,7 +1115,6 @@
     if (notesPresent) setNotesPresentation(false);
     if (pollsPresent) setPollsPresentation(false);
     if (mediaPresent) setMediaPresentation(false);
-    if (chromeFree) setChromeFree(false);
   });
 
   /* Full-screen results view: all poll cards, or one slide at a time.
@@ -3945,23 +3935,9 @@
       return;
     }
 
-    /* In the default chrome-free wall, Escape brings the controls back
-       (when fullscreen did not swallow the key first). */
-    if (k === "escape" && chromeFree) {
-      e.preventDefault();
-      setChromeFree(false);
-      return;
-    }
-
-    /* H toggles between the clean wall and the controls. Opening controls
-       also leaves any full-screen module presentation. */
+    /* The Extras shortcuts stay available in every module, not only Notes. */
     if (k === "h") {
       e.preventDefault();
-      if (!chromeFree && extras?.classList.contains("open")) {
-        setChromeFree(true);
-        goFullscreen();
-        return;
-      }
       if (notesPresent) setNotesPresentation(false);
       if (pollsPresent) setPollsPresentation(false);
       if (mediaPresent) setMediaPresentation(false);
@@ -3969,8 +3945,7 @@
       if (raceOpenNow()) closePollRace();
       if (dashboardOpen()) closeDashboard();
       if (focusId) closeFocus();
-      setChromeFree(false);
-      setExtrasOpen(true);
+      setExtrasOpen(!extras?.classList.contains("open"));
       return;
     }
     if (k === "w") { e.preventDefault(); showNotesWall(); setExtrasOpen(false); return; }
@@ -4327,11 +4302,10 @@
   buildPiles(true);
   updateStatus();
 
-  /* The wall comes first, chrome-free. ?module=notes|media|poll|stream opens
-     a module straight away; H or Escape brings the presenter controls back. */
+  /* The wall comes first with its controls visible. ?module=notes|media|poll|stream
+     opens a module straight away. */
   const bootModuleParam = new URLSearchParams(location.search).get("module");
   const bootModuleTarget = MODULE_KEYS.includes(bootModuleParam) ? bootModuleParam : "notes";
-  setChromeFree(true);
   activateModule(bootModuleTarget);
 
   (async () => {
