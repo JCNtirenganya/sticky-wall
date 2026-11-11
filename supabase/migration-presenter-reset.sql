@@ -12,6 +12,9 @@
 
 -- 1 · schema ----------------------------------------------------------------
 create extension if not exists pgcrypto with schema extensions;
+-- pgcrypto may already live in public on older projects; this search path
+-- finds it either way for the statements below.
+set search_path = public, extensions;
 
 create table if not exists public.presenter_config (
   id boolean primary key default true check (id),
@@ -29,7 +32,7 @@ revoke all on table public.presenter_config from anon, authenticated;
 -- Seed one row with an unguessable hash. Nobody can use the reset until step 2
 -- replaces it with a passphrase the presenter knows.
 insert into public.presenter_config (id, secret_hash)
-values (true, extensions.crypt(encode(extensions.gen_random_bytes(32), 'hex'), extensions.gen_salt('bf', 12)))
+values (true, crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf', 12)))
 on conflict (id) do nothing;
 
 -- 2 · choose the passphrase ------------------------------------------------
@@ -38,7 +41,7 @@ on conflict (id) do nothing;
 -- Treat this like a password: do not commit it or paste it into chat.
 --
 -- update public.presenter_config
--- set secret_hash = extensions.crypt('replace with a long presenter passphrase', extensions.gen_salt('bf', 12)),
+-- set secret_hash = crypt('replace with a long presenter passphrase', gen_salt('bf', 12)),
 --     failed_attempts = 0,
 --     locked_until = 'epoch',
 --     updated_at = now()
