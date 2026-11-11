@@ -1,4 +1,4 @@
-/* Presence only: gives the phone and board an installable fullscreen app.
+/* Presence only: gives the phone and board an installable app.
    It deliberately keeps no cache, so a new deploy is picked up on reload. */
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", event => event.waitUntil(self.clients.claim()));

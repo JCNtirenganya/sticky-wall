@@ -550,6 +550,9 @@
       /* ── media full-screen album ────────────────────────────── */
       "Play full screen": "Tangiza kuri ecran yose",
       "Exit full screen": "Sohoka kuri ecran yose",
+      "Full screen": "Erekana kuri ecran yose",
+      "Full screen (Shift+F)": "Erekana kuri ecran yose (Shift+F)",
+      "Exit full screen (Shift+F)": "Sohoka kuri ecran yose (Shift+F)",
       "Play media full screen": "Tangiza amafoto na videwo kuri ecran yose",
       "Play media full screen (F)": "Tangiza amafoto na videwo kuri ecran yose (F)",
       "Autoplay": "Byikora",
@@ -1202,6 +1205,9 @@
       /* ── media full-screen album ────────────────────────────── */
       "Play full screen": "Lire en plein écran",
       "Exit full screen": "Quitter le plein écran",
+      "Full screen": "Plein écran",
+      "Full screen (Shift+F)": "Plein écran (Maj+F)",
+      "Exit full screen (Shift+F)": "Quitter le plein écran (Maj+F)",
       "Play media full screen": "Lire les médias en plein écran",
       "Play media full screen (F)": "Lire les médias en plein écran (F)",
       "Autoplay": "Lecture auto",

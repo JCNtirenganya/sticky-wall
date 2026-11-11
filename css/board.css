@@ -1033,7 +1033,13 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   pointer-events:none;
   transition:opacity .3s var(--ease-soft);
 }
-#extras-toggle{
+.extras-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  pointer-events:auto;
+}
+#extras-toggle,#fullscreen-toggle{
   pointer-events:auto;
   display:inline-flex;
   align-items:center;
@@ -1053,11 +1059,15 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   opacity:.14;
   transition:opacity .35s var(--ease-soft),background .2s,color .2s,transform .2s;
 }
-#extras-toggle svg{width:13px;height:13px;display:block}
-body:not(.idle) #extras-toggle{opacity:.6}
+#extras-toggle svg,#fullscreen-toggle svg{width:13px;height:13px;display:block}
+body:not(.idle) #extras-toggle,
+body:not(.idle) #fullscreen-toggle{opacity:.6}
 body:not(.idle) #extras-toggle:hover,
+body:not(.idle) #fullscreen-toggle:hover,
 #extras-toggle:focus-visible,
-#extras.open #extras-toggle{
+#fullscreen-toggle:focus-visible,
+#extras.open #extras-toggle,
+#fullscreen-toggle[aria-pressed="true"]{
   opacity:1;
   background:rgba(255,244,230,.94);
   color:#2a1a10;
@@ -3225,6 +3235,7 @@ body.present-media .media-stage__item video{
 }
 .module-home__foot{
   display:flex;
+  align-items:center;
   justify-content:center;
   gap:clamp(14px,3vw,34px);
   flex-wrap:wrap;
@@ -3238,6 +3249,31 @@ body.present-media .media-stage__item video{
   border-radius:4px;
   background:rgba(255,244,230,.1);
   color:rgba(255,244,230,.7);
+}
+.module-home__fullscreen{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 11px;
+  border:1px solid rgba(255,238,210,.18);
+  border-radius:999px;
+  background:rgba(255,244,230,.06);
+  color:rgba(255,244,230,.68);
+  font:600 9.5px/1 var(--font-ui);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .2s,color .2s,border-color .2s,transform .2s;
+}
+.module-home__fullscreen svg{width:12px;height:12px;display:block}
+.module-home__fullscreen:hover,
+.module-home__fullscreen:focus-visible,
+.module-home__fullscreen[aria-pressed="true"]{
+  background:rgba(255,244,230,.94);
+  border-color:rgba(255,244,230,.94);
+  color:#2a1a10;
+  transform:translateY(-1px);
+  outline:none;
 }
 body.show-modules #brand,
 body.show-modules #status,

@@ -1185,28 +1185,6 @@
   }, true);
   applyTheme(safe.get(THEME_KEY) || "classic");
 
-  /* ── best-effort fullscreen ─────────────────────────────────
-     Browsers only grant fullscreen from a real tap or key press.
-     Try once, then leave it alone. An installed app (Add to Home
-     Screen) already runs fullscreen through the manifest. */
-  let fullscreenAsked = false;
-  function requestPhoneFullscreen(event) {
-    if (fullscreenAsked) return;
-    if (event?.type === "pointerdown" && event.target.closest?.("input, textarea, select")) return;
-    fullscreenAsked = true;
-    const installed = window.matchMedia?.("(display-mode: standalone)")?.matches
-      || window.navigator.standalone === true;
-    if (installed || document.fullscreenElement) return;
-    const el = document.documentElement;
-    if (typeof el.requestFullscreen !== "function") return;
-    try {
-      const pending = el.requestFullscreen({ navigationUI: "hide" });
-      if (pending?.catch) pending.catch(() => {});
-    } catch {}
-  }
-  document.addEventListener("pointerdown", requestPhoneFullscreen, { passive: true, capture: true });
-  document.addEventListener("keydown", requestPhoneFullscreen, true);
-
   /* ── boot: load the presenter's category plan ──────────────── */
   applyCategories(DEFAULT_CATEGORIES);
   renderCategories();

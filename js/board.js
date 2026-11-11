@@ -1096,21 +1096,33 @@
     } catch {}
   }
 
-  /* The first real gesture asks for true fullscreen, which also removes the
-     browser tabs, address bar and taskbar where the browser allows it.
-     It leaves the board's own controls untouched. */
-  let fullscreenAsked = false;
-  function askFullscreenOnce(event) {
-    if (fullscreenAsked) return;
-    if (event?.type === "keydown" && (event.key === "h" || event.key === "H" || event.key === "Escape")) return;
-    fullscreenAsked = true;
-    goFullscreen();
+  /* Fullscreen is opt-in. The Full screen buttons (or Shift+F) ask for the
+     browser's real fullscreen, which removes only the tabs, address bar and
+     taskbar; the board keeps all of its own controls. */
+  function toggleBoardFullscreen() {
+    if (document.fullscreenElement) leaveFullscreen();
+    else goFullscreen();
   }
-  window.addEventListener("pointerdown", askFullscreenOnce, { passive: true, capture: true });
-  window.addEventListener("keydown", askFullscreenOnce, true);
+
+  function syncFullscreenButtons() {
+    const active = !!document.fullscreenElement;
+    document.querySelectorAll("#fullscreen-toggle, #module-fullscreen").forEach(button => {
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+      const label = button.querySelector("[data-i18n]");
+      if (label) {
+        const key = active ? "Exit full screen" : "Full screen";
+        label.dataset.i18n = key;
+        label.textContent = t(key);
+      }
+      const titleKey = active ? "Exit full screen (Shift+F)" : "Full screen (Shift+F)";
+      button.dataset.i18nTitle = titleKey;
+      button.title = t(titleKey);
+    });
+  }
 
   /* Esc in fullscreen is swallowed by the browser, so mirror the exit here. */
   document.addEventListener("fullscreenchange", () => {
+    syncFullscreenButtons();
     if (document.fullscreenElement) return;
     if (notesPresent) setNotesPresentation(false);
     if (pollsPresent) setPollsPresentation(false);
@@ -3595,6 +3607,16 @@
     });
   });
 
+  /* The opt-in Full screen control in the dock and on the module home. */
+  ["fullscreen-toggle", "module-fullscreen"].forEach(id => {
+    $(id)?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleBoardFullscreen();
+    });
+  });
+  syncFullscreenButtons();
+
   $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
 
   /* Per-card defaults: reset just the settings that belong to that module,
@@ -3920,6 +3942,13 @@
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
     touchAutoplay();
+
+    /* Shift+F is the global Full screen shortcut, including module home. */
+    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && k === "f") {
+      e.preventDefault();
+      toggleBoardFullscreen();
+      return;
+    }
 
     if (moduleHomeOpen) {
       if (/^[1-4]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }

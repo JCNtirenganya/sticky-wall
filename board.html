@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261112a"><link rel="stylesheet" href="css/postit.css?v=20261112a"><link rel="stylesheet" href="css/board.css?v=20261112a"><link rel="stylesheet" href="css/avatar.css?v=20261112a"><link rel="stylesheet" href="css/piles.css?v=20261112a"><link rel="stylesheet" href="css/qr.css?v=20261112a"><link rel="stylesheet" href="css/charts.css?v=20261112a">
+<link rel="stylesheet" href="css/paper.css?v=20261112b"><link rel="stylesheet" href="css/postit.css?v=20261112b"><link rel="stylesheet" href="css/board.css?v=20261112b"><link rel="stylesheet" href="css/avatar.css?v=20261112b"><link rel="stylesheet" href="css/piles.css?v=20261112b"><link rel="stylesheet" href="css/qr.css?v=20261112b"><link rel="stylesheet" href="css/charts.css?v=20261112b">
 </head>
 <body>
 <main id="board">
@@ -123,6 +123,10 @@
     <footer class="module-home__foot">
       <span><kbd>1</kbd>–<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
       <span><kbd>0</kbd> <span data-i18n="opens this window">opens this window</span></span>
+      <button id="module-fullscreen" class="module-home__fullscreen" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
+        <span data-i18n="Full screen">Full screen</span>
+      </button>
     </footer>
   </div>
 </section>
@@ -415,10 +419,16 @@
 
     </div>
   </div>
-  <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
-    <span data-i18n="Extras">Extras</span>
-  </button>
+  <div class="extras-bar">
+    <button id="fullscreen-toggle" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
+      <span data-i18n="Full screen">Full screen</span>
+    </button>
+    <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+      <span data-i18n="Extras">Extras</span>
+    </button>
+  </div>
 </div>
 
 <!-- presentation QR: opens the phone page -->
@@ -1022,6 +1032,6 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261112a"></script><script src="js/i18n.js?v=20261112a"></script><script src="js/polls.js?v=20261112a"></script><script src="js/store.js?v=20261112a"></script><script src="js/shared.js?v=20261112a"></script><script src="js/charts.js?v=20261112a"></script><script src="js/qrcode.js?v=20261112a"></script><script src="js/export.js?v=20261112a"></script><script src="js/live.js?v=20261112a"></script><script src="js/board.js?v=20261112a"></script>
+<script src="js/config.js?v=20261112b"></script><script src="js/i18n.js?v=20261112b"></script><script src="js/polls.js?v=20261112b"></script><script src="js/store.js?v=20261112b"></script><script src="js/shared.js?v=20261112b"></script><script src="js/charts.js?v=20261112b"></script><script src="js/qrcode.js?v=20261112b"></script><script src="js/export.js?v=20261112b"></script><script src="js/live.js?v=20261112b"></script><script src="js/board.js?v=20261112b"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>
