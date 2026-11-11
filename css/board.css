@@ -1038,6 +1038,7 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   align-items:center;
   gap:8px;
   pointer-events:auto;
+  transition:opacity .35s var(--ease-soft);
 }
 #extras-toggle,#fullscreen-toggle{
   pointer-events:auto;
@@ -1066,13 +1067,19 @@ body:not(.idle) #extras-toggle:hover,
 body:not(.idle) #fullscreen-toggle:hover,
 #extras-toggle:focus-visible,
 #fullscreen-toggle:focus-visible,
-#extras.open #extras-toggle,
-#fullscreen-toggle[aria-pressed="true"]{
+#extras.open #extras-toggle{
   opacity:1;
   background:rgba(255,244,230,.94);
   color:#2a1a10;
   transform:translateY(-1px);
   outline:none;
+}
+/* In fullscreen the buttons stay quiet: no pressed highlight, and they
+   disappear completely once the pointer has been still for a moment. */
+body.is-fullscreen.idle .extras-bar,
+body.is-fullscreen.idle .module-home__fullscreen{
+  opacity:0;
+  pointer-events:none;
 }
 #extras-panel{
   position:absolute;
@@ -3263,12 +3270,11 @@ body.present-media .media-stage__item video{
   letter-spacing:.12em;
   text-transform:uppercase;
   cursor:pointer;
-  transition:background .2s,color .2s,border-color .2s,transform .2s;
+  transition:opacity .35s var(--ease-soft),background .2s,color .2s,border-color .2s,transform .2s;
 }
 .module-home__fullscreen svg{width:12px;height:12px;display:block}
 .module-home__fullscreen:hover,
-.module-home__fullscreen:focus-visible,
-.module-home__fullscreen[aria-pressed="true"]{
+.module-home__fullscreen:focus-visible{
   background:rgba(255,244,230,.94);
   border-color:rgba(255,244,230,.94);
   color:#2a1a10;

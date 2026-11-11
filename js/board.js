@@ -1106,6 +1106,7 @@
 
   function syncFullscreenButtons() {
     const active = !!document.fullscreenElement;
+    document.body.classList.toggle("is-fullscreen", active);
     document.querySelectorAll("#fullscreen-toggle, #module-fullscreen").forEach(button => {
       button.setAttribute("aria-pressed", active ? "true" : "false");
       const label = button.querySelector("[data-i18n]");
