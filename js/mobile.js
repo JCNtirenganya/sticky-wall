@@ -1134,6 +1134,57 @@
     if (!$("s-cat").classList.contains("hidden")) { show("s-home"); cat = null; }
   });
 
+  /* ── colour theme ──────────────────────────────────────────── */
+  const THEME_KEY = "sticky_theme";
+  const THEMES = ["classic", "ocean", "mint", "blush", "grape"];
+  const THEME_META = {
+    classic: "#1b120d",
+    ocean: "#0b1420",
+    mint: "#0a1710",
+    blush: "#1b0c13",
+    grape: "#120a1c"
+  };
+  const themeTray = $("theme-tray");
+  const themeToggles = ["theme-open-name", "theme-open-home"].map($).filter(Boolean);
+
+  function applyTheme(name) {
+    const theme = THEMES.includes(name) ? name : "classic";
+    document.documentElement.dataset.theme = theme;
+    safe.set(THEME_KEY, theme);
+    themeTray?.querySelectorAll(".theme-swatch").forEach(button => {
+      button.setAttribute("aria-checked", button.dataset.theme === theme ? "true" : "false");
+    });
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", THEME_META[theme]);
+  }
+
+  function setThemeTray(open) {
+    if (!themeTray) return;
+    themeTray.hidden = !open;
+    themeToggles.forEach(button => button.setAttribute("aria-expanded", open ? "true" : "false"));
+  }
+
+  themeToggles.forEach(button => button.addEventListener("click", event => {
+    event.stopPropagation();
+    setThemeTray(themeTray ? themeTray.hidden : false);
+  }));
+  themeTray?.querySelectorAll(".theme-swatch").forEach(button => {
+    button.addEventListener("click", () => {
+      applyTheme(button.dataset.theme);
+      setThemeTray(false);
+    });
+  });
+  document.addEventListener("click", event => {
+    if (!themeTray || themeTray.hidden) return;
+    if (!event.target.closest?.("#theme-tray, .theme-toggle")) setThemeTray(false);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !themeTray || themeTray.hidden) return;
+    event.stopPropagation();
+    setThemeTray(false);
+  }, true);
+  applyTheme(safe.get(THEME_KEY) || "classic");
+
   /* ── boot: load the presenter's category plan ──────────────── */
   applyCategories(DEFAULT_CATEGORIES);
   renderCategories();

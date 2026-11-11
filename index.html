@@ -7,7 +7,16 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261111e"><link rel="stylesheet" href="css/mobile.css?v=20261111e"><link rel="stylesheet" href="css/charts.css?v=20261111e">
+<link rel="stylesheet" href="css/paper.css?v=20261111f"><link rel="stylesheet" href="css/mobile.css?v=20261111f"><link rel="stylesheet" href="css/charts.css?v=20261111f">
+<script>
+/* Apply the saved phone theme before the first paint. */
+try {
+  var savedTheme = localStorage.getItem("sticky_theme");
+  if (/^(classic|ocean|mint|blush|grape)$/.test(savedTheme || "")) {
+    document.documentElement.dataset.theme = savedTheme;
+  }
+} catch (e) {}
+</script>
 </head>
 <body>
 <main class="app">
@@ -17,6 +26,9 @@
     <div class="bg-notes" aria-hidden="true">
       <span class="bg-note n1"></span><span class="bg-note n2"></span><span class="bg-note n3"></span>
     </div>
+    <button id="theme-open-name" class="theme-toggle theme-toggle--float" type="button" aria-label="Colour theme" aria-expanded="false" aria-controls="theme-tray">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.6a2.4 2.4 0 0 0 1.9-3.9 2.4 2.4 0 0 1 1.9-3.9H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="10.5" cy="7" r=".9"/><circle cx="15" cy="7.5" r=".9"/><circle cx="17" cy="11.5" r=".9"/></svg>
+    </button>
     <div class="name-wrap">
       <div class="brandmark">
         <span class="brandmark__bean" aria-hidden="true">
@@ -50,7 +62,12 @@
             </span>
             <span>Sticky Wall</span>
           </div>
-          <div class="lang-switch" data-lang-switch></div>
+          <div class="head-tools">
+            <button id="theme-open-home" class="theme-toggle" type="button" aria-label="Colour theme" aria-expanded="false" aria-controls="theme-tray">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.6a2.4 2.4 0 0 0 1.9-3.9 2.4 2.4 0 0 1 1.9-3.9H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="10.5" cy="7" r=".9"/><circle cx="15" cy="7.5" r=".9"/><circle cx="17" cy="11.5" r=".9"/></svg>
+            </button>
+            <div class="lang-switch" data-lang-switch></div>
+          </div>
         </div>
         <p class="eyebrow" data-i18n="Choose a module">Choose a module</p>
         <h1 data-i18n="What do you want to do?">What do you want to do?</h1>
@@ -280,6 +297,14 @@
     </div>
   </section>
 
+  <div id="theme-tray" class="theme-tray" role="radiogroup" aria-label="Colour theme" hidden>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="classic" title="Classic" aria-label="Classic"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="ocean" title="Ocean" aria-label="Ocean"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="mint" title="Mint" aria-label="Mint"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="blush" title="Blush" aria-label="Blush"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="grape" title="Grape" aria-label="Grape"></button>
+  </div>
+
   <!-- reactions: always available, whatever the board is showing -->
   <div id="phone-reactions" class="phone-reactions" aria-hidden="true"></div>
   <div id="react-fab" class="react-fab">
@@ -291,7 +316,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261111e"></script><script src="js/i18n.js?v=20261111e"></script><script src="js/polls.js?v=20261111e"></script><script src="js/store.js?v=20261111e"></script><script src="js/shared.js?v=20261111e"></script><script src="js/charts.js?v=20261111e"></script>
-<script src="js/live.js?v=20261111e"></script>
-<script src="js/mobile.js?v=20261111e"></script>
+<script src="js/config.js?v=20261111f"></script><script src="js/i18n.js?v=20261111f"></script><script src="js/polls.js?v=20261111f"></script><script src="js/store.js?v=20261111f"></script><script src="js/shared.js?v=20261111f"></script><script src="js/charts.js?v=20261111f"></script>
+<script src="js/live.js?v=20261111f"></script>
+<script src="js/mobile.js?v=20261111f"></script>
 </body></html>
