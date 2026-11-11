@@ -33,6 +33,8 @@
   const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty"), streamSub = $("stream-sub");
   const liveFloat = $("live-float"), liveFloatGrid = $("live-float-grid");
   const liveRequestDialog = $("live-request-dialog"), liveRequestList = $("live-request-list"), liveRequestEmpty = $("live-request-empty");
+  const resetDialog = $("reset-dialog"), resetForm = $("reset-form"), resetPassphrase = $("reset-passphrase");
+  const resetError = $("reset-error"), resetConfirm = $("reset-confirm");
   const statusLiveRequests = $("status-live-requests"), statusLiveCount = $("status-live-count");
   const liveRequestAlert = $("live-request-alert"), liveRequestAlertWho = $("live-request-alert-who"), liveRequestAlertSub = $("live-request-alert-sub");
   let liveAlertTitleBase = "", liveAlertDismissed = false, requestChimeCtx = null, requestChimeAt = 0;
@@ -2955,6 +2957,73 @@
     updateStatus();
   }
 
+  /* Presenter-only reset: Supabase checks the passphrase inside a
+     SECURITY DEFINER function, so the board never holds a powerful key. */
+  function showResetError(message) {
+    if (!resetError) return;
+    resetError.textContent = message;
+    resetError.hidden = false;
+  }
+
+  function openResetDialog() {
+    if (!resetDialog) return;
+    setExtrasOpen(false);
+    if (resetError) { resetError.hidden = true; resetError.textContent = ""; }
+    if (resetPassphrase) {
+      resetPassphrase.value = "";
+      resetPassphrase.required = Store.mode !== "demo";
+      resetPassphrase.disabled = false;
+    }
+    if (resetConfirm) resetConfirm.disabled = false;
+    if (typeof resetDialog.showModal === "function") {
+      if (!resetDialog.open) resetDialog.showModal();
+    } else resetDialog.setAttribute("open", "");
+    setTimeout(() => resetPassphrase?.focus(), 60);
+  }
+
+  async function clearAllSubmissions(event) {
+    event?.preventDefault();
+    if (!resetDialog || !resetConfirm) return;
+    const passphrase = String(resetPassphrase?.value || "");
+    if (Store.mode !== "demo" && !passphrase) {
+      showResetError(t("Enter the presenter passphrase."));
+      resetPassphrase?.focus();
+      return;
+    }
+    resetConfirm.disabled = true;
+    if (resetPassphrase) resetPassphrase.disabled = true;
+    const label = resetConfirm.textContent;
+    resetConfirm.textContent = t("Clearing…");
+    if (resetError) { resetError.hidden = true; resetError.textContent = ""; }
+    try {
+      await Store.clearSubmissions(passphrase);
+      if (mediaPresent) setMediaPresentation(false);
+      if (pollsPresent) setPollsPresentation(false);
+      if (raceOpenNow()) closePollRace();
+      closeFocus();
+      hidden.clear();
+      saveHidden();
+      await Promise.allSettled([syncNotes(), syncPolls(), syncMedia()]);
+      setDashboard(false);
+      showNotesWall();
+      renderDashboard();
+      updateStatus();
+      resetDialog.close();
+      flashPollStatus("All submissions cleared");
+    } catch (err) {
+      console.error("Could not clear submissions", err);
+      const message = String(err?.message || "");
+      if (/incorrect passphrase/i.test(message)) showResetError(t("Wrong passphrase. Try again."));
+      else if (/too many attempts/i.test(message)) showResetError(t("Too many attempts. Try again later."));
+      else if (/not configured|does not exist|schema cache/i.test(message)) showResetError(t("Presenter reset is not set up yet."));
+      else showResetError(t("Could not clear submissions. Try again."));
+    } finally {
+      resetConfirm.disabled = false;
+      if (resetPassphrase) resetPassphrase.disabled = false;
+      resetConfirm.textContent = label;
+    }
+  }
+
   const armedTimers = new WeakMap();
   function armButton(btn, label, action) {
     if (!btn) return;
@@ -3682,6 +3751,11 @@
     armButton(e.currentTarget, t("Confirm clear"), () => { showNotesWall(); clearWall(); });
   });
   $("dash-clear")?.addEventListener("click", e => armButton(e.currentTarget, t("Confirm clear"), clearWall));
+
+  $("extras-reset-submissions")?.addEventListener("click", openResetDialog);
+  $("reset-cancel")?.addEventListener("click", () => resetDialog?.close());
+  resetDialog?.addEventListener("click", e => { if (e.target === resetDialog) resetDialog.close(); });
+  resetForm?.addEventListener("submit", clearAllSubmissions);
 
   dashNotes?.addEventListener("click", e => {
     const btn = e.target.closest("button[data-act]");

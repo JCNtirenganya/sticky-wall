@@ -15,13 +15,15 @@ Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your l
 ## Go live
 1. **Supabase** → new project → SQL Editor → paste `supabase/schema.sql` → Run.
 2. Paste `supabase/migration-polls.sql` → Run (adds the `polls` and `poll_votes` tables used by the poll room).
-3. Project Settings → API: copy *Project URL* and the *anon public* key into `js/config.js`.
-4. **GitHub** → push this folder to a repo → Settings → Pages → Deploy from branch `main` / root.
-5. Open the two URLs above. Done.
+3. Paste `supabase/migration-media.sql` → Run (adds the media bucket and `event_media` table).
+4. Paste `supabase/migration-presenter-reset.sql` → Run, then set your own passphrase with the update statement in step 2 of that file.
+5. Project Settings → API: copy *Project URL* and the *anon public* key into `js/config.js`.
+6. **GitHub** → push this folder to a repo → Settings → Pages → Deploy from branch `main` / root.
+7. Open the two URLs above. Done.
 
-Upgrading an existing install? Run `supabase/migration-author-names.sql` once if the board still hides sender names, then `supabase/migration-categories.sql` once to allow the five dynamic categories, then `supabase/migration-polls.sql` for live polls. All keep existing notes.
+Upgrading an existing install? Run `supabase/migration-author-names.sql` once if the board still hides sender names, then `supabase/migration-categories.sql` once to allow the five dynamic categories, then `supabase/migration-polls.sql` for live polls, `supabase/migration-media.sql` for the media wall, and `supabase/migration-presenter-reset.sql` for the passphrase reset. All keep existing notes.
 
-Security: notes are written only through the RPCs (`submit_note`, `get_categories`, `set_categories`, `reassign_notes`). Polls and votes use the `polls` / `poll_votes` tables directly so the phone page can upsert one answer per voter; the anon key can technically write them. The board has no presenter login, so treat the board URL as the presenter control and keep it off the audience phones. Sender names appear on the board, so they are stored in `notes.author_name`. To pull a note off the wall: `update notes set hidden = true where id = '…';` — it vanishes from the board instantly.
+Security: notes are written only through the RPCs (`submit_note`, `get_categories`, `set_categories`, `reassign_notes`). Polls and votes use the `polls` / `poll_votes` tables directly so the phone page can upsert one answer per voter; the anon key can technically write them. **Extras → Start fresh → Clear all submissions** calls `presenter_clear`, a `SECURITY DEFINER` function that checks a bcrypt passphrase stored in `presenter_config`; the passphrase itself is never shipped to the browser. The board has no presenter login, so treat the board URL as the presenter control and keep it off the audience phones. Sender names appear on the board, so they are stored in `notes.author_name`. To pull a note off the wall: `update notes set hidden = true where id = '…';` — it vanishes from the board instantly.
 
 ## Design stack (v2)
 
@@ -149,6 +151,9 @@ Two downloads are available from the dashboard (**Wall summary PDF**, **Notes im
 - `supabase/migration-author-names.sql` — one-time upgrade for installations created before sender names became public
 - `supabase/migration-categories.sql` — one-time upgrade that removes the fixed category CHECK and adds category sync
 - `supabase/migration-polls.sql` — poll and vote tables, one-vote-per-voter constraint, RLS, indexes and realtime
+- `supabase/migration-media.sql` — media bucket, `event_media` table, storage policies and realtime
+- `supabase/migration-presenter-reset.sql` — bcrypt passphrase and the `presenter_clear` reset function
+- `supabase/reset-submissions.sql` — manual full reset from the SQL Editor (no passphrase needed)
 
 ## Quick checks
 - Board: notes fit inside their sheets, with the sender's name signed at the bottom; one note sits top-left, five fill the first column, and the fixed grid resizes with the window/orientation without stretching a short list.

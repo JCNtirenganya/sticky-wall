@@ -22,6 +22,7 @@
      Store.addMedia({file, author, kind, width, height}) → Promise<media>
      Store.hideMedia(id) → Promise<void>
      Store.removeMedia(media) → Promise<void>
+     Store.clearSubmissions(passphrase) → Promise<counts>   // presenter reset
      Store.subscribeMedia({onAdd, onRemove, onUpdate, resync})                                      */
 (function () {
   const C = window.STICKY_CONFIG || {};
@@ -312,6 +313,11 @@
           if (removed.error) console.warn("Could not delete the media file", removed.error);
         }
       },
+      async clearSubmissions(passphrase) {
+        const { data, error } = await sb.rpc("presenter_clear", { p_secret: String(passphrase || "") });
+        if (error) throw error;
+        return data || {};
+      },
       subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
         sb.channel("media-feed")
           .on("postgres_changes", { event: "INSERT", schema: "public", table: "event_media" }, p => {
@@ -601,6 +607,16 @@
       async removeMedia(media) {
         if (!media?.id) return;
         await this.hideMedia(media.id);
+      },
+      async clearSubmissions() {
+        localStorage.removeItem(NOTE_KEY);
+        localStorage.removeItem(POLL_KEY);
+        localStorage.removeItem(VOTE_KEY);
+        localStorage.removeItem(MEDIA_KEY);
+        bc && bc.postMessage({ type: "resync" });
+        bc && bc.postMessage({ type: "resync-polls" });
+        bc && bc.postMessage({ type: "resync-media" });
+        return { notes: 0, polls: 0, votes: 0, media: 0, files: 0 };
       },
       subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
         mediaHandlers = { onAdd, onRemove, onUpdate, resync };

@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261111b"><link rel="stylesheet" href="css/postit.css?v=20261111b"><link rel="stylesheet" href="css/board.css?v=20261111b"><link rel="stylesheet" href="css/avatar.css?v=20261111b"><link rel="stylesheet" href="css/piles.css?v=20261111b"><link rel="stylesheet" href="css/qr.css?v=20261111b"><link rel="stylesheet" href="css/charts.css?v=20261111b">
+<link rel="stylesheet" href="css/paper.css?v=20261111c"><link rel="stylesheet" href="css/postit.css?v=20261111c"><link rel="stylesheet" href="css/board.css?v=20261111c"><link rel="stylesheet" href="css/avatar.css?v=20261111c"><link rel="stylesheet" href="css/piles.css?v=20261111c"><link rel="stylesheet" href="css/qr.css?v=20261111c"><link rel="stylesheet" href="css/charts.css?v=20261111c">
 </head>
 <body>
 <main id="board">
@@ -396,6 +396,16 @@
         </div>
       </section>
 
+      <section class="extras-card extras-card--danger">
+        <header class="extras-card__head">
+          <h3 data-i18n="Start fresh">Start fresh</h3>
+        </header>
+        <div class="extras-grid extras-grid--single">
+          <button id="extras-reset-submissions" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear all submissions">Clear all submissions</button>
+        </div>
+        <p class="extras-note" data-i18n="Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.">Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.</p>
+      </section>
+
     </div>
   </div>
   <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
@@ -678,6 +688,23 @@
       <button id="live-request-close" type="button" class="event-btn event-btn--quiet" data-i18n="Close">Close</button>
       <span class="event-spacer"></span>
       <button type="submit" class="event-btn" data-i18n="Done">Done</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- presenter: passphrase-protected full reset -->
+<dialog id="reset-dialog" class="event-dialog reset-dialog">
+  <form id="reset-form" method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 data-i18n="Clear all submissions?">Clear all submissions?</h2>
+    <p class="event-lead" data-i18n="This permanently deletes every note, poll, vote, and media file. It cannot be undone.">This permanently deletes every note, poll, vote, and media file. It cannot be undone.</p>
+    <label for="reset-passphrase" data-i18n="Presenter passphrase">Presenter passphrase</label>
+    <input id="reset-passphrase" type="password" autocomplete="current-password" required>
+    <p id="reset-error" class="event-error" role="alert" hidden></p>
+    <div class="event-actions">
+      <button id="reset-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
+      <span class="event-spacer"></span>
+      <button id="reset-confirm" type="submit" class="event-btn event-btn--danger" data-i18n="Delete everything">Delete everything</button>
     </div>
   </form>
 </dialog>
@@ -988,5 +1015,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261111b"></script><script src="js/i18n.js?v=20261111b"></script><script src="js/polls.js?v=20261111b"></script><script src="js/store.js?v=20261111b"></script><script src="js/shared.js?v=20261111b"></script><script src="js/charts.js?v=20261111b"></script><script src="js/qrcode.js?v=20261111b"></script><script src="js/export.js?v=20261111b"></script><script src="js/live.js?v=20261111b"></script><script src="js/board.js?v=20261111b"></script>
+<script src="js/config.js?v=20261111c"></script><script src="js/i18n.js?v=20261111c"></script><script src="js/polls.js?v=20261111c"></script><script src="js/store.js?v=20261111c"></script><script src="js/shared.js?v=20261111c"></script><script src="js/charts.js?v=20261111c"></script><script src="js/qrcode.js?v=20261111c"></script><script src="js/export.js?v=20261111c"></script><script src="js/live.js?v=20261111c"></script><script src="js/board.js?v=20261111c"></script>
 </body></html>
