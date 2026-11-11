@@ -38,7 +38,6 @@
     IDS.forEach(s => $(s).classList.toggle("hidden", s !== id));
     if (id === "s-home" || id === "s-cat") {
       syncWho();
-      updatePollBanner();
     }
     if (id === "s-polls") renderPollList();
   };
@@ -423,7 +422,12 @@
   const liveFallback = $("live-fallback");
   const phoneReactions = $("phone-reactions");
   const reactFab = $("react-fab"), reactOpen = $("react-open"), reactTray = $("react-tray");
-  const REACTION_CHOICES = ["👍", "❤️", "😂", "🎉", "👏", "🔥"];
+  const REACTION_CHOICES = [
+    "👍", "❤️", "😂", "🎉", "👏",
+    "🔥", "😍", "🥳", "😮", "😢",
+    "🙌", "💯", "🙏", "😊", "🤩",
+    "💡", "👀", "✅", "🤔", "😅"
+  ];
   let reactTrayTimer = 0;
 
   const LIVE_STATUS = {
@@ -485,7 +489,7 @@
     reactTray.hidden = !open;
     reactOpen.setAttribute("aria-expanded", open ? "true" : "false");
     if (open) {
-      reactTrayTimer = setTimeout(() => setReactionTray(false), 5000);
+      reactTrayTimer = setTimeout(() => setReactionTray(false), 6500);
     }
   }
 
@@ -508,7 +512,7 @@
     }
     showPhoneReaction({ emoji });
     clearTimeout(reactTrayTimer);
-    reactTrayTimer = setTimeout(() => setReactionTray(false), 2600);
+    reactTrayTimer = setTimeout(() => setReactionTray(false), 4200);
     try {
       const sent = await window.StickyLive.react({ emoji, author: name });
       if (!sent) toast(t("Couldn't send — try again"), true);
@@ -703,12 +707,13 @@
   });
 
   /* ── live polls ────────────────────────────────────────────── */
-  const pollBanner = $("poll-banner");
-  const pollBannerTitle = $("poll-banner-title"), pollBannerSub = $("poll-banner-sub");
   const pollListEl = $("poll-list"), pollListEmpty = $("poll-list-empty");
   const pollScreen = $("s-poll");
   const polls = [], votes = [];
   let activePollId = null, pollDraft = null, pollSending = false;
+  /* Samples belong to the presenter's board only. Phones never see them. */
+  const SAMPLE_POLL_PREFIX = "sample-";
+  const isSamplePollId = id => String(id || "").startsWith(SAMPLE_POLL_PREFIX);
 
   const pollEl = (tag, cls, text) => {
     const node = document.createElement(tag);
@@ -718,13 +723,14 @@
   };
   const pollSorted = () => polls.slice().sort((a, b) =>
     (a.position - b.position) || String(a.created_at).localeCompare(String(b.created_at)));
-  const pollVisible = () => pollSorted().filter(p => p.status !== "draft");
+  const pollVisible = () => pollSorted().filter(p => p.status !== "draft" && !isSamplePollId(p.id));
   const pollMyVote = poll => pollVoteFor(votes, poll?.id, voterKey);
   const pollActive = () => polls.find(p => p.id === activePollId) || null;
   const pollAnsweredCount = () => pollVisible().filter(p => pollMyVote(p)).length;
 
   function upsertPollLocal(raw) {
     const poll = normalisePoll(raw);
+    if (isSamplePollId(poll.id)) return;
     const i = polls.findIndex(p => p.id === poll.id);
     if (i >= 0) polls[i] = poll; else polls.push(poll);
   }
@@ -737,7 +743,7 @@
 
   function upsertVoteLocal(raw) {
     const vote = normalisePollVote(raw);
-    if (!vote.poll_id || !vote.voter_key) return;
+    if (!vote.poll_id || !vote.voter_key || isSamplePollId(vote.poll_id)) return;
     const i = votes.findIndex(v => v.id === vote.id || (v.poll_id === vote.poll_id && v.voter_key === vote.voter_key));
     if (i >= 0) votes[i] = vote; else votes.push(vote);
   }
@@ -756,30 +762,8 @@
   }
 
   function pollRefreshChrome() {
-    updatePollBanner();
     if (!$("s-polls").classList.contains("hidden")) renderPollList();
     if (pollScreen && !pollScreen.classList.contains("hidden")) renderPollScreen();
-  }
-
-  function updatePollBanner() {
-    if (!pollBanner) return;
-    const visible = pollVisible();
-    if (!visible.length) { pollBanner.hidden = true; return; }
-    const open = visible.filter(p => p.status === "open");
-    const pending = open.filter(p => !pollMyVote(p)).length;
-    pollBanner.hidden = false;
-    if (pollBannerTitle) {
-      pollBannerTitle.textContent = open.length
-        ? open.length === 1 ? open[0].question : t("{n} live polls", { n: open.length })
-        : t("Polls are closed");
-    }
-    if (pollBannerSub) {
-      pollBannerSub.textContent = !open.length
-        ? t("Tap to see the results")
-        : pending
-          ? pending === 1 ? t("1 waiting for your answer") : t("{n} waiting for your answers", { n: pending })
-          : t("You answered · tap to update");
-    }
   }
 
   function renderPollList() {
@@ -1112,7 +1096,6 @@
       navigator.vibrate?.(14);
       toast(mine ? t("Answer updated") : t("Answer sent"));
       renderPollScreen();
-      updatePollBanner();
     } catch (err) {
       console.error("Could not send the answer", err);
       toast(t("Couldn't send — try again"), true);
@@ -1125,15 +1108,17 @@
   async function syncPolls() {
     try {
       const [freshPolls, freshVotes] = await Promise.all([Store.listPolls(), Store.listVotes()]);
-      polls.splice(0, polls.length, ...normalisePolls(freshPolls));
-      votes.splice(0, votes.length, ...normalisePollVotes(freshVotes));
+      const visiblePolls = normalisePolls(freshPolls).filter(poll => !isSamplePollId(poll.id));
+      const visibleIds = new Set(visiblePolls.map(poll => poll.id));
+      polls.splice(0, polls.length, ...visiblePolls);
+      votes.splice(0, votes.length, ...normalisePollVotes(freshVotes)
+        .filter(vote => visibleIds.has(vote.poll_id)));
     } catch (err) {
       console.warn("Could not load polls. In live mode run supabase/migration-polls.sql.", err);
     }
     pollRefreshChrome();
   }
 
-  pollBanner?.addEventListener("click", () => show("s-polls"));
   $("poll-list-back")?.addEventListener("click", () => show("s-home"));
   $("poll-back")?.addEventListener("click", () => show("s-polls"));
   $("poll-submit")?.addEventListener("click", submitPollAnswer);
@@ -1177,11 +1162,15 @@
 
   syncPolls();
   Store.subscribePolls({
-    onPoll: poll => { upsertPollLocal(poll); pollRefreshChrome(); },
-    onDelete: id => { removePollLocal(id); pollRefreshChrome(); },
-    onVote: vote => { upsertVoteLocal(vote); pollRefreshChrome(); },
-    onVoteDelete: vote => { removeVoteLocal(vote); pollRefreshChrome(); },
-    onResetVotes: id => { resetVotesLocal(id); pollRefreshChrome(); },
+    onPoll: poll => {
+      if (isSamplePollId(poll?.id)) return;
+      upsertPollLocal(poll);
+      pollRefreshChrome();
+    },
+    onDelete: id => { if (isSamplePollId(id)) return; removePollLocal(id); pollRefreshChrome(); },
+    onVote: vote => { if (isSamplePollId(vote?.poll_id)) return; upsertVoteLocal(vote); pollRefreshChrome(); },
+    onVoteDelete: vote => { if (isSamplePollId(vote?.poll_id)) return; removeVoteLocal(vote); pollRefreshChrome(); },
+    onResetVotes: id => { if (isSamplePollId(id)) return; resetVotesLocal(id); pollRefreshChrome(); },
     resync: syncPolls
   });
 })();

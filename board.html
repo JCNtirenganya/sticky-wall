@@ -6,7 +6,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261111a"><link rel="stylesheet" href="css/postit.css?v=20261111a"><link rel="stylesheet" href="css/board.css?v=20261111a"><link rel="stylesheet" href="css/avatar.css?v=20261111a"><link rel="stylesheet" href="css/piles.css?v=20261111a"><link rel="stylesheet" href="css/qr.css?v=20261111a"><link rel="stylesheet" href="css/charts.css?v=20261111a">
+<link rel="stylesheet" href="css/paper.css?v=20261111b"><link rel="stylesheet" href="css/postit.css?v=20261111b"><link rel="stylesheet" href="css/board.css?v=20261111b"><link rel="stylesheet" href="css/avatar.css?v=20261111b"><link rel="stylesheet" href="css/piles.css?v=20261111b"><link rel="stylesheet" href="css/qr.css?v=20261111b"><link rel="stylesheet" href="css/charts.css?v=20261111b">
 </head>
 <body>
 <main id="board">
@@ -67,7 +67,16 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
+<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
+<aside id="live-request-alert" class="live-request-alert" role="status" aria-live="assertive" hidden>
+  <span class="live-request-alert__pulse" aria-hidden="true"></span>
+  <span class="live-request-alert__copy">
+    <b id="live-request-alert-who">Guest</b>
+    <small id="live-request-alert-sub" data-i18n="Asking to go live">Asking to go live</small>
+  </span>
+  <button id="live-request-alert-review" class="live-request-alert__review" type="button" data-i18n="Review requests">Review requests</button>
+  <button id="live-request-alert-close" class="live-request-alert__close" type="button" aria-label="Close" data-i18n-aria="Close">×</button>
+</aside>
 <button id="piles-back" type="button" hidden><span aria-hidden="true">←</span> <span data-i18n="All piles">All piles</span></button>
 
 <!-- presenter: first stop · choose which module fills the screen -->
@@ -137,125 +146,18 @@
 
     <div class="extras-cols">
 
-      <section class="extras-card">
+      <section class="extras-card extras-card--general">
         <header class="extras-card__head">
           <h3 data-i18n="Modules">Modules</h3>
         </header>
         <div class="extras-grid">
           <button id="extras-home" class="extras-btn" type="button"><span data-i18n="Module home">Module home</span> <kbd>0</kbd></button>
           <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screen…">Split screen…</button>
-          <button id="extras-stream-wall" class="extras-btn" type="button" data-i18n="Live stream">Live stream</button>
         </div>
         <p class="extras-note" data-i18n="Choose what fills the screen, or show two or more modules side by side.">Choose what fills the screen, or show two or more modules side by side.</p>
       </section>
 
-      <section class="extras-card">
-        <header class="extras-card__head">
-          <h3 data-i18n="Notes">Notes</h3>
-          <button id="extras-defaults-notes" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
-        </header>
-        <div class="extras-grid">
-          <button id="extras-notes-wall" class="extras-btn" type="button"><span data-i18n="Wall">Wall</span> <kbd>W</kbd></button>
-          <button id="extras-dashboard" class="extras-btn" type="button"><span data-i18n="Dashboard">Dashboard</span> <kbd>D</kbd></button>
-          <button id="extras-reset-view" class="extras-btn" type="button" data-i18n="Reset view">Reset view</button>
-          <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
-          <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
-        </div>
-        <div class="extras-grid extras-grid--single">
-          <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
-        </div>
-        <details class="extras-advanced">
-          <summary data-i18n="Advanced">Advanced</summary>
-          <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
-            <input type="checkbox" data-extra="columns">
-            <span data-i18n="Categories in columns">Categories in columns</span>
-          </label>
-          <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Note spacing">Note spacing</span> <output id="gap-out" data-for="gap">12</output><span class="extra-unit">px</span></span>
-            <input type="range" data-extra="gap" min="0" max="40" step="1" value="12">
-          </label>
-        </details>
-      </section>
-
-      <section class="extras-card">
-        <header class="extras-card__head">
-          <h3 data-i18n="Polls">Polls</h3>
-          <button id="extras-defaults-polls" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
-        </header>
-        <div class="extras-grid">
-          <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
-          <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
-          <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
-          <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
-          <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-        </div>
-        <div class="extras-grid">
-          <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
-          <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
-        </div>
-
-        <details class="extras-advanced" open>
-          <summary data-i18n="Charts">Charts</summary>
-          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
-          <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
-            <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
-            <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
-            <button type="button" data-chart-type="columns" data-i18n="Columns">Columns</button>
-            <button type="button" data-chart-type="donut" data-i18n="Donut">Donut</button>
-            <button type="button" data-chart-type="line" data-i18n="Trend">Trend</button>
-            <button type="button" data-chart-type="cloud" data-i18n="Word cloud">Word cloud</button>
-          </div>
-          <div class="chart-picks chart-picks--style" role="group" aria-label="Chart style" data-i18n-aria="Chart style">
-            <button type="button" data-chart-style="hand" data-i18n="Hand-drawn">Hand-drawn</button>
-            <button type="button" data-chart-style="clean" data-i18n="Standard">Standard</button>
-          </div>
-        </details>
-      </section>
-
-      <section class="extras-card">
-        <header class="extras-card__head">
-          <h3 data-i18n="Media wall">Media wall</h3>
-          <button id="extras-defaults-media" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
-        </header>
-        <div class="extras-grid">
-          <button id="extras-media-open" class="extras-btn" type="button"><span data-i18n="Show media wall">Show media wall</span> <kbd>V</kbd></button>
-          <button id="extras-media-close" class="extras-btn" type="button" data-i18n="Hide media wall">Hide media wall</button>
-          <button id="extras-media-present" class="extras-btn extras-btn--wide" type="button"><span data-i18n="Play media full screen">Play media full screen</span> <kbd>F</kbd></button>
-        </div>
-        <div class="extras-grid extras-grid--single">
-          <button id="extras-demo-media" class="extras-btn" type="button" title="Add 3 sample photos" data-i18n-title="Add 3 sample photos"><span data-i18n="Add sample media">Add sample media</span></button>
-        </div>
-        <p class="extras-note" data-i18n="Phones upload here; only this board shows the wall.">Phones upload here; only this board shows the wall.</p>
-        <details class="extras-advanced">
-          <summary data-i18n="Advanced">Advanced</summary>
-          <label class="extra-row">
-            <input type="checkbox" data-extra="mediaAutoplay" checked>
-            <span data-i18n="Autoplay videos">Autoplay videos</span>
-          </label>
-          <label class="extra-row">
-            <input type="checkbox" data-extra="mediaMute" checked>
-            <span data-i18n="Mute videos">Mute videos</span>
-          </label>
-          <label class="extra-row">
-            <input type="checkbox" data-extra="mediaLoop" checked>
-            <span data-i18n="Loop videos">Loop videos</span>
-          </label>
-          <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Seconds per photo">Seconds per photo</span> <output id="media-photo-seconds-out" data-for="mediaPhotoSeconds">6</output><span class="extra-unit">s</span></span>
-            <input type="range" data-extra="mediaPhotoSeconds" min="2" max="60" step="1" value="6">
-          </label>
-          <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">×</span></span>
-            <input type="range" data-extra="mediaVideoRate" min="0.5" max="2" step="0.25" value="1">
-          </label>
-          <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Most recent">Most recent</span> <output id="media-max-out" data-for="mediaMax">12</output><span class="extra-unit" data-i18n="items">items</span></span>
-            <input type="range" data-extra="mediaMax" min="1" max="24" step="1" value="12">
-          </label>
-        </details>
-      </section>
-
-      <section class="extras-card">
+      <section class="extras-card extras-card--general">
         <header class="extras-card__head">
           <h3 data-i18n="Look">Look</h3>
           <button id="extras-defaults-look" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
@@ -334,7 +236,123 @@
         </details>
       </section>
 
-      <section class="extras-card">
+      <section class="extras-card extras-card--notes">
+        <header class="extras-card__head">
+          <h3 data-i18n="Notes">Notes</h3>
+          <button id="extras-defaults-notes" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-notes-wall" class="extras-btn" type="button"><span data-i18n="Wall">Wall</span> <kbd>W</kbd></button>
+          <button id="extras-dashboard" class="extras-btn" type="button"><span data-i18n="Dashboard">Dashboard</span> <kbd>D</kbd></button>
+          <button id="extras-reset-view" class="extras-btn" type="button" data-i18n="Reset view">Reset view</button>
+          <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
+          <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
+        </div>
+        <div class="extras-grid extras-grid--single">
+          <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
+        </div>
+        <details class="extras-advanced">
+          <summary data-i18n="Advanced">Advanced</summary>
+          <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
+            <input type="checkbox" data-extra="columns">
+            <span data-i18n="Categories in columns">Categories in columns</span>
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Note spacing">Note spacing</span> <output id="gap-out" data-for="gap">12</output><span class="extra-unit">px</span></span>
+            <input type="range" data-extra="gap" min="0" max="40" step="1" value="12">
+          </label>
+        </details>
+      </section>
+
+      <section class="extras-card extras-card--media">
+        <header class="extras-card__head">
+          <h3 data-i18n="Media wall">Media wall</h3>
+          <button id="extras-defaults-media" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-media-open" class="extras-btn" type="button"><span data-i18n="Show media wall">Show media wall</span> <kbd>V</kbd></button>
+          <button id="extras-media-close" class="extras-btn" type="button" data-i18n="Hide media wall">Hide media wall</button>
+          <button id="extras-media-present" class="extras-btn extras-btn--wide" type="button"><span data-i18n="Play media full screen">Play media full screen</span> <kbd>F</kbd></button>
+        </div>
+        <div class="extras-grid extras-grid--single">
+          <button id="extras-demo-media" class="extras-btn" type="button" title="Add 3 sample photos" data-i18n-title="Add 3 sample photos"><span data-i18n="Add sample media">Add sample media</span></button>
+        </div>
+        <p class="extras-note" data-i18n="Phones upload here; only this board shows the wall.">Phones upload here; only this board shows the wall.</p>
+        <details class="extras-advanced">
+          <summary data-i18n="Advanced">Advanced</summary>
+          <label class="extra-row">
+            <input type="checkbox" data-extra="mediaAutoplay" checked>
+            <span data-i18n="Autoplay videos">Autoplay videos</span>
+          </label>
+          <label class="extra-row">
+            <input type="checkbox" data-extra="mediaMute" checked>
+            <span data-i18n="Mute videos">Mute videos</span>
+          </label>
+          <label class="extra-row">
+            <input type="checkbox" data-extra="mediaLoop" checked>
+            <span data-i18n="Loop videos">Loop videos</span>
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Seconds per photo">Seconds per photo</span> <output id="media-photo-seconds-out" data-for="mediaPhotoSeconds">6</output><span class="extra-unit">s</span></span>
+            <input type="range" data-extra="mediaPhotoSeconds" min="2" max="60" step="1" value="6">
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">×</span></span>
+            <input type="range" data-extra="mediaVideoRate" min="0.5" max="2" step="0.25" value="1">
+          </label>
+          <label class="extra-range">
+            <span class="extra-range-head"><span data-i18n="Most recent">Most recent</span> <output id="media-max-out" data-for="mediaMax">12</output><span class="extra-unit" data-i18n="items">items</span></span>
+            <input type="range" data-extra="mediaMax" min="1" max="24" step="1" value="12">
+          </label>
+        </details>
+      </section>
+
+      <section class="extras-card extras-card--poll">
+        <header class="extras-card__head">
+          <h3 data-i18n="Polls">Polls</h3>
+          <button id="extras-defaults-polls" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
+          <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
+          <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
+          <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
+          <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
+        </div>
+        <div class="extras-grid">
+          <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
+          <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
+        </div>
+        <details class="extras-advanced">
+          <summary data-i18n="Charts">Charts</summary>
+          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
+          <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
+            <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
+            <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
+            <button type="button" data-chart-type="columns" data-i18n="Columns">Columns</button>
+            <button type="button" data-chart-type="donut" data-i18n="Donut">Donut</button>
+            <button type="button" data-chart-type="line" data-i18n="Trend">Trend</button>
+            <button type="button" data-chart-type="cloud" data-i18n="Word cloud">Word cloud</button>
+          </div>
+          <div class="chart-picks chart-picks--style" role="group" aria-label="Chart style" data-i18n-aria="Chart style">
+            <button type="button" data-chart-style="hand" data-i18n="Hand-drawn">Hand-drawn</button>
+            <button type="button" data-chart-style="clean" data-i18n="Standard">Standard</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="extras-card extras-card--stream">
+        <header class="extras-card__head">
+          <h3 data-i18n="Live stream">Live stream</h3>
+        </header>
+        <div class="extras-grid">
+          <button id="extras-stream-wall" class="extras-btn" type="button"><span data-i18n="Live stream">Live stream</span></button>
+          <button id="extras-stream-requests" class="extras-btn" type="button"><span data-i18n="Review live requests">Review live requests</span> <span id="extras-stream-request-count" class="extras-badge">0</span></button>
+        </div>
+        <p class="extras-note" data-i18n="Only you can allow a phone to go live, and you choose where it appears.">Only you can allow a phone to go live, and you choose where it appears.</p>
+      </section>
+
+      <section class="extras-card extras-card--general">
         <header class="extras-card__head">
           <h3 data-i18n="Presentation">Presentation</h3>
           <button id="extras-defaults-presentation" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
@@ -358,7 +376,7 @@
         </div>
       </section>
 
-      <section class="extras-card">
+      <section class="extras-card extras-card--general">
         <header class="extras-card__head">
           <h3 data-i18n="Share &amp; embed">Share &amp; embed</h3>
         </header>
@@ -367,12 +385,7 @@
           <button id="extras-share-polls" class="extras-btn" type="button"><span data-i18n="Poll results link">Poll results link</span></button>
         </div>
         <p class="extras-note" data-i18n="Copy a read-only link or iframe. It updates live and needs no login.">Copy a read-only link or iframe. It updates live and needs no login.</p>
-      </section>
-
-      <section class="extras-card">
-        <header class="extras-card__head">
-          <h3 data-i18n="Data">Data</h3>
-        </header>
+        <p class="extras-kicker" data-i18n="Data">Data</p>
         <div class="extras-grid">
           <button id="extras-download-pdf" class="extras-btn" type="button"><span data-i18n="Wall summary PDF">Wall summary PDF</span></button>
           <button id="extras-download-jpeg" class="extras-btn" type="button"><span data-i18n="Notes image JPEG">Notes image JPEG</span></button>
@@ -975,5 +988,5 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261111a"></script><script src="js/i18n.js?v=20261111a"></script><script src="js/polls.js?v=20261111a"></script><script src="js/store.js?v=20261111a"></script><script src="js/shared.js?v=20261111a"></script><script src="js/charts.js?v=20261111a"></script><script src="js/qrcode.js?v=20261111a"></script><script src="js/export.js?v=20261111a"></script><script src="js/live.js?v=20261111a"></script><script src="js/board.js?v=20261111a"></script>
+<script src="js/config.js?v=20261111b"></script><script src="js/i18n.js?v=20261111b"></script><script src="js/polls.js?v=20261111b"></script><script src="js/store.js?v=20261111b"></script><script src="js/shared.js?v=20261111b"></script><script src="js/charts.js?v=20261111b"></script><script src="js/qrcode.js?v=20261111b"></script><script src="js/export.js?v=20261111b"></script><script src="js/live.js?v=20261111b"></script><script src="js/board.js?v=20261111b"></script>
 </body></html>

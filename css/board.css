@@ -412,7 +412,7 @@ body.show-dashboard #hot{opacity:0;visibility:hidden;pointer-events:none}
   position:fixed;
   left:clamp(16px,2.2vw,28px);
   top:clamp(14px,2vh,26px);
-  z-index:20;
+  z-index:160;
   display:flex;
   align-items:center;
   gap:clamp(10px,1.1vw,16px);
@@ -767,7 +767,7 @@ body.idle .brand-edit{opacity:0;pointer-events:none}
   position:fixed;
   left:clamp(16px,2.2vw,28px);
   bottom:clamp(14px,2.2vh,24px);
-  z-index:20;
+  z-index:161;
   display:flex;
   align-items:center;
   gap:8px;
@@ -794,7 +794,8 @@ body.idle .brand-edit{opacity:0;pointer-events:none}
 }
 #status.is-demo .dot{background:#f0c46b;box-shadow:0 0 0 3px rgba(240,196,107,.14)}
 #status .sep{opacity:.32}
-body.hide-status #status{opacity:0;visibility:hidden}
+.status-notes{display:inline-flex;align-items:center;gap:8px}
+body.hide-status .status-notes{display:none}
 
 /* ── note choreography ──────────────────────────────────────── */
 .note.new{animation:noteIn .95s var(--ease-spring) both}
@@ -1131,12 +1132,24 @@ body.reading #extras{display:none!important}
   align-items:start;
 }
 .extras-card{
+  --card-line:rgba(255,242,224,.1);
+  --card-tint:rgba(255,244,230,.04);
+  --card-accent:rgba(255,244,230,.62);
   min-width:0;
   padding:9px 9px 10px;
-  border:1px solid rgba(255,242,224,.1);
+  border:1px solid var(--card-line);
+  border-left:3px solid var(--card-line);
   border-radius:11px;
-  background:rgba(255,244,230,.04);
+  background:var(--card-tint);
 }
+/* Board-wide groups stay neutral; each module keeps its own accent so the
+   presenter can find a group at a glance. */
+.extras-card--general{--card-line:rgba(255,242,224,.12);--card-tint:rgba(255,244,230,.04);--card-accent:rgba(255,244,230,.66)}
+.extras-card--notes{--card-line:rgba(240,196,107,.34);--card-tint:rgba(240,196,107,.075);--card-accent:#f0c46b}
+.extras-card--media{--card-line:rgba(127,199,217,.34);--card-tint:rgba(127,199,217,.075);--card-accent:#8fd3e2}
+.extras-card--poll{--card-line:rgba(196,155,240,.34);--card-tint:rgba(196,155,240,.075);--card-accent:#cbaaf3}
+.extras-card--stream{--card-line:rgba(255,143,114,.38);--card-tint:rgba(255,143,114,.085);--card-accent:#ffa189}
+.extras-card--notes,.extras-card--media,.extras-card--poll,.extras-card--stream{border-left-width:3px}
 .extras-card__head{
   display:flex;
   align-items:center;
@@ -1150,7 +1163,7 @@ body.reading #extras{display:none!important}
   font:600 9px/1 var(--font-ui);
   letter-spacing:.18em;
   text-transform:uppercase;
-  color:rgba(255,244,230,.62);
+  color:var(--card-accent,rgba(255,244,230,.62));
 }
 .extras-mini{
   flex:none;
@@ -1476,7 +1489,7 @@ body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
   right:clamp(10px,1.6vw,26px);
   bottom:clamp(4px,.8vh,10px);
   width:clamp(118px,12.5vw,208px);
-  z-index:60;
+  z-index:161;
   transition:width .55s var(--ease-spring),filter .5s,opacity .4s var(--ease-soft),visibility .4s;
   pointer-events:none;
   filter:drop-shadow(0 14px 16px rgba(25,12,4,.32));
@@ -1519,7 +1532,9 @@ body.reading #avatar{width:clamp(146px,16vw,270px)}
 }
 
 /* ── polls: presenter room ──────────────────────────────────── */
-#status-polls{
+#status-polls,
+#status-modules,
+#status-live-requests{
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -1527,6 +1542,7 @@ body.reading #avatar{width:clamp(146px,16vw,270px)}
   padding:2px 7px 2px 9px;
   border:0;
   border-left:1px solid rgba(255,242,224,.16);
+  border-radius:7px;
   background:transparent;
   color:rgba(255,244,230,.68);
   font:600 9.5px/1 var(--font-ui);
@@ -1534,19 +1550,126 @@ body.reading #avatar{width:clamp(146px,16vw,270px)}
   text-transform:uppercase;
   pointer-events:auto;
   cursor:pointer;
-  transition:color .18s;
+  transition:color .18s,background .18s;
 }
-#status-polls:hover{color:#fff4e6}
-#status-polls .status-polls__icon{font-size:10px;opacity:.7}
+#status-polls:hover,
+#status-modules:hover,
+#status-live-requests:hover,
+#status-polls:focus-visible,
+#status-modules:focus-visible,
+#status-live-requests:focus-visible{color:#fff4e6;background:rgba(255,244,230,.09);outline:none}
+#status-polls .status-polls__icon,
+#status-modules .status-polls__icon,
+#status-live-requests .status-polls__icon{font-size:10px;opacity:.7}
 #status-polls.has-open{color:#ffe1a8}
 #status-polls.has-open .status-polls__icon{color:#f0c46b}
+#status-live-requests{color:#ffc9b8}
+#status-live-requests .status-polls__icon{color:#ff8f72;opacity:1}
+#status-live-requests[hidden],
+#status-modules[hidden]{display:none!important}
+
+/* ── go-live alert: always on top, over any module or presentation ── */
+.live-request-alert{
+  position:fixed;
+  top:clamp(12px,2vh,24px);
+  left:50%;
+  z-index:260;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:max-content;
+  max-width:min(580px,calc(100vw - 24px));
+  padding:9px 11px;
+  border:1px solid rgba(255,143,114,.52);
+  border-radius:14px;
+  background:
+    radial-gradient(120% 130% at 0% 0%,rgba(255,143,114,.22),transparent 58%),
+    linear-gradient(180deg,rgba(64,22,13,.98),rgba(26,10,6,.99));
+  color:#fff1e8;
+  box-shadow:0 18px 46px rgba(0,0,0,.52),0 0 0 1px rgba(255,143,114,.12);
+  transform:translateX(-50%);
+  animation:liveRequestIn .32s var(--ease-spring) both;
+  cursor:default;
+}
+.live-request-alert[hidden]{display:none!important}
+@keyframes liveRequestIn{
+  from{opacity:0;transform:translateX(-50%) translateY(-12px) scale(.96)}
+  to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+}
+.live-request-alert__pulse{
+  flex:none;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:#ff6a4d;
+  box-shadow:0 0 0 0 rgba(255,106,77,.6);
+  animation:liveRequestPulse 1.5s ease-out infinite;
+}
+@keyframes liveRequestPulse{
+  0%{box-shadow:0 0 0 0 rgba(255,106,77,.55)}
+  70%{box-shadow:0 0 0 11px rgba(255,106,77,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,106,77,0)}
+}
+.live-request-alert__copy{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+  padding-right:4px;
+}
+.live-request-alert__copy b{
+  overflow:hidden;
+  font:700 14px/1.1 var(--font-hand);
+  letter-spacing:.01em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.live-request-alert__copy small{
+  font:600 8.5px/1 var(--font-ui);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,220,205,.62);
+  white-space:nowrap;
+}
+.live-request-alert__review{
+  flex:none;
+  min-height:30px;
+  padding:6px 12px;
+  border:1px solid rgba(255,180,158,.4);
+  border-radius:9px;
+  background:rgba(255,143,114,.16);
+  color:#fff3ec;
+  font:700 10px/1 var(--font-ui);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .18s,border-color .18s;
+}
+.live-request-alert__review:hover{background:rgba(255,143,114,.32);border-color:rgba(255,180,158,.7)}
+.live-request-alert__review:focus-visible{outline:2px solid #ffe9b8;outline-offset:2px}
+.live-request-alert__close{
+  flex:none;
+  width:26px;
+  height:26px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,244,230,.07);
+  color:rgba(255,232,220,.7);
+  font:400 17px/1 var(--font-ui);
+  cursor:pointer;
+  transition:background .18s,color .18s;
+}
+.live-request-alert__close:hover{background:rgba(255,244,230,.18);color:#fff5ea}
+.live-request-alert__close:focus-visible{outline:2px solid #ffe9b8;outline-offset:2px}
+@media (max-width:560px){
+  .live-request-alert{gap:8px;padding:8px 9px}
+  .live-request-alert__copy b{font-size:12.5px}
+  .live-request-alert__review{min-height:26px;padding:5px 9px;font-size:9px}
+}
 
 body.show-polls #sheet,
 body.show-polls #piles,
-body.show-polls #brand,
-body.show-polls #status,
-body.show-polls #avatar,
-body.show-polls #qr-card,
 body.show-polls #filters,
 body.show-polls #hot,
 body.show-polls #empty,
@@ -3216,10 +3339,6 @@ body.show-modules #focus{opacity:0;visibility:hidden;pointer-events:none}
 .split-pane .media-live-grid{max-height:32%}
 .split-pane .media-stage__item img,
 .split-pane .media-stage__item video{max-height:calc(100% - 4px)}
-body.split-mode #brand,
-body.split-mode #status,
-body.split-mode #qr-card,
-body.split-mode #avatar,
 body.split-mode #filters,
 body.split-mode #hot,
 body.split-mode #piles-back{display:none!important}
@@ -3242,6 +3361,23 @@ body.split-mode.idle{cursor:default}
   transition:opacity .28s var(--ease-soft),visibility .28s;
 }
 body.show-stream .stream-wall{opacity:1;visibility:visible;pointer-events:auto}
+
+/* Branding, QR and Bun stay above every module wall; reserve room for them. */
+body.show-polls .poll-room,
+body.show-media .media-wall,
+body.show-stream .stream-wall{
+  padding-top:clamp(96px,11vh,136px);
+  padding-bottom:clamp(88px,10vh,124px);
+}
+body.show-media .media-wall__shell{max-height:100%}
+body.show-polls .poll-foot{padding-bottom:0}
+body.split-mode .split-stage__bar{
+  padding-left:clamp(250px,27vw,340px);
+  padding-right:clamp(150px,15vw,190px);
+}
+body.split-mode .split-panes{padding-bottom:clamp(82px,10vh,120px)}
+body.split-mode #qr-card{width:clamp(92px,8.5vw,124px)}
+body.split-mode #qr-card .qr-caption{display:none}
 .stream-wall__shell{
   width:min(1500px,100%);
   height:100%;
@@ -3336,10 +3472,6 @@ body.show-stream .stream-wall{opacity:1;visibility:visible;pointer-events:auto}
   color:rgba(255,244,230,.3);
 }
 .stream-foot kbd{padding:2px 5px;border-radius:4px;background:rgba(255,244,230,.1);font:600 8.5px/1 var(--font-ui)}
-body.show-stream #brand,
-body.show-stream #status,
-body.show-stream #qr-card,
-body.show-stream #avatar,
 body.show-stream #filters,
 body.show-stream #hot,
 body.show-stream #empty,
@@ -3564,4 +3696,27 @@ body.present-media #extras,
 body.present-stream #extras,
 body.present-polls #extras,
 body.present-notes #extras{display:none!important}
+body.present-media #brand,
+body.present-media #status,
+body.present-media #qr-card,
+body.present-media #avatar,
+body.present-stream #brand,
+body.present-stream #status,
+body.present-stream #qr-card,
+body.present-stream #avatar,
+body.present-polls #brand,
+body.present-polls #status,
+body.present-polls #qr-card,
+body.present-polls #avatar{display:none!important}
 
+/* The module chooser is its own full screen; keep it clean too. */
+body.show-modules #brand,
+body.show-modules #status,
+body.show-modules #qr-card,
+body.show-modules #avatar{display:none!important}
+
+
+/* Full-screen presentations ignore the branding band reserved for module walls. */
+body.present-media .media-wall,
+body.present-stream .stream-wall{padding:0}
+body.present-polls .poll-room{padding:clamp(10px,1.6vw,22px)}

@@ -6,7 +6,7 @@
   position:fixed;
   top:clamp(14px,2vh,26px);
   right:clamp(14px,1.8vw,26px);
-  z-index:20;
+  z-index:160;
   width:clamp(124px,11.5vw,170px);
   padding:9px 9px 11px;
   color:#382617;

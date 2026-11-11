@@ -34,6 +34,8 @@
   const liveFloat = $("live-float"), liveFloatGrid = $("live-float-grid");
   const liveRequestDialog = $("live-request-dialog"), liveRequestList = $("live-request-list"), liveRequestEmpty = $("live-request-empty");
   const statusLiveRequests = $("status-live-requests"), statusLiveCount = $("status-live-count");
+  const liveRequestAlert = $("live-request-alert"), liveRequestAlertWho = $("live-request-alert-who"), liveRequestAlertSub = $("live-request-alert-sub");
+  let liveAlertTitleBase = "", liveAlertDismissed = false, requestChimeCtx = null, requestChimeAt = 0;
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
   const polls = [], votes = [], media = [];
@@ -1957,6 +1959,60 @@
     : value === "split" ? t("Split with media")
     : t("Stream page");
 
+  function playRequestChime() {
+    const now = Date.now();
+    if (now - requestChimeAt < 1600) return;
+    requestChimeAt = now;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      requestChimeCtx = requestChimeCtx || new Ctx();
+      if (requestChimeCtx.state === "suspended") requestChimeCtx.resume().catch(() => {});
+      const start = requestChimeCtx.currentTime + .02;
+      [0, .18].forEach((offset, index) => {
+        const osc = requestChimeCtx.createOscillator();
+        const gain = requestChimeCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(index ? 988 : 784, start + offset);
+        gain.gain.setValueAtTime(0, start + offset);
+        gain.gain.linearRampToValueAtTime(.16, start + offset + .02);
+        gain.gain.exponentialRampToValueAtTime(.001, start + offset + .26);
+        osc.connect(gain).connect(requestChimeCtx.destination);
+        osc.start(start + offset);
+        osc.stop(start + offset + .3);
+      });
+    } catch (err) { /* audio is a bonus; the banner still shows */ }
+  }
+
+  function syncLiveAlertTitle(count) {
+    if (count > 0) {
+      if (!liveAlertTitleBase) liveAlertTitleBase = document.title;
+      document.title = "(" + count + ") " + t("Go-live requests") + " · " + liveAlertTitleBase;
+    } else if (liveAlertTitleBase) {
+      document.title = liveAlertTitleBase;
+      liveAlertTitleBase = "";
+    }
+  }
+
+  function renderLiveRequestAlert() {
+    const n = liveRequests.size;
+    if (!n) liveAlertDismissed = false;
+    if (liveRequestAlert) {
+      liveRequestAlert.hidden = n === 0 || liveAlertDismissed;
+      if (n && !liveAlertDismissed) {
+        const latest = [...liveRequests.values()].reduce((best, item) =>
+          (item.at || 0) > (best.at || 0) ? item : best);
+        if (liveRequestAlertWho) liveRequestAlertWho.textContent = latest.author || t("Guest");
+        if (liveRequestAlertSub) {
+          liveRequestAlertSub.textContent = n > 1
+            ? t("{n} go-live requests", { n })
+            : t("Asking to go live");
+        }
+      }
+    }
+    syncLiveAlertTitle(n && !liveAlertDismissed ? n : 0);
+  }
+
   function renderLiveRequestChrome() {
     const n = liveRequests.size;
     if (statusLiveRequests) {
@@ -1967,9 +2023,14 @@
     const streamButton = $("stream-requests");
     const streamCount = $("stream-request-count");
     const emptyButton = $("stream-empty-requests");
+    const extrasButton = $("extras-stream-requests");
+    const extrasCount = $("extras-stream-request-count");
     if (streamButton) streamButton.hidden = n === 0;
     if (streamCount) streamCount.textContent = String(n);
     if (emptyButton) emptyButton.hidden = n === 0;
+    if (extrasButton) extrasButton.classList.toggle("is-empty", n === 0);
+    if (extrasCount) extrasCount.textContent = String(n);
+    renderLiveRequestAlert();
   }
 
   function renderLiveRequests() {
@@ -2029,6 +2090,8 @@
         author: author || t("Guest"),
         at: at || Date.now()
       });
+      liveAlertDismissed = false;
+      playRequestChime();
       flashPollStatus(t("{n} go-live requests", { n: liveRequests.size }));
     }
     renderLiveRequests();
@@ -2712,7 +2775,17 @@
   $("stream-empty-media")?.addEventListener("click", () => openMediaWall());
   $("stream-requests")?.addEventListener("click", openLiveRequestDialog);
   $("stream-empty-requests")?.addEventListener("click", openLiveRequestDialog);
+  $("extras-stream-requests")?.addEventListener("click", () => { setExtrasOpen(false); openLiveRequestDialog(); });
   $("status-live-requests")?.addEventListener("click", openLiveRequestDialog);
+  $("live-request-alert-review")?.addEventListener("click", () => {
+    liveAlertDismissed = true;
+    renderLiveRequestAlert();
+    openLiveRequestDialog();
+  });
+  $("live-request-alert-close")?.addEventListener("click", () => {
+    liveAlertDismissed = true;
+    renderLiveRequestAlert();
+  });
   $("live-request-close")?.addEventListener("click", closeLiveRequestDialog);
   $("live-float-close")?.addEventListener("click", () => { if (liveFloat) liveFloat.hidden = true; });
 
