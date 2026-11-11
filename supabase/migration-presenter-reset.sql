@@ -60,7 +60,7 @@ declare
   poll_count integer := 0;
   vote_count integer := 0;
   media_count integer := 0;
-  file_count integer := 0;
+  media_paths text[] := '{}';
 begin
   select * into cfg from public.presenter_config where id for update;
 
@@ -87,21 +87,21 @@ begin
       updated_at = now()
   where id;
 
-  -- Answers before the polls they point at, then media rows and the files
-  -- they reference, then the notes.
-  delete from public.poll_votes;
+  -- Answers before the polls they point at, then media rows (the board
+  -- removes the stored files through the Storage API), then the notes.
+  -- `where true` keeps Supabase's safeupdate guard happy inside RPC calls.
+  delete from public.poll_votes where true;
   get diagnostics vote_count = row_count;
 
-  delete from public.polls;
+  delete from public.polls where true;
   get diagnostics poll_count = row_count;
 
-  delete from public.event_media;
+  select coalesce(array_agg(storage_path), '{}') into media_paths
+  from public.event_media;
+  delete from public.event_media where true;
   get diagnostics media_count = row_count;
 
-  delete from storage.objects where bucket_id = 'event-media';
-  get diagnostics file_count = row_count;
-
-  delete from public.notes;
+  delete from public.notes where true;
   get diagnostics note_count = row_count;
 
   return jsonb_build_object(
@@ -109,7 +109,8 @@ begin
     'polls', poll_count,
     'votes', vote_count,
     'media', media_count,
-    'files', file_count
+    'files', coalesce(array_length(media_paths, 1), 0),
+    'paths', to_jsonb(media_paths)
   );
 end;
 $$;

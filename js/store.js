@@ -316,6 +316,11 @@
       async clearSubmissions(passphrase) {
         const { data, error } = await sb.rpc("presenter_clear", { p_secret: String(passphrase || "") });
         if (error) throw error;
+        const paths = Array.isArray(data?.paths) ? data.paths.filter(Boolean) : [];
+        if (paths.length) {
+          const removed = await sb.storage.from("event-media").remove(paths);
+          if (removed.error) console.warn("Submissions cleared, but some media files could not be removed", removed.error);
+        }
         return data || {};
       },
       subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
