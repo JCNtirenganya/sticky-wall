@@ -19,7 +19,7 @@
      Store.subscribePolls({onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync})
 
      Store.listMedia() → Promise<media[]>
-     Store.addMedia({file, author, kind, width, height}) → Promise<media>
+     Store.addMedia({file, author, kind, width, height, onProgress}) → Promise<media>
      Store.hideMedia(id) → Promise<void>
      Store.removeMedia(media) → Promise<void>
      Store.clearSubmissions(passphrase) → Promise<counts>   // presenter reset
@@ -148,6 +148,42 @@
       hidden: !!r.hidden,
       url: sb.storage.from("event-media").getPublicUrl(r.storage_path).data.publicUrl
     });
+
+    /* Upload straight to the event-media bucket with XHR so the phone can
+       show real progress. storage-js sends Blob/File uploads as multipart
+       FormData with a cacheControl field, so this mirrors that request. */
+    function uploadMediaFile(path, file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const form = new FormData();
+        form.append("cacheControl", "3600");
+        form.append("", file);
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${C.SUPABASE_URL}/storage/v1/object/event-media/${path}`);
+        xhr.setRequestHeader("apikey", C.SUPABASE_ANON_KEY);
+        xhr.setRequestHeader("Authorization", `Bearer ${C.SUPABASE_ANON_KEY}`);
+        xhr.setRequestHeader("x-upsert", "false");
+        if (xhr.upload && onProgress) {
+          xhr.upload.onprogress = event => {
+            if (event.lengthComputable && event.total) onProgress(event.loaded, event.total);
+          };
+        }
+        xhr.onload = () => {
+          let payload = null;
+          try { payload = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch { payload = null; }
+          if (xhr.status >= 200 && xhr.status < 300) {
+            onProgress?.(1, 1);
+            resolve({ path, id: payload?.Id, fullPath: payload?.Key });
+            return;
+          }
+          const detail = payload?.message || payload?.error || `Upload failed (${xhr.status})`;
+          reject(new Error(detail));
+        };
+        xhr.onerror = () => reject(new Error("Could not upload the media file"));
+        xhr.onabort = () => reject(new Error("Upload cancelled"));
+        xhr.send(form);
+      });
+    }
+
     window.Store = {
       mode: "supabase",
       liveBus,
@@ -273,19 +309,14 @@
         if (error) throw error;
         return (data || []).map(normMedia);
       },
-      async addMedia({ file, author, kind, width, height }) {
+      async addMedia({ file, author, kind, width, height, onProgress }) {
         if (!file) throw new Error("No file selected");
         const type = String(file.type || "");
         const isVideo = /^video\//.test(type) || kind === "video";
         const ext = (String(file.name || "").match(/\.[a-z0-9]+$/i)?.[0] || (isVideo ? ".mp4" : ".jpg")).toLowerCase();
         const unique = window.crypto?.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
         const path = `${Date.now()}-${unique}${ext}`;
-        const upload = await sb.storage.from("event-media").upload(path, file, {
-          contentType: type || undefined,
-          cacheControl: "3600",
-          upsert: false
-        });
-        if (upload.error) throw upload.error;
+        await uploadMediaFile(path, file, onProgress);
         const { data, error } = await sb.from("event_media").insert({
           kind: isVideo ? "video" : "photo",
           storage_path: path,
@@ -576,7 +607,7 @@
       async listMedia() {
         return readMedia().slice().sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
       },
-      async addMedia({ file, author, kind, width, height }) {
+      async addMedia({ file, author, kind, width, height, onProgress }) {
         if (!file) throw new Error("No file selected");
         if (file.size > 4 * 1024 * 1024) throw new Error("Demo mode supports files up to 4 MB");
         const url = await new Promise((resolve, reject) => {
@@ -585,6 +616,7 @@
           reader.onerror = () => reject(reader.error || new Error("Could not read the file"));
           reader.readAsDataURL(file);
         });
+        onProgress?.(1, 1);
         const isVideo = /^video\//.test(String(file.type || "")) || kind === "video";
         const item = {
           id: window.crypto?.randomUUID ? crypto.randomUUID() : "m-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),

@@ -245,16 +245,25 @@
   const mediaPreview = $("media-preview"), mediaSend = $("media-send"), mediaNote = $("media-note");
   const mediaInputs = [mediaFileInput, mediaPhotoInput, mediaVideoInput].filter(Boolean);
   const MAX_MEDIA = 50 * 1024 * 1024, MAX_VIDEO_SECONDS = 30;
-  let mediaState = null, mediaSending = false;
+  const VIDEO_COMPRESS_OVER = 6 * 1024 * 1024;
+  let mediaState = null, mediaSending = false, mediaToken = 0;
+
+  function setMediaNote(text) {
+    if (!mediaNote) return;
+    mediaNote.textContent = text || "";
+    mediaNote.hidden = !text;
+  }
 
   function clearMediaSelection() {
+    mediaToken++;
+    mediaState?.cancel?.();
     if (mediaState?.url) URL.revokeObjectURL(mediaState.url);
     mediaState = null;
     if (mediaPreview) { mediaPreview.replaceChildren(); mediaPreview.hidden = true; }
     if (mediaSource) mediaSource.hidden = false;
     if (mediaPick) mediaPick.hidden = false;
     if (mediaSend) mediaSend.disabled = true;
-    if (mediaNote) { mediaNote.textContent = ""; mediaNote.hidden = true; }
+    setMediaNote("");
     mediaInputs.forEach(input => { input.value = ""; });
   }
 
@@ -271,6 +280,117 @@
       video.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read this video")); };
       video.src = url;
     });
+  }
+
+  function pickVideoMime() {
+    if (typeof MediaRecorder === "undefined") return "";
+    return [
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+      "video/mp4",
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    ].find(type => MediaRecorder.isTypeSupported(type)) || "";
+  }
+
+  /* Re-record a too-large clip at a lower bitrate so it uploads faster.
+     Playback runs in real time, so this returns immediately and the send
+     button waits for the result. Any problem keeps the original file. */
+  function shrinkVideo(file, meta, onProgress) {
+    let stopped = false;
+    let stopNow = () => {};
+    let resolvePromise = () => {};
+    const promise = new Promise(resolve => {
+      resolvePromise = resolve;
+      const finish = result => {
+        if (stopped) return;
+        stopped = true;
+        stopNow();
+        resolve(result);
+      };
+      const original = { file, width: meta.width, height: meta.height, duration: meta.duration, optimized: false };
+      const mime = file.size >= VIDEO_COMPRESS_OVER && typeof HTMLMediaElement.prototype.captureStream === "function"
+        ? pickVideoMime()
+        : "";
+      if (!mime) { finish(original); return; }
+
+      const url = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      video.src = url;
+      video.preload = "auto";
+      video.playsInline = true;
+      video.muted = true;
+      video.setAttribute("playsinline", "");
+      video.style.cssText = "position:fixed;left:-2px;top:-2px;width:2px;height:2px;opacity:0;pointer-events:none";
+      document.body.appendChild(video);
+
+      let recorder = null, chunks = [], timer = 0;
+      stopNow = () => {
+        clearTimeout(timer);
+        video.ontimeupdate = video.onended = video.onerror = null;
+        try { if (recorder && recorder.state !== "inactive") recorder.stop(); } catch {}
+        try { video.pause(); } catch {}
+        video.removeAttribute("src");
+        try { video.load(); } catch {}
+        video.remove();
+        URL.revokeObjectURL(url);
+      };
+      const giveUp = () => finish(original);
+
+      video.onerror = giveUp;
+      video.onended = () => {
+        try { if (recorder && recorder.state !== "inactive") recorder.stop(); } catch { giveUp(); }
+      };
+      video.onloadeddata = () => {
+        try {
+          const stream = video.captureStream();
+          if (!stream || !stream.getVideoTracks().length) { giveUp(); return; }
+          const pixels = (meta.width || 0) * (meta.height || 0);
+          const videoBitsPerSecond = pixels >= 1920 * 1080 ? 2200000 : pixels >= 1280 * 720 ? 1600000 : 1000000;
+          recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond, audioBitsPerSecond: 96000 });
+          recorder.ondataavailable = event => { if (event.data && event.data.size) chunks.push(event.data); };
+          recorder.onerror = giveUp;
+          recorder.onstop = () => {
+            if (stopped) return;
+            try {
+              const blob = new Blob(chunks, { type: recorder.mimeType || mime });
+              if (!blob.size || blob.size >= file.size * 0.9) { finish(original); return; }
+              const ext = /mp4/i.test(blob.type) ? ".mp4" : ".webm";
+              const base = String(file.name || "video").replace(/\.[a-z0-9]+$/i, "") || "video";
+              finish({
+                file: new File([blob], base + ext, { type: blob.type }),
+                width: meta.width,
+                height: meta.height,
+                duration: Math.min(meta.duration || 0, MAX_VIDEO_SECONDS),
+                optimized: true
+              });
+            } catch (err) {
+              finish(original);
+            }
+          };
+          recorder.start(250);
+          video.ontimeupdate = () => {
+            if (meta.duration) onProgress?.(Math.max(0, Math.min(1, video.currentTime / meta.duration)));
+          };
+          timer = setTimeout(() => {
+            try { if (recorder.state !== "inactive") recorder.stop(); } catch { giveUp(); }
+          }, Math.max(4000, (Math.min(meta.duration || MAX_VIDEO_SECONDS, MAX_VIDEO_SECONDS) + 3) * 1000));
+          const played = video.play();
+          if (played && typeof played.catch === "function") played.catch(giveUp);
+        } catch (err) {
+          giveUp();
+        }
+      };
+    });
+    return {
+      promise,
+      cancel() {
+        if (stopped) return;
+        stopped = true;
+        stopNow();
+        resolvePromise(null);
+      }
+    };
   }
 
   function shrinkImage(file) {
@@ -352,17 +472,43 @@
     const isVideo = /^video\//.test(type);
     if (!isVideo && !/^image\//.test(type)) { toast(t("Choose a photo or video"), true); return; }
     if (file.size > MAX_MEDIA) { toast(t("Too large. Choose a file under 50 MB."), true); return; }
+    const token = ++mediaToken;
+    mediaState?.cancel?.();
+    if (mediaState?.url) URL.revokeObjectURL(mediaState.url);
     mediaState = null;
     try {
       if (isVideo) {
         const meta = await readVideoMeta(file);
+        if (token !== mediaToken) return;
         if (meta.duration > MAX_VIDEO_SECONDS + .5) {
           toast(t("Videos must be 30 seconds or shorter"), true);
           return;
         }
-        mediaState = { file, kind: "video", width: meta.width, height: meta.height, duration: meta.duration, url: URL.createObjectURL(file) };
+        const state = {
+          file,
+          kind: "video",
+          width: meta.width,
+          height: meta.height,
+          duration: meta.duration,
+          url: URL.createObjectURL(file),
+          optimized: false,
+          preparing: false,
+          prepared: null
+        };
+        mediaState = state;
+        if (file.size >= VIDEO_COMPRESS_OVER) {
+          state.preparing = true;
+          const job = shrinkVideo(file, meta, ratio => {
+            if (token === mediaToken && mediaSending) {
+              setMediaNote(t("Sending…") + " " + Math.round(ratio * 40) + "%");
+            }
+          });
+          state.cancel = job.cancel;
+          state.prepared = job.promise;
+        }
       } else {
         const shrunk = await shrinkImage(file);
+        if (token !== mediaToken) return;
         mediaState = { file: shrunk.file, kind: "photo", width: shrunk.width, height: shrunk.height, url: URL.createObjectURL(shrunk.file) };
       }
       paintMediaPreview();
@@ -388,16 +534,38 @@
     if (!mediaState || mediaSending) return;
     if (!name) { show("s-name"); return; }
     mediaSending = true;
+    const token = mediaToken;
+    const state = mediaState;
     const label = mediaSend.textContent;
     mediaSend.disabled = true;
     mediaSend.textContent = t("Sending…");
+    setMediaNote(t("Sending…"));
     try {
+      if (state.prepared) {
+        const prepared = await state.prepared;
+        state.prepared = null;
+        if (prepared && token === mediaToken && mediaState === state) {
+          state.file = prepared.file;
+          state.width = prepared.width;
+          state.height = prepared.height;
+          state.duration = prepared.duration;
+          state.optimized = prepared.optimized;
+        }
+      }
+      if (token !== mediaToken || !mediaState || mediaState !== state) return;
+      const origin = state.preparing ? 40 : 0;
+      const span = state.preparing ? 60 : 100;
       await Store.addMedia({
-        file: mediaState.file,
+        file: state.file,
         author: name,
-        kind: mediaState.kind,
-        width: mediaState.width,
-        height: mediaState.height
+        kind: state.kind,
+        width: state.width,
+        height: state.height,
+        onProgress: (loaded, total) => {
+          if (token !== mediaToken || mediaState !== state) return;
+          const ratio = total ? Math.min(1, loaded / total) : 0;
+          setMediaNote(t("Sending…") + " " + Math.round(origin + ratio * span) + "%");
+        }
       });
       navigator.vibrate?.(14);
       toast(t("Sent to the big screen"));
@@ -405,6 +573,7 @@
       setTimeout(() => show("s-home"), 700);
     } catch (err) {
       console.error("Could not send the media", err);
+      setMediaNote("");
       toast(t("Couldn't send — try again"), true);
     } finally {
       mediaSending = false;

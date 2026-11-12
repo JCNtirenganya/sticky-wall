@@ -78,6 +78,8 @@ With **Categories in columns** enabled, every category starts a new column (stil
 3. Write on the full-size paper sheet; the counter and send button track the draft.
 4. Send: the sheet lifts off the screen, a paper toast confirms, and the wall receives the note in realtime — signed with the sender's name at the bottom.
 
+**Event media.** Photos are resized before sending. Videos stay limited to 30 seconds and 50 MB; clips over about 6 MB are re-recorded on the phone at a lower bitrate first, so the upload is much smaller. The phone shows real upload progress, and any compression problem falls back to the original file (iOS Safari cannot capture a playing video, so it uploads the original).
+
 ## Language
 Both pages ship with **English, Kinyarwanda and French**. Use the **EN / RW / FR** switch on the phone's name screen, the phone header, the board dashboard or **Extras → Language**. The choice is stored in `sticky_lang` and the page reloads. Static text uses `data-i18n` attributes; dynamic text goes through `t(key, vars)`. Stored category and poll text stays in its original language and is translated when displayed.
 
