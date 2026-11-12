@@ -31,7 +31,7 @@
       </div>
     </div>
     <section class="dash-card" id="dash-card" aria-label="Presenter dashboard" data-i18n-aria="Presenter dashboard" hidden>
-      <p class="dash-kicker" data-i18n="Presenter Â· received notes">Presenter Â· received notes</p>
+      <p class="dash-kicker" data-i18n="Presenter · received notes">Presenter · received notes</p>
       <h1 id="dash-title">You received 0 notes.</h1>
       <p class="dash-lead" id="dash-lead">Everything received is on the wall.</p>
       <div class="dash-cats" id="dash-cats"></div>
@@ -53,7 +53,7 @@
       </div>
       <div class="dash-list-head"><span data-i18n="Notes">Notes</span><span id="dash-count"></span></div>
       <ul id="dash-notes" class="dash-notes"></ul>
-      <p class="dash-foot"><kbd>D</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="returns to the wall Â· hidden notes stay here until restored">returns to the wall Â· hidden notes stay here until restored</span></p>
+      <p class="dash-foot"><kbd>D</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="returns to the wall · hidden notes stay here until restored">returns to the wall · hidden notes stay here until restored</span></p>
     </section>
   </div>
   <div id="sheet"></div>
@@ -74,7 +74,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">Â·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">â–£</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">â–¦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">â—</span><span id="status-live-count">0</span></button></div>
+<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
 <aside id="live-request-alert" class="live-request-alert" role="status" aria-live="assertive" hidden>
   <span class="live-request-alert__pulse" aria-hidden="true"></span>
   <span class="live-request-alert__copy">
@@ -82,46 +82,46 @@
     <small id="live-request-alert-sub" data-i18n="Asking to go live">Asking to go live</small>
   </span>
   <button id="live-request-alert-review" class="live-request-alert__review" type="button" data-i18n="Review requests">Review requests</button>
-  <button id="live-request-alert-close" class="live-request-alert__close" type="button" aria-label="Close" data-i18n-aria="Close">Ã—</button>
+  <button id="live-request-alert-close" class="live-request-alert__close" type="button" aria-label="Close" data-i18n-aria="Close">×</button>
 </aside>
-<button id="piles-back" type="button" hidden><span aria-hidden="true">â†</span> <span data-i18n="All piles">All piles</span></button>
+<button id="piles-back" type="button" hidden><span aria-hidden="true">←</span> <span data-i18n="All piles">All piles</span></button>
 
-<!-- presenter: first stop Â· choose which module fills the screen -->
+<!-- presenter: first stop · choose which module fills the screen -->
 <section id="module-home" class="module-home" aria-label="Choose a module" data-i18n-aria="Choose a module" aria-hidden="false">
   <div class="module-home__shell">
     <header class="module-home__head">
-      <p class="poll-kicker" data-i18n="Presenter Â· modules">Presenter Â· modules</p>
+      <p class="poll-kicker" data-i18n="Presenter · modules">Presenter · modules</p>
       <h2 data-i18n="What should fill the screen?">What should fill the screen?</h2>
       <p data-i18n="Pick one module to activate. You can split the screen later.">Pick one module to activate. You can split the screen later.</p>
     </header>
     <div class="module-home__grid">
       <button type="button" class="module-card module-card--notes" data-module="notes">
         <kbd>1</kbd>
-        <span class="module-card__icon" aria-hidden="true">ðŸ“</span>
+        <span class="module-card__icon" aria-hidden="true">📝</span>
         <b data-i18n="Notes">Notes</b>
         <small data-i18n="Everything the room wrote, on the wall.">Everything the room wrote, on the wall.</small>
       </button>
       <button type="button" class="module-card module-card--media" data-module="media">
         <kbd>2</kbd>
-        <span class="module-card__icon" aria-hidden="true">ðŸ–¼ï¸</span>
+        <span class="module-card__icon" aria-hidden="true">🖼️</span>
         <b data-i18n="Media">Media</b>
         <small data-i18n="Photos and short videos from phones.">Photos and short videos from phones.</small>
       </button>
       <button type="button" class="module-card module-card--poll" data-module="poll">
         <kbd>3</kbd>
-        <span class="module-card__icon" aria-hidden="true">â–£</span>
+        <span class="module-card__icon" aria-hidden="true">▣</span>
         <b data-i18n="Poll">Poll</b>
         <small data-i18n="Live questions and results.">Live questions and results.</small>
       </button>
       <button type="button" class="module-card module-card--stream" data-module="stream">
         <kbd>4</kbd>
-        <span class="module-card__icon" aria-hidden="true">ðŸ“¹</span>
+        <span class="module-card__icon" aria-hidden="true">📹</span>
         <b data-i18n="Stream">Stream</b>
         <small data-i18n="Approved phone cameras, live.">Approved phone cameras, live.</small>
       </button>
     </div>
     <footer class="module-home__foot">
-      <span><kbd>1</kbd>â€“<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
+      <span><kbd>1</kbd>–<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
       <span><kbd>0</kbd> <span data-i18n="opens this window">opens this window</span></span>
       <button id="module-fullscreen" class="module-home__fullscreen" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
@@ -152,7 +152,7 @@
         <p class="extras-kicker" data-i18n="Presenter controls">Presenter controls</p>
         <p class="extras-head__hint" data-i18n="Everything in one place. Changes apply immediately.">Everything in one place. Changes apply immediately.</p>
       </div>
-      <button id="extras-close" class="extras-close" type="button" aria-label="Close" data-i18n-aria="Close" title="Close (Esc)" data-i18n-title="Close (Esc)">Ã—</button>
+      <button id="extras-close" class="extras-close" type="button" aria-label="Close" data-i18n-aria="Close" title="Close (Esc)" data-i18n-title="Close (Esc)">×</button>
     </header>
 
     <div class="extras-cols">
@@ -163,7 +163,7 @@
         </header>
         <div class="extras-grid">
           <button id="extras-home" class="extras-btn" type="button"><span data-i18n="Module home">Module home</span> <kbd>0</kbd></button>
-          <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screenâ€¦">Split screenâ€¦</button>
+          <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screen…">Split screen…</button>
         </div>
         <p class="extras-note" data-i18n="Choose what fills the screen, or show two or more modules side by side.">Choose what fills the screen, or show two or more modules side by side.</p>
       </section>
@@ -214,12 +214,12 @@
         <details class="extras-advanced">
           <summary data-i18n="Advanced">Advanced</summary>
           <div class="extra-file-row">
-            <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background imageâ€¦">Background imageâ€¦</button>
+            <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background image…">Background image…</button>
             <button id="extras-bg-clear" class="extras-btn" type="button" data-i18n="Remove image">Remove image</button>
           </div>
           <input id="extras-bg-file" type="file" accept="image/*" hidden>
           <div class="extra-input-row">
-            <input id="extras-bg-url" type="url" inputmode="url" placeholder="â€¦or paste an image URL" data-i18n-placeholder="â€¦or paste an image URL" autocomplete="off">
+            <input id="extras-bg-url" type="url" inputmode="url" placeholder="…or paste an image URL" data-i18n-placeholder="…or paste an image URL" autocomplete="off">
             <button id="extras-bg-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
           </div>
           <label class="extra-range">
@@ -228,12 +228,12 @@
           </label>
           <p class="extras-kicker" data-i18n="Logo">Logo</p>
           <div class="extra-file-row">
-            <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logoâ€¦">Change logoâ€¦</button>
+            <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logo…">Change logo…</button>
             <button id="extras-logo-reset" class="extras-btn" type="button" data-i18n="Default logo">Default logo</button>
           </div>
           <input id="extras-logo-file" type="file" accept="image/*" hidden>
           <div class="extra-input-row">
-            <input id="extras-logo-url" type="url" inputmode="url" placeholder="â€¦or paste a logo URL" data-i18n-placeholder="â€¦or paste a logo URL" autocomplete="off">
+            <input id="extras-logo-url" type="url" inputmode="url" placeholder="…or paste a logo URL" data-i18n-placeholder="…or paste a logo URL" autocomplete="off">
             <button id="extras-logo-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
           </div>
           <label class="extra-range">
@@ -304,7 +304,7 @@
             <input type="range" data-extra="mediaPhotoSeconds" min="2" max="60" step="1" value="6">
           </label>
           <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">Ã—</span></span>
+            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">×</span></span>
             <input type="range" data-extra="mediaVideoRate" min="0.5" max="2" step="0.25" value="1">
           </label>
           <label class="extra-range">
@@ -332,7 +332,7 @@
         </div>
         <details class="extras-advanced">
           <summary data-i18n="Charts">Charts</summary>
-          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> Â· <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
+          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
           <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
             <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
             <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
@@ -438,7 +438,7 @@
   <div class="poll-room__shell">
     <header class="poll-room__head">
       <div class="poll-room__title">
-        <p class="poll-kicker" data-i18n="Presenter Â· live audience">Presenter Â· live audience</p>
+        <p class="poll-kicker" data-i18n="Presenter · live audience">Presenter · live audience</p>
         <h2 data-i18n="Poll room">Poll room</h2>
         <p id="poll-summary" class="poll-summary">No polls yet.</p>
       </div>
@@ -456,7 +456,7 @@
     <div id="poll-filters" class="poll-filters" aria-label="Filter polls" data-i18n-aria="Filter polls"></div>
     <div id="poll-grid" class="poll-grid"></div>
     <div id="poll-empty" class="poll-empty" hidden>
-      <p class="poll-empty__icon" aria-hidden="true">â–£</p>
+      <p class="poll-empty__icon" aria-hidden="true">▣</p>
       <h3 data-i18n="No polls yet">No polls yet</h3>
       <p data-i18n="Create a poll and it appears on every phone instantly.">Create a poll and it appears on every phone instantly.</p>
       <div class="poll-empty__actions">
@@ -464,7 +464,7 @@
         <button id="poll-empty-samples" class="poll-btn poll-btn--samples" type="button" data-i18n="Load sample polls">Load sample polls</button>
       </div>
     </div>
-    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> Â· <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> Â· <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> Â· <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> Â· <kbd>O</kbd> <span data-i18n="One by one">One by one</span> Â· <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
+    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
   </div>
 </section>
 
@@ -473,7 +473,7 @@
   <div class="media-wall__shell">
     <header class="media-wall__head">
       <div>
-        <p class="poll-kicker" data-i18n="Presenter Â· event media">Presenter Â· event media</p>
+        <p class="poll-kicker" data-i18n="Presenter · event media">Presenter · event media</p>
         <h2 data-i18n="Shared moments">Shared moments</h2>
         <p id="media-count" class="media-wall__sub"></p>
       </div>
@@ -497,14 +497,14 @@
       <div id="media-live-grid" class="media-live-grid"></div>
     </div>
     <div id="media-grid" class="media-grid" aria-live="polite"></div>
-    <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or videoâ€¦">Waiting for the first photo or videoâ€¦</p>
+    <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or video…">Waiting for the first photo or video…</p>
     <div id="media-stage" class="media-stage" hidden aria-live="polite">
       <div id="media-stage-body" class="media-stage__body"></div>
       <div class="media-stage__bar">
-        <button id="media-stage-prev" class="media-stage__nav" type="button" aria-label="Previous" data-i18n-aria="Previous">â€¹</button>
+        <button id="media-stage-prev" class="media-stage__nav" type="button" aria-label="Previous" data-i18n-aria="Previous">‹</button>
         <span id="media-stage-count" class="media-stage__count"></span>
         <span id="media-stage-auto" class="media-stage__auto" hidden data-i18n="Autoplay">Autoplay</span>
-        <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">â€º</button>
+        <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">›</button>
         <button id="media-stage-exit" class="poll-btn media-stage__exit" type="button"><span data-i18n="Exit full screen">Exit full screen</span> <kbd>Esc</kbd></button>
       </div>
     </div>
@@ -516,7 +516,7 @@
   <div class="stream-wall__shell">
     <header class="stream-wall__head">
       <div>
-        <p class="poll-kicker" data-i18n="Presenter Â· live stream">Presenter Â· live stream</p>
+        <p class="poll-kicker" data-i18n="Presenter · live stream">Presenter · live stream</p>
         <h2 data-i18n="Live from phones">Live from phones</h2>
         <p id="stream-sub" class="stream-wall__sub"></p>
       </div>
@@ -529,7 +529,7 @@
     </header>
     <div id="stream-grid" class="stream-grid"></div>
     <div id="stream-empty" class="stream-empty" hidden>
-      <p class="stream-empty__icon" aria-hidden="true">ðŸ“¹</p>
+      <p class="stream-empty__icon" aria-hidden="true">📹</p>
       <h3 data-i18n="No live stream yet">No live stream yet</h3>
       <p data-i18n="When someone asks to go live, approve the request and their camera appears here.">When someone asks to go live, approve the request and their camera appears here.</p>
       <div class="stream-empty__actions">
@@ -537,7 +537,7 @@
         <button id="stream-empty-media" class="poll-btn" type="button" data-i18n="Open media wall">Open media wall</button>
       </div>
     </div>
-    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> Â· <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
+    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> · <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
   </div>
 </section>
 
@@ -545,7 +545,7 @@
 <div id="live-float" class="live-float" hidden>
   <div class="live-float__head">
     <span class="media-live-strip__label"><span class="media-live-strip__dot" aria-hidden="true"></span><span data-i18n="Live from phones">Live from phones</span></span>
-    <button id="live-float-close" class="live-float__close" type="button" aria-label="Close live window" data-i18n-aria="Close live window">Ã—</button>
+    <button id="live-float-close" class="live-float__close" type="button" aria-label="Close live window" data-i18n-aria="Close live window">×</button>
   </div>
   <div id="live-float-grid" class="live-float__grid"></div>
 </div>
@@ -555,7 +555,7 @@
   <div class="poll-race__shell">
     <header class="poll-race__head">
       <div class="poll-race__copy">
-        <p class="poll-kicker" data-i18n="Presenter Â· live results">Presenter Â· live results</p>
+        <p class="poll-kicker" data-i18n="Presenter · live results">Presenter · live results</p>
         <h2 id="race-title"></h2>
         <p id="race-sub" class="poll-race__sub"></p>
       </div>
@@ -577,10 +577,10 @@
       </label>
       <span id="race-clock" class="race-clock">0:00</span>
       <div class="race-speeds" role="group" aria-label="Playback speed" data-i18n-aria="Playback speed">
-        <button type="button" data-race-speed="0.5" class="race-speed">0.5Ã—</button>
-        <button type="button" data-race-speed="1" class="race-speed act">1Ã—</button>
-        <button type="button" data-race-speed="2" class="race-speed">2Ã—</button>
-        <button type="button" data-race-speed="4" class="race-speed">4Ã—</button>
+        <button type="button" data-race-speed="0.5" class="race-speed">0.5×</button>
+        <button type="button" data-race-speed="1" class="race-speed act">1×</button>
+        <button type="button" data-race-speed="2" class="race-speed">2×</button>
+        <button type="button" data-race-speed="4" class="race-speed">4×</button>
       </div>
     </footer>
   </div>
@@ -596,7 +596,7 @@
       <label for="poll-question" data-i18n="Question">Question</label>
       <input id="poll-question" maxlength="160" autocomplete="off" placeholder="e.g. Which topic should we cover next?" data-i18n-placeholder="e.g. Which topic should we cover next?" required>
       <label for="poll-description"><span data-i18n="Description">Description</span> <span data-i18n="optional">optional</span></label>
-      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the roomâ€¦" data-i18n-placeholder="A little context for the roomâ€¦"></textarea>
+      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the room…" data-i18n-placeholder="A little context for the room…"></textarea>
       <div class="poll-form-row">
         <label for="poll-type"><span data-i18n="Type">Type</span>
           <select id="poll-type"></select>
@@ -675,10 +675,10 @@
     <h2 data-i18n="Split screen">Split screen</h2>
     <p class="event-lead" data-i18n="Pick two or more modules to show side by side. Use this when the screen or projector is large enough.">Pick two or more modules to show side by side. Use this when the screen or projector is large enough.</p>
     <div id="split-options" class="split-options" role="group" aria-label="Modules" data-i18n-aria="Modules">
-      <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">ðŸ“</span><b data-i18n="Notes">Notes</b></label>
-      <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">ðŸ–¼ï¸</span><b data-i18n="Media">Media</b></label>
-      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">â–£</span><b data-i18n="Poll">Poll</b></label>
-      <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">ðŸ“¹</span><b data-i18n="Stream">Stream</b></label>
+      <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">📝</span><b data-i18n="Notes">Notes</b></label>
+      <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">🖼️</span><b data-i18n="Media">Media</b></label>
+      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">▣</span><b data-i18n="Poll">Poll</b></label>
+      <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">📹</span><b data-i18n="Stream">Stream</b></label>
     </div>
     <p id="split-hint" class="split-hint" role="status"></p>
     <div class="event-actions">
