@@ -209,7 +209,6 @@ body.show-dashboard #sheet,
 body.show-dashboard #piles{opacity:0;pointer-events:none;visibility:hidden}
 body.show-dashboard #brand,
 body.show-dashboard #status,
-body.show-dashboard #avatar,
 body.show-dashboard #qr-card,
 body.show-dashboard #extras,
 body.show-dashboard #filters,
@@ -1518,29 +1517,6 @@ body.reading #extras{display:none!important}
 .extras-actions button:hover{background:rgba(255,244,230,.92);color:#2a1a10}
 body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
 
-/* ── Bun, the rabbit host ───────────────────────────────────── */
-#avatar{
-  position:fixed;
-  right:clamp(10px,1.6vw,26px);
-  bottom:clamp(4px,.8vh,10px);
-  width:clamp(118px,12.5vw,208px);
-  z-index:161;
-  transition:width .55s var(--ease-spring),filter .5s,opacity .4s var(--ease-soft),visibility .4s;
-  pointer-events:none;
-  filter:drop-shadow(0 14px 16px rgba(25,12,4,.32));
-  transform-origin:50% 100%;
-}
-body.hide-mascot #avatar{opacity:0;visibility:hidden}
-body.reading #avatar{width:clamp(146px,16vw,270px)}
-#avatar.mood-pop{animation:moodPop .5s var(--ease-spring)}
-@keyframes moodPop{
-  0%{transform:scale(1)}
-  36%{transform:scale(1.045) translateY(-4px)}
-  70%{transform:scale(.988)}
-  100%{transform:scale(1)}
-}
-#avatar svg{width:100%;display:block;overflow:visible}
-
 @media (max-width:800px){
   #brand{max-width:calc(100vw - 32px)}
 }
@@ -1552,7 +1528,6 @@ body.reading #avatar{width:clamp(146px,16vw,270px)}
   #brand p{display:none}
   .event-dialog form{padding:24px 22px 20px}
   #status{font-size:9.5px;padding:7px 10px}
-  #avatar{width:108px}
   #extras-panel{width:min(560px,calc(100vw - 20px))}
   #focus .note{--s:min(66vh,78vw,520px)}
   #focus-meta{font-size:9.5px;padding:7px 11px}
@@ -1999,7 +1974,6 @@ body.present-notes #status,
 body.present-notes #qr-card,
 body.present-notes #filters,
 body.present-notes #hot,
-body.present-notes #avatar,
 body.present-notes #piles-back,
 body.present-notes .empty-hint{display:none!important}
 
@@ -2312,7 +2286,6 @@ body.show-race #sheet,
 body.show-race #piles,
 body.show-race #brand,
 body.show-race #status,
-body.show-race #avatar,
 body.show-race #qr-card,
 body.show-race #extras,
 body.show-race #filters,
@@ -3285,7 +3258,6 @@ body.show-modules #brand,
 body.show-modules #status,
 body.show-modules #extras,
 body.show-modules #qr-card,
-body.show-modules #avatar,
 body.show-modules #filters,
 body.show-modules #hot,
 body.show-modules #empty,
@@ -3422,7 +3394,7 @@ body.split-mode.idle{cursor:default}
 }
 body.show-stream .stream-wall{opacity:1;visibility:visible;pointer-events:auto}
 
-/* Branding, QR and Bun stay above every module wall; reserve room for them. */
+/* Branding and QR stay above every module wall; reserve room for them. */
 body.show-polls .poll-room,
 body.show-media .media-wall,
 body.show-stream .stream-wall{
@@ -3759,21 +3731,17 @@ body.present-notes #extras{display:none!important}
 body.present-media #brand,
 body.present-media #status,
 body.present-media #qr-card,
-body.present-media #avatar,
 body.present-stream #brand,
 body.present-stream #status,
 body.present-stream #qr-card,
-body.present-stream #avatar,
 body.present-polls #brand,
 body.present-polls #status,
-body.present-polls #qr-card,
-body.present-polls #avatar{display:none!important}
+body.present-polls #qr-card{display:none!important}
 
 /* The module chooser is its own full screen; keep it clean too. */
 body.show-modules #brand,
 body.show-modules #status,
-body.show-modules #qr-card,
-body.show-modules #avatar{display:none!important}
+body.show-modules #qr-card{display:none!important}
 
 
 /* Full-screen presentations ignore the branding band reserved for module walls. */

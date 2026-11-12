@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261112d"><link rel="stylesheet" href="css/postit.css?v=20261112d"><link rel="stylesheet" href="css/board.css?v=20261112d"><link rel="stylesheet" href="css/avatar.css?v=20261112d"><link rel="stylesheet" href="css/piles.css?v=20261112d"><link rel="stylesheet" href="css/qr.css?v=20261112d"><link rel="stylesheet" href="css/charts.css?v=20261112d">
+<link rel="stylesheet" href="css/paper.css?v=20261112e"><link rel="stylesheet" href="css/postit.css?v=20261112e"><link rel="stylesheet" href="css/board.css?v=20261112e"><link rel="stylesheet" href="css/piles.css?v=20261112e"><link rel="stylesheet" href="css/qr.css?v=20261112e"><link rel="stylesheet" href="css/charts.css?v=20261112e">
 </head>
 <body>
 <main id="board">
@@ -31,7 +31,7 @@
       </div>
     </div>
     <section class="dash-card" id="dash-card" aria-label="Presenter dashboard" data-i18n-aria="Presenter dashboard" hidden>
-      <p class="dash-kicker" data-i18n="Presenter · received notes">Presenter · received notes</p>
+      <p class="dash-kicker" data-i18n="Presenter Â· received notes">Presenter Â· received notes</p>
       <h1 id="dash-title">You received 0 notes.</h1>
       <p class="dash-lead" id="dash-lead">Everything received is on the wall.</p>
       <div class="dash-cats" id="dash-cats"></div>
@@ -53,7 +53,7 @@
       </div>
       <div class="dash-list-head"><span data-i18n="Notes">Notes</span><span id="dash-count"></span></div>
       <ul id="dash-notes" class="dash-notes"></ul>
-      <p class="dash-foot"><kbd>D</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="returns to the wall · hidden notes stay here until restored">returns to the wall · hidden notes stay here until restored</span></p>
+      <p class="dash-foot"><kbd>D</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="returns to the wall Â· hidden notes stay here until restored">returns to the wall Â· hidden notes stay here until restored</span></p>
     </section>
   </div>
   <div id="sheet"></div>
@@ -74,7 +74,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
+<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">Â·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">â–£</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">â–¦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">â—</span><span id="status-live-count">0</span></button></div>
 <aside id="live-request-alert" class="live-request-alert" role="status" aria-live="assertive" hidden>
   <span class="live-request-alert__pulse" aria-hidden="true"></span>
   <span class="live-request-alert__copy">
@@ -82,46 +82,46 @@
     <small id="live-request-alert-sub" data-i18n="Asking to go live">Asking to go live</small>
   </span>
   <button id="live-request-alert-review" class="live-request-alert__review" type="button" data-i18n="Review requests">Review requests</button>
-  <button id="live-request-alert-close" class="live-request-alert__close" type="button" aria-label="Close" data-i18n-aria="Close">×</button>
+  <button id="live-request-alert-close" class="live-request-alert__close" type="button" aria-label="Close" data-i18n-aria="Close">Ã—</button>
 </aside>
-<button id="piles-back" type="button" hidden><span aria-hidden="true">←</span> <span data-i18n="All piles">All piles</span></button>
+<button id="piles-back" type="button" hidden><span aria-hidden="true">â†</span> <span data-i18n="All piles">All piles</span></button>
 
-<!-- presenter: first stop · choose which module fills the screen -->
+<!-- presenter: first stop Â· choose which module fills the screen -->
 <section id="module-home" class="module-home" aria-label="Choose a module" data-i18n-aria="Choose a module" aria-hidden="false">
   <div class="module-home__shell">
     <header class="module-home__head">
-      <p class="poll-kicker" data-i18n="Presenter · modules">Presenter · modules</p>
+      <p class="poll-kicker" data-i18n="Presenter Â· modules">Presenter Â· modules</p>
       <h2 data-i18n="What should fill the screen?">What should fill the screen?</h2>
       <p data-i18n="Pick one module to activate. You can split the screen later.">Pick one module to activate. You can split the screen later.</p>
     </header>
     <div class="module-home__grid">
       <button type="button" class="module-card module-card--notes" data-module="notes">
         <kbd>1</kbd>
-        <span class="module-card__icon" aria-hidden="true">📝</span>
+        <span class="module-card__icon" aria-hidden="true">ðŸ“</span>
         <b data-i18n="Notes">Notes</b>
         <small data-i18n="Everything the room wrote, on the wall.">Everything the room wrote, on the wall.</small>
       </button>
       <button type="button" class="module-card module-card--media" data-module="media">
         <kbd>2</kbd>
-        <span class="module-card__icon" aria-hidden="true">🖼️</span>
+        <span class="module-card__icon" aria-hidden="true">ðŸ–¼ï¸</span>
         <b data-i18n="Media">Media</b>
         <small data-i18n="Photos and short videos from phones.">Photos and short videos from phones.</small>
       </button>
       <button type="button" class="module-card module-card--poll" data-module="poll">
         <kbd>3</kbd>
-        <span class="module-card__icon" aria-hidden="true">▣</span>
+        <span class="module-card__icon" aria-hidden="true">â–£</span>
         <b data-i18n="Poll">Poll</b>
         <small data-i18n="Live questions and results.">Live questions and results.</small>
       </button>
       <button type="button" class="module-card module-card--stream" data-module="stream">
         <kbd>4</kbd>
-        <span class="module-card__icon" aria-hidden="true">📹</span>
+        <span class="module-card__icon" aria-hidden="true">ðŸ“¹</span>
         <b data-i18n="Stream">Stream</b>
         <small data-i18n="Approved phone cameras, live.">Approved phone cameras, live.</small>
       </button>
     </div>
     <footer class="module-home__foot">
-      <span><kbd>1</kbd>–<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
+      <span><kbd>1</kbd>â€“<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
       <span><kbd>0</kbd> <span data-i18n="opens this window">opens this window</span></span>
       <button id="module-fullscreen" class="module-home__fullscreen" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
@@ -152,7 +152,7 @@
         <p class="extras-kicker" data-i18n="Presenter controls">Presenter controls</p>
         <p class="extras-head__hint" data-i18n="Everything in one place. Changes apply immediately.">Everything in one place. Changes apply immediately.</p>
       </div>
-      <button id="extras-close" class="extras-close" type="button" aria-label="Close" data-i18n-aria="Close" title="Close (Esc)" data-i18n-title="Close (Esc)">×</button>
+      <button id="extras-close" class="extras-close" type="button" aria-label="Close" data-i18n-aria="Close" title="Close (Esc)" data-i18n-title="Close (Esc)">Ã—</button>
     </header>
 
     <div class="extras-cols">
@@ -163,7 +163,7 @@
         </header>
         <div class="extras-grid">
           <button id="extras-home" class="extras-btn" type="button"><span data-i18n="Module home">Module home</span> <kbd>0</kbd></button>
-          <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screen…">Split screen…</button>
+          <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screenâ€¦">Split screenâ€¦</button>
         </div>
         <p class="extras-note" data-i18n="Choose what fills the screen, or show two or more modules side by side.">Choose what fills the screen, or show two or more modules side by side.</p>
       </section>
@@ -181,10 +181,6 @@
         <label class="extra-row">
           <input type="checkbox" data-extra="brand" checked>
           <span data-i18n="Header &amp; logo">Header &amp; logo</span>
-        </label>
-        <label class="extra-row">
-          <input type="checkbox" data-extra="mascot" checked>
-          <span data-i18n="Mascot">Mascot</span>
         </label>
         <label class="extra-row">
           <input type="checkbox" data-extra="qr" checked>
@@ -218,12 +214,12 @@
         <details class="extras-advanced">
           <summary data-i18n="Advanced">Advanced</summary>
           <div class="extra-file-row">
-            <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background image…">Background image…</button>
+            <button id="extras-bg-upload" class="extras-btn" type="button" data-i18n="Background imageâ€¦">Background imageâ€¦</button>
             <button id="extras-bg-clear" class="extras-btn" type="button" data-i18n="Remove image">Remove image</button>
           </div>
           <input id="extras-bg-file" type="file" accept="image/*" hidden>
           <div class="extra-input-row">
-            <input id="extras-bg-url" type="url" inputmode="url" placeholder="…or paste an image URL" data-i18n-placeholder="…or paste an image URL" autocomplete="off">
+            <input id="extras-bg-url" type="url" inputmode="url" placeholder="â€¦or paste an image URL" data-i18n-placeholder="â€¦or paste an image URL" autocomplete="off">
             <button id="extras-bg-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
           </div>
           <label class="extra-range">
@@ -232,12 +228,12 @@
           </label>
           <p class="extras-kicker" data-i18n="Logo">Logo</p>
           <div class="extra-file-row">
-            <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logo…">Change logo…</button>
+            <button id="extras-logo-upload" class="extras-btn" type="button" data-i18n="Change logoâ€¦">Change logoâ€¦</button>
             <button id="extras-logo-reset" class="extras-btn" type="button" data-i18n="Default logo">Default logo</button>
           </div>
           <input id="extras-logo-file" type="file" accept="image/*" hidden>
           <div class="extra-input-row">
-            <input id="extras-logo-url" type="url" inputmode="url" placeholder="…or paste a logo URL" data-i18n-placeholder="…or paste a logo URL" autocomplete="off">
+            <input id="extras-logo-url" type="url" inputmode="url" placeholder="â€¦or paste a logo URL" data-i18n-placeholder="â€¦or paste a logo URL" autocomplete="off">
             <button id="extras-logo-url-set" class="extra-mini" type="button" data-i18n="Set">Set</button>
           </div>
           <label class="extra-range">
@@ -308,7 +304,7 @@
             <input type="range" data-extra="mediaPhotoSeconds" min="2" max="60" step="1" value="6">
           </label>
           <label class="extra-range">
-            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">×</span></span>
+            <span class="extra-range-head"><span data-i18n="Video speed">Video speed</span> <output id="media-video-rate-out" data-for="mediaVideoRate">1</output><span class="extra-unit">Ã—</span></span>
             <input type="range" data-extra="mediaVideoRate" min="0.5" max="2" step="0.25" value="1">
           </label>
           <label class="extra-range">
@@ -336,7 +332,7 @@
         </div>
         <details class="extras-advanced">
           <summary data-i18n="Charts">Charts</summary>
-          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
+          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> Â· <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
           <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
             <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
             <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
@@ -442,7 +438,7 @@
   <div class="poll-room__shell">
     <header class="poll-room__head">
       <div class="poll-room__title">
-        <p class="poll-kicker" data-i18n="Presenter · live audience">Presenter · live audience</p>
+        <p class="poll-kicker" data-i18n="Presenter Â· live audience">Presenter Â· live audience</p>
         <h2 data-i18n="Poll room">Poll room</h2>
         <p id="poll-summary" class="poll-summary">No polls yet.</p>
       </div>
@@ -460,7 +456,7 @@
     <div id="poll-filters" class="poll-filters" aria-label="Filter polls" data-i18n-aria="Filter polls"></div>
     <div id="poll-grid" class="poll-grid"></div>
     <div id="poll-empty" class="poll-empty" hidden>
-      <p class="poll-empty__icon" aria-hidden="true">▣</p>
+      <p class="poll-empty__icon" aria-hidden="true">â–£</p>
       <h3 data-i18n="No polls yet">No polls yet</h3>
       <p data-i18n="Create a poll and it appears on every phone instantly.">Create a poll and it appears on every phone instantly.</p>
       <div class="poll-empty__actions">
@@ -468,7 +464,7 @@
         <button id="poll-empty-samples" class="poll-btn poll-btn--samples" type="button" data-i18n="Load sample polls">Load sample polls</button>
       </div>
     </div>
-    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
+    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> Â· <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> Â· <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> Â· <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> Â· <kbd>O</kbd> <span data-i18n="One by one">One by one</span> Â· <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
   </div>
 </section>
 
@@ -477,7 +473,7 @@
   <div class="media-wall__shell">
     <header class="media-wall__head">
       <div>
-        <p class="poll-kicker" data-i18n="Presenter · event media">Presenter · event media</p>
+        <p class="poll-kicker" data-i18n="Presenter Â· event media">Presenter Â· event media</p>
         <h2 data-i18n="Shared moments">Shared moments</h2>
         <p id="media-count" class="media-wall__sub"></p>
       </div>
@@ -501,14 +497,14 @@
       <div id="media-live-grid" class="media-live-grid"></div>
     </div>
     <div id="media-grid" class="media-grid" aria-live="polite"></div>
-    <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or video…">Waiting for the first photo or video…</p>
+    <p id="media-empty" class="media-empty" hidden data-i18n="Waiting for the first photo or videoâ€¦">Waiting for the first photo or videoâ€¦</p>
     <div id="media-stage" class="media-stage" hidden aria-live="polite">
       <div id="media-stage-body" class="media-stage__body"></div>
       <div class="media-stage__bar">
-        <button id="media-stage-prev" class="media-stage__nav" type="button" aria-label="Previous" data-i18n-aria="Previous">‹</button>
+        <button id="media-stage-prev" class="media-stage__nav" type="button" aria-label="Previous" data-i18n-aria="Previous">â€¹</button>
         <span id="media-stage-count" class="media-stage__count"></span>
         <span id="media-stage-auto" class="media-stage__auto" hidden data-i18n="Autoplay">Autoplay</span>
-        <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">›</button>
+        <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">â€º</button>
         <button id="media-stage-exit" class="poll-btn media-stage__exit" type="button"><span data-i18n="Exit full screen">Exit full screen</span> <kbd>Esc</kbd></button>
       </div>
     </div>
@@ -520,7 +516,7 @@
   <div class="stream-wall__shell">
     <header class="stream-wall__head">
       <div>
-        <p class="poll-kicker" data-i18n="Presenter · live stream">Presenter · live stream</p>
+        <p class="poll-kicker" data-i18n="Presenter Â· live stream">Presenter Â· live stream</p>
         <h2 data-i18n="Live from phones">Live from phones</h2>
         <p id="stream-sub" class="stream-wall__sub"></p>
       </div>
@@ -533,7 +529,7 @@
     </header>
     <div id="stream-grid" class="stream-grid"></div>
     <div id="stream-empty" class="stream-empty" hidden>
-      <p class="stream-empty__icon" aria-hidden="true">📹</p>
+      <p class="stream-empty__icon" aria-hidden="true">ðŸ“¹</p>
       <h3 data-i18n="No live stream yet">No live stream yet</h3>
       <p data-i18n="When someone asks to go live, approve the request and their camera appears here.">When someone asks to go live, approve the request and their camera appears here.</p>
       <div class="stream-empty__actions">
@@ -541,7 +537,7 @@
         <button id="stream-empty-media" class="poll-btn" type="button" data-i18n="Open media wall">Open media wall</button>
       </div>
     </div>
-    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> · <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
+    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> Â· <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
   </div>
 </section>
 
@@ -549,7 +545,7 @@
 <div id="live-float" class="live-float" hidden>
   <div class="live-float__head">
     <span class="media-live-strip__label"><span class="media-live-strip__dot" aria-hidden="true"></span><span data-i18n="Live from phones">Live from phones</span></span>
-    <button id="live-float-close" class="live-float__close" type="button" aria-label="Close live window" data-i18n-aria="Close live window">×</button>
+    <button id="live-float-close" class="live-float__close" type="button" aria-label="Close live window" data-i18n-aria="Close live window">Ã—</button>
   </div>
   <div id="live-float-grid" class="live-float__grid"></div>
 </div>
@@ -559,7 +555,7 @@
   <div class="poll-race__shell">
     <header class="poll-race__head">
       <div class="poll-race__copy">
-        <p class="poll-kicker" data-i18n="Presenter · live results">Presenter · live results</p>
+        <p class="poll-kicker" data-i18n="Presenter Â· live results">Presenter Â· live results</p>
         <h2 id="race-title"></h2>
         <p id="race-sub" class="poll-race__sub"></p>
       </div>
@@ -581,10 +577,10 @@
       </label>
       <span id="race-clock" class="race-clock">0:00</span>
       <div class="race-speeds" role="group" aria-label="Playback speed" data-i18n-aria="Playback speed">
-        <button type="button" data-race-speed="0.5" class="race-speed">0.5×</button>
-        <button type="button" data-race-speed="1" class="race-speed act">1×</button>
-        <button type="button" data-race-speed="2" class="race-speed">2×</button>
-        <button type="button" data-race-speed="4" class="race-speed">4×</button>
+        <button type="button" data-race-speed="0.5" class="race-speed">0.5Ã—</button>
+        <button type="button" data-race-speed="1" class="race-speed act">1Ã—</button>
+        <button type="button" data-race-speed="2" class="race-speed">2Ã—</button>
+        <button type="button" data-race-speed="4" class="race-speed">4Ã—</button>
       </div>
     </footer>
   </div>
@@ -600,7 +596,7 @@
       <label for="poll-question" data-i18n="Question">Question</label>
       <input id="poll-question" maxlength="160" autocomplete="off" placeholder="e.g. Which topic should we cover next?" data-i18n-placeholder="e.g. Which topic should we cover next?" required>
       <label for="poll-description"><span data-i18n="Description">Description</span> <span data-i18n="optional">optional</span></label>
-      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the room…" data-i18n-placeholder="A little context for the room…"></textarea>
+      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the roomâ€¦" data-i18n-placeholder="A little context for the roomâ€¦"></textarea>
       <div class="poll-form-row">
         <label for="poll-type"><span data-i18n="Type">Type</span>
           <select id="poll-type"></select>
@@ -679,10 +675,10 @@
     <h2 data-i18n="Split screen">Split screen</h2>
     <p class="event-lead" data-i18n="Pick two or more modules to show side by side. Use this when the screen or projector is large enough.">Pick two or more modules to show side by side. Use this when the screen or projector is large enough.</p>
     <div id="split-options" class="split-options" role="group" aria-label="Modules" data-i18n-aria="Modules">
-      <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">📝</span><b data-i18n="Notes">Notes</b></label>
-      <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">🖼️</span><b data-i18n="Media">Media</b></label>
-      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">▣</span><b data-i18n="Poll">Poll</b></label>
-      <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">📹</span><b data-i18n="Stream">Stream</b></label>
+      <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">ðŸ“</span><b data-i18n="Notes">Notes</b></label>
+      <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">ðŸ–¼ï¸</span><b data-i18n="Media">Media</b></label>
+      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">â–£</span><b data-i18n="Poll">Poll</b></label>
+      <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">ðŸ“¹</span><b data-i18n="Stream">Stream</b></label>
     </div>
     <p id="split-hint" class="split-hint" role="status"></p>
     <div class="event-actions">
@@ -765,273 +761,9 @@
   </div>
 </div>
 
-<!-- Bun, the map-and-coffee rabbit host -->
-<div id="avatar" data-mood="idle" aria-hidden="true">
-<svg viewBox="0 -58 240 348" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bunFur" cx="38%" cy="22%" r="90%">
-      <stop offset="0" stop-color="#fffdf0"/>
-      <stop offset=".4" stop-color="#f4eecb"/>
-      <stop offset=".76" stop-color="#e0e0c0"/>
-      <stop offset="1" stop-color="#bfb184"/>
-    </radialGradient>
-    <linearGradient id="bunShade" x1="0" y1="0" x2="0" y2="1">
-      <stop offset=".52" stop-color="#5a3a1a" stop-opacity="0"/>
-      <stop offset="1" stop-color="#5a3a1a" stop-opacity=".3"/>
-    </linearGradient>
-    <radialGradient id="bunBelly" cx="42%" cy="28%" r="82%">
-      <stop offset="0" stop-color="#fffef8"/>
-      <stop offset="1" stop-color="#f1e9cd"/>
-    </radialGradient>
-    <linearGradient id="bunEar" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#e6a978"/>
-      <stop offset="1" stop-color="#c06020"/>
-    </linearGradient>
-    <radialGradient id="bunIris" cx="40%" cy="34%" r="76%">
-      <stop offset="0" stop-color="#e2b47a"/>
-      <stop offset=".56" stop-color="#a96a2f"/>
-      <stop offset="1" stop-color="#4a240c"/>
-    </radialGradient>
-    <radialGradient id="bunGlow">
-      <stop offset="0" stop-color="#fff8b0" stop-opacity=".95"/>
-      <stop offset=".5" stop-color="#ffd94a" stop-opacity=".4"/>
-      <stop offset="1" stop-color="#ffd400" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="bunSoft"><feGaussianBlur stdDeviation="2.4"/></filter>
-    <filter id="bunGrainF" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7" stitchTiles="stitch"/>
-      <feColorMatrix type="saturate" values="0"/>
-    </filter>
-    <pattern id="bunGrainP" width="84" height="84" patternUnits="userSpaceOnUse">
-      <rect width="84" height="84" filter="url(#bunGrainF)" opacity=".5"/>
-    </pattern>
-  </defs>
-
-  <ellipse class="ground" cx="120" cy="282" rx="66" ry="9" fill="#000" opacity=".4"/>
-
-  <g id="all">
-    <!-- ears (behind the head) -->
-    <g class="earL">
-      <path d="M104 96 C84 56 66 12 72 -20 C75 -39 92 -42 99 -24 C108 4 118 54 124 86 Z"
-            fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4.5" stroke-linejoin="round"/>
-      <path d="M102 84 C88 50 78 12 82 -14 C84 -27 91 -28 95 -15 C101 8 109 52 114 78 Z"
-            fill="url(#bunEar)" opacity=".85"/>
-      <path d="M104 92 C89 60 81 26 84 0" fill="none" stroke="#fff" stroke-width="2.2" opacity=".35" stroke-linecap="round"/>
-    </g>
-    <g transform="translate(240 0) scale(-1 1)">
-      <g class="earR">
-        <path d="M104 96 C84 56 66 12 72 -20 C75 -39 92 -42 99 -24 C108 4 118 54 124 86 Z"
-              fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4.5" stroke-linejoin="round"/>
-        <path d="M102 84 C88 50 78 12 82 -14 C84 -27 91 -28 95 -15 C101 8 109 52 114 78 Z"
-              fill="url(#bunEar)" opacity=".85"/>
-        <path d="M104 92 C89 60 81 26 84 0" fill="none" stroke="#fff" stroke-width="2.2" opacity=".35" stroke-linecap="round"/>
-      </g>
-    </g>
-
-    <!-- feet -->
-    <g class="feet">
-      <ellipse cx="92" cy="266" rx="26" ry="14" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4"/>
-      <ellipse cx="148" cy="266" rx="26" ry="14" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="4"/>
-      <path d="M84 261 q0 8 0 12 M92 260 q0 9 0 13 M100 261 q0 8 0 12" fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".35" stroke-linecap="round"/>
-      <path d="M140 261 q0 8 0 12 M148 260 q0 9 0 13 M156 261 q0 8 0 12" fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".35" stroke-linecap="round"/>
-    </g>
-
-    <!-- body -->
-    <g class="body">
-      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunFur)"/>
-      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunShade)"/>
-      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="url(#bunGrainP)" opacity=".12" style="mix-blend-mode:soft-light"/>
-      <path d="M120 154 C158 154 180 192 180 224 C180 252 156 266 120 266 C84 266 60 252 60 224 C60 192 82 154 120 154 Z" fill="none" stroke="#3a1d0d" stroke-width="4.4" stroke-linejoin="round"/>
-      <path d="M120 188 C144 188 158 210 158 230 C158 250 142 260 120 260 C98 260 82 250 82 230 C82 210 96 188 120 188 Z" fill="url(#bunBelly)" opacity=".92"/>
-    </g>
-
-    <!-- head -->
-    <g class="head">
-      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunFur)"/>
-      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunShade)" opacity=".85"/>
-      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="url(#bunGrainP)" opacity=".13" style="mix-blend-mode:soft-light"/>
-      <path d="M120 50 C168 50 192 84 192 124 C192 164 160 188 120 188 C80 188 48 164 48 124 C48 84 72 50 120 50 Z" fill="none" stroke="#3a1d0d" stroke-width="4.4" stroke-linejoin="round"/>
-      <ellipse cx="84" cy="80" rx="30" ry="17" fill="#fff" opacity=".2" transform="rotate(-24 84 80)" filter="url(#bunSoft)"/>
-
-      <!-- muzzle + cheeks -->
-      <ellipse cx="120" cy="152" rx="41" ry="29" fill="#fffdf4" opacity=".92"/>
-      <ellipse cx="70" cy="140" rx="17" ry="12" fill="#e08a72" opacity=".2"/>
-      <ellipse cx="170" cy="140" rx="17" ry="12" fill="#e08a72" opacity=".2"/>
-
-      <!-- whiskers -->
-      <g fill="none" stroke="#3a1d0d" stroke-width="2" opacity=".45" stroke-linecap="round">
-        <path d="M86 146 q-16 -6 -28 -11"/>
-        <path d="M84 154 q-18 0 -30 -2"/>
-        <path d="M86 162 q-16 6 -26 13"/>
-        <path d="M154 146 q16 -6 28 -11"/>
-        <path d="M156 154 q18 0 30 -2"/>
-        <path d="M154 162 q16 6 26 13"/>
-      </g>
-
-      <!-- eyes: idle + question -->
-      <g class="v vn vq">
-        <g class="blink">
-          <ellipse cx="92" cy="118" rx="16" ry="19" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
-          <ellipse cx="148" cy="118" rx="16" ry="19" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
-          <g class="pupils">
-            <circle cx="94" cy="121" r="9.5" fill="url(#bunIris)" stroke="#3a1d0d" stroke-width="2"/>
-            <circle cx="94" cy="121" r="4.6" fill="#2a1408"/>
-            <circle cx="97" cy="117" r="3" fill="#fff"/>
-            <circle cx="91" cy="125" r="1.3" fill="#fff" opacity=".8"/>
-            <circle cx="150" cy="121" r="9.5" fill="url(#bunIris)" stroke="#3a1d0d" stroke-width="2"/>
-            <circle cx="150" cy="121" r="4.6" fill="#2a1408"/>
-            <circle cx="153" cy="117" r="3" fill="#fff"/>
-            <circle cx="147" cy="125" r="1.3" fill="#fff" opacity=".8"/>
-          </g>
-        </g>
-      </g>
-      <!-- eyes: idea -->
-      <g class="v vi">
-        <ellipse cx="92" cy="118" rx="17" ry="20" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
-        <ellipse cx="148" cy="118" rx="17" ry="20" fill="#fffaf0" stroke="#3a1d0d" stroke-width="4"/>
-        <g class="starE">
-          <path d="M92 104 l3.6 9.6 10.2 .8 -7.8 6.7 2.4 10.2 -8.4 -6 -8.4 6 2.4 -10.2 -7.8 -6.7 10.2 -.8z" fill="#ffbe1a" stroke="#3a1d0d" stroke-width="2.6" stroke-linejoin="round"/>
-          <path d="M148 104 l3.6 9.6 10.2 .8 -7.8 6.7 2.4 10.2 -8.4 -6 -8.4 6 2.4 -10.2 -7.8 -6.7 10.2 -.8z" fill="#ffbe1a" stroke="#3a1d0d" stroke-width="2.6" stroke-linejoin="round"/>
-        </g>
-      </g>
-      <!-- eyes: appreciation -->
-      <g class="v va">
-        <path d="M76 124 Q92 100 108 124" fill="none" stroke="#3a1d0d" stroke-width="6.5" stroke-linecap="round"/>
-        <path d="M132 124 Q148 100 164 124" fill="none" stroke="#3a1d0d" stroke-width="6.5" stroke-linecap="round"/>
-        <g class="tears">
-          <path class="t1" d="M78 128 q-7 15 0 22 q7 -7 0 -22z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
-          <path class="t2" d="M162 128 q-7 15 0 22 q7 -7 0 -22z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
-        </g>
-      </g>
-
-      <!-- brows -->
-      <g class="v vn"><path d="M78 96 Q92 88 106 96 M134 96 Q148 88 162 96" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/></g>
-      <g class="v vq"><path class="bq1" d="M76 92 Q92 76 108 92" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/><path d="M132 100 L160 94" fill="none" stroke="#3a1d0d" stroke-width="5" stroke-linecap="round"/></g>
-      <g class="v vi"><path class="bi" d="M76 94 Q92 80 108 94 M132 94 Q148 80 164 94" fill="none" stroke="#3a1d0d" stroke-width="4.6" stroke-linecap="round"/></g>
-      <g class="v va"><path d="M78 106 Q92 98 106 103 M134 103 Q148 98 162 106" fill="none" stroke="#3a1d0d" stroke-width="4" stroke-linecap="round"/></g>
-
-      <!-- nose + mouth -->
-      <path d="M112 137 C116 133 124 133 128 137 C130 140 126 145 120 146 C114 145 110 140 112 137 Z" fill="#c06020" stroke="#3a1d0d" stroke-width="2.4" stroke-linejoin="round"/>
-      <g class="wob">
-        <path d="M120 146 v4" stroke="#3a1d0d" stroke-width="3" stroke-linecap="round"/>
-        <path d="M120 150 q-8 8 -15 3 M120 150 q8 8 15 3" fill="none" stroke="#3a1d0d" stroke-width="3.2" stroke-linecap="round"/>
-      </g>
-      <g class="v vn vq va teeth">
-        <rect x="113" y="152" width="6.6" height="9" rx="2.4" fill="#fffdf4" stroke="#3a1d0d" stroke-width="2"/>
-        <rect x="120.4" y="152" width="6.6" height="9" rx="2.4" fill="#fffdf4" stroke="#3a1d0d" stroke-width="2"/>
-      </g>
-
-      <!-- open smile (idea) -->
-      <g class="v vi">
-        <path d="M102 150 Q120 178 138 150 Q120 160 102 150 Z" fill="#5a1522" stroke="#3a1d0d" stroke-width="3.4" stroke-linejoin="round"/>
-        <path d="M110 160 Q120 153 130 160 Q120 170 110 160Z" fill="#ff8aa0"/>
-      </g>
-
-      <!-- sweat (question) -->
-      <path class="v vq sweat" d="M50 92 q-7 13 0 19 q7 -6 0 -19z" fill="#7fd6ff" stroke="#3a1d0d" stroke-width="2.6"/>
-    </g>
-
-    <!-- neckerchief -->
-    <g class="scarf">
-      <path d="M72 184 C90 198 150 198 168 184 C170 198 148 212 120 213 C92 212 70 198 72 184 Z" fill="#c06020" stroke="#3a1d0d" stroke-width="3.6" stroke-linejoin="round"/>
-      <path d="M150 202 L164 222 L150 228 L144 206 Z" fill="#a94f18" stroke="#3a1d0d" stroke-width="3.2" stroke-linejoin="round"/>
-      <path d="M86 192 q14 10 34 12" fill="none" stroke="#e0894a" stroke-width="2.4" opacity=".7" stroke-linecap="round"/>
-    </g>
-
-    <!-- left arm + map -->
-    <g class="mapRig">
-      <path d="M82 200 C70 204 56 208 44 214" fill="none" stroke="#3a1d0d" stroke-width="18" stroke-linecap="round"/>
-      <path d="M82 200 C70 204 56 208 44 214" fill="none" stroke="#f0e9cb" stroke-width="10" stroke-linecap="round"/>
-      <g transform="rotate(-8 68 204)">
-        <rect x="36" y="180" width="64" height="48" rx="2.5" fill="#f1e8c9" stroke="#3a1d0d" stroke-width="3.2"/>
-        <path d="M57 181 v46 M78 181 v46" stroke="#cfbe93" stroke-width="1.5" opacity=".85"/>
-        <path d="M37 204 h62" stroke="#cfbe93" stroke-width="1.5" opacity=".7" stroke-dasharray="3 4"/>
-        <path d="M45 216 C54 208 60 214 66 206 C71 199 76 200 84 192" fill="none" stroke="#c06020" stroke-width="2.6" stroke-dasharray="4 3" stroke-linecap="round"/>
-        <circle cx="45" cy="216" r="2.8" fill="#3a1d0d"/>
-        <path d="M80 188 l8 8 M88 188 l-8 8" stroke="#b03b2a" stroke-width="2.6" stroke-linecap="round"/>
-        <circle class="routeDot" cx="45" cy="216" r="3.6" fill="#c06020" stroke="#fff8e6" stroke-width="1.6"/>
-        <g class="v vq magnify">
-          <circle cx="76" cy="198" r="16" fill="#eaf6ff" fill-opacity=".4" stroke="#3a1d0d" stroke-width="5"/>
-          <circle cx="76" cy="198" r="16" fill="none" stroke="#c06020" stroke-width="2.4"/>
-          <path d="M88 210 l12 16" stroke="#3a1d0d" stroke-width="8" stroke-linecap="round"/>
-          <path d="M88 210 l12 16" stroke="#c06020" stroke-width="4" stroke-linecap="round"/>
-          <path d="M68 190 a10 10 0 0 1 6 -5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-        </g>
-      </g>
-      <g class="hand">
-        <circle cx="42" cy="216" r="12.5" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="3.4"/>
-        <path d="M37 219 q5 3 10 0" fill="none" stroke="#3a1d0d" stroke-width="2" stroke-linecap="round" opacity=".5"/>
-      </g>
-    </g>
-
-    <!-- right arm + coffee -->
-    <g class="cupRig">
-      <path d="M168 202 C180 196 178 184 164 184" fill="none" stroke="#3a1d0d" stroke-width="18" stroke-linecap="round"/>
-      <path d="M168 202 C180 196 178 184 164 184" fill="none" stroke="#f0e9cb" stroke-width="10" stroke-linecap="round"/>
-      <g class="cup" transform="translate(150 184)">
-        <path d="M-15 -14 L15 -14 L11 15 C10.5 19 -10.5 19 -11 15 Z" fill="#fdf8ea" stroke="#3a1d0d" stroke-width="3.4" stroke-linejoin="round"/>
-        <ellipse cx="0" cy="-14" rx="15" ry="4.6" fill="#6b3a1c" stroke="#3a1d0d" stroke-width="2.4"/>
-        <ellipse cx="0" cy="-14.5" rx="10.5" ry="2.6" fill="#8a4c25"/>
-        <path d="M15 -8 C25 -10 26 8 12 13" fill="none" stroke="#3a1d0d" stroke-width="5.2" stroke-linecap="round"/>
-        <path d="M15 -8 C25 -10 26 8 12 13" fill="none" stroke="#fdf8ea" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M-13.5 2 h27" stroke="#c06020" stroke-width="4.5"/>
-        <path d="M-9 -13 q1 6 -1 13" fill="none" stroke="#fff" stroke-width="2.4" opacity=".55"/>
-      </g>
-      <g class="steam" fill="none" stroke="#fff" stroke-linecap="round">
-        <path d="M146 164 q-7 -8 0 -16 q7 -8 0 -14" stroke-width="3.4" opacity=".7"/>
-        <path d="M156 166 q6 -7 0 -14 q-6 -7 0 -12" stroke-width="2.8" opacity=".55"/>
-      </g>
-      <g class="hand">
-        <circle cx="159" cy="189" r="11.5" fill="url(#bunFur)" stroke="#3a1d0d" stroke-width="3.4"/>
-        <path d="M154 192 q5 3 10 0" fill="none" stroke="#3a1d0d" stroke-width="2" stroke-linecap="round" opacity=".5"/>
-      </g>
-    </g>
-
-    <!-- question: floating marks -->
-    <g class="v vq qm">
-      <text x="24" y="70" font-size="42" font-weight="700" fill="#fff" stroke="#3a1d0d" stroke-width="2.4" paint-order="stroke" font-family="Caveat, cursive">?</text>
-      <text x="182" y="54" font-size="30" font-weight="700" fill="#fff" stroke="#3a1d0d" stroke-width="2.4" paint-order="stroke" font-family="Caveat, cursive">?</text>
-    </g>
-
-    <!-- idea: bulb + sparks -->
-    <g class="v vi bulbwrap">
-      <circle class="halo" cx="120" cy="-16" r="52" fill="url(#bunGlow)"/>
-      <g class="rays" stroke="#ffc233" stroke-width="4.5" stroke-linecap="round">
-        <path d="M120 -54 v-8"/>
-        <path d="M94 -46 l-6 -8"/>
-        <path d="M146 -46 l6 -8"/>
-        <path d="M78 -22 l-9 -3"/>
-        <path d="M162 -22 l9 -3"/>
-      </g>
-      <rect x="109" y="2" width="22" height="14" rx="4" fill="#c9cdd2" stroke="#3a1d0d" stroke-width="3.4"/>
-      <path class="bulb" d="M120 -44 C98 -44 90 -20 104 -6 C109 -1 110 1 111 6 H129 C130 1 131 -1 136 -6 C150 -20 142 -44 120 -44Z" fill="#fff17a" stroke="#3a1d0d" stroke-width="4" stroke-linejoin="round"/>
-      <path d="M112 -20 L116 -30 L120 -22 L124 -30 L128 -20" fill="none" stroke="#e08a00" stroke-width="3" stroke-linecap="round"/>
-      <path d="M104 -28 a16 16 0 0 1 8 -11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9"/>
-    </g>
-    <g class="v vi">
-      <g class="spark" style="transform-origin:52px 8px"><path d="M52 0 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#ffd24a"/></g>
-      <g class="spark" style="transform-origin:190px 18px"><path d="M190 10 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#ffd24a"/></g>
-      <g class="spark" style="transform-origin:36px 60px"><path d="M36 53 l1.6 4.8 4.8 1.6 -4.8 1.6 -1.6 4.8 -1.6 -4.8 -4.8 -1.6 4.8 -1.6z" fill="#ffe98a"/></g>
-      <g class="spark" style="transform-origin:204px 66px"><path d="M204 59 l1.6 4.8 4.8 1.6 -4.8 1.6 -1.6 4.8 -1.6 -4.8 -4.8 -1.6 4.8 -1.6z" fill="#ffe98a"/></g>
-    </g>
-
-    <!-- appreciation: floating heart + kisses -->
-    <g class="v va held" transform="translate(196 112)">
-      <path d="M0 0 c-16 -12 -26 -26 -14 -36 c7 -6 14 -2 14 6 c0 -8 7 -12 14 -6 c12 10 2 24 -14 36z" fill="#ff4f86" stroke="#3a1d0d" stroke-width="3.2" stroke-linejoin="round"/>
-      <path d="M-9 -26 q-4 3 -3 8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
-    </g>
-    <g class="v va kisses">
-      <g class="k k1"><path d="M0 0 c-13 -10 -21 -21 -11 -29 c6 -5 11 -2 11 5 c0 -7 5 -10 11 -5 c10 8 2 19 -11 29z" fill="#ff4f86" stroke="#3a1d0d" stroke-width="2.4" stroke-linejoin="round"/></g>
-      <g class="k k2"><path d="M0 0 c-11 -8 -18 -18 -9 -25 c5 -4 9 -1 9 4 c0 -5 4 -8 9 -4 c8 7 2 17 -9 25z" fill="#ff7aa8" stroke="#3a1d0d" stroke-width="2.2" stroke-linejoin="round"/></g>
-      <g class="k k3"><path d="M0 0 c-10 -8 -16 -16 -8 -22 c4 -4 8 -1 8 4 c0 -5 4 -8 8 -4 c7 6 2 14 -8 22z" fill="#ff6d9d" stroke="#3a1d0d" stroke-width="2.2" stroke-linejoin="round"/></g>
-    </g>
-  </g>
-</svg>
-</div>
-</div>
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261112d"></script><script src="js/i18n.js?v=20261112d"></script><script src="js/polls.js?v=20261112d"></script><script src="js/store.js?v=20261112d"></script><script src="js/shared.js?v=20261112d"></script><script src="js/charts.js?v=20261112d"></script><script src="js/qrcode.js?v=20261112d"></script><script src="js/export.js?v=20261112d"></script><script src="js/live.js?v=20261112d"></script><script src="js/board.js?v=20261112d"></script>
+<script src="js/config.js?v=20261112e"></script><script src="js/i18n.js?v=20261112e"></script><script src="js/polls.js?v=20261112e"></script><script src="js/store.js?v=20261112e"></script><script src="js/shared.js?v=20261112e"></script><script src="js/charts.js?v=20261112e"></script><script src="js/qrcode.js?v=20261112e"></script><script src="js/export.js?v=20261112e"></script><script src="js/live.js?v=20261112e"></script><script src="js/board.js?v=20261112e"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

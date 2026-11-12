@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const t = (key, vars) => typeof window.t === "function" ? window.t(key, vars) : key;
-  const board = $("board"), sheet = $("sheet"), focusBox = $("focus"), focusStage = $("focus-stage"), avatar = $("avatar");
+  const board = $("board"), sheet = $("sheet"), focusBox = $("focus"), focusStage = $("focus-stage");
   const brand = $("brand"), brandTitle = $("brand-title"), brandSub = $("brand-sub"), brandLogo = $("brand-logo");
   const brandEdit = $("brand-edit"), eventDialog = $("event-dialog"), eventForm = $("event-form");
   const eventTitleInput = $("event-title"), eventSubInput = $("event-subtitle"), eventReset = $("event-reset"), eventCancel = $("event-cancel");
@@ -52,7 +52,7 @@
   let samplePollRoundSeen = 0;
   const isSamplePoll = poll => String(poll?.id || "").startsWith(SAMPLE_POLL_PREFIX);
   const isSampleMedia = item => String(item?.author || "").trim().toLowerCase() === "sample";
-  let cats = new Set(categoryKeys()), focusId = null, moodTimer = 0, closeTimer = 0;
+  let cats = new Set(categoryKeys()), focusId = null, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
   let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
   let notesPresent = false, notesPresentSnapshot = null;
@@ -72,7 +72,6 @@
   const PREF_DEFAULTS = {
     columns: false,
     brand: true,
-    mascot: true,
     qr: true,
     status: true,
     filters: true,
@@ -159,7 +158,6 @@
   function applyPrefs(relayout = true) {
     const hideClasses = {
       brand: "hide-brand",
-      mascot: "hide-mascot",
       qr: "hide-qr",
       status: "hide-status",
       filters: "hide-filters"
@@ -3385,7 +3383,6 @@
         if (!pileView && board.scrollHeight > board.clientHeight + 4) {
           board.scrollTo({ top: board.scrollHeight, behavior: "smooth" });
         }
-        react(nt.category);
         if (pileView) pulsePile(nt.category);
       } else {
         updateFocusMeta();
@@ -3429,7 +3426,7 @@
     els.get(id)?.remove();
     els.delete(id);
     if (hidden.delete(id)) saveHidden();
-    if (focusId === id) { focusId = null; document.body.classList.remove("reading"); setMood("idle", true); focusStage.replaceChildren(); }
+    if (focusId === id) { focusId = null; document.body.classList.remove("reading"); focusStage.replaceChildren(); }
     layout();
   }
 
@@ -3456,11 +3453,6 @@
   }
 
   /* ── reading mode ──────────────────────────────────────────── */
-  function moodFor(category) {
-    const known = { question: "question", idea: "idea", appreciation: "appreciation", resources: "idea", requests: "question" };
-    return known[category] || "idle";
-  }
-
   function openFocus(id) {
     const nt = notes.find(n => n.id === id);
     if (!nt) return;
@@ -3471,7 +3463,6 @@
     el.classList.add("focus-note");
     focusStage.appendChild(el);
     document.body.classList.add("reading");
-    setMood(moodFor(nt.category), true);
     updateFocusMeta();
     fitNote(el);
     requestAnimationFrame(() => fitNote(el));
@@ -3482,7 +3473,6 @@
     if (!focusId) return;
     focusId = null;
     document.body.classList.remove("reading");
-    setMood("idle", true);
     clearTimeout(closeTimer);
     closeTimer = setTimeout(() => {
       if (!document.body.classList.contains("reading")) focusStage.replaceChildren();
@@ -3508,23 +3498,6 @@
     focusCat.textContent = t(CATS[nt.category]?.label || "Note");
     focusCount.textContent = t("{i} of {n}", { i: i < 0 ? 1 : i + 1, n: Math.max(1, list.length) });
     focusMeta.style.setProperty("--focus-dot", CATS[nt.category]?.color || "#fff4e6");
-  }
-
-  /* ── Bun's mood ────────────────────────────────────────────── */
-  function setMood(m, pop) {
-    if (!avatar || avatar.dataset.mood === m) return;
-    avatar.dataset.mood = m;
-    if (pop) {
-      avatar.classList.remove("mood-pop");
-      void avatar.offsetWidth;
-      avatar.classList.add("mood-pop");
-    }
-  }
-  function react(category) {
-    if (focusId) return;
-    clearTimeout(moodTimer);
-    setMood(moodFor(category), true);
-    moodTimer = setTimeout(() => { if (!focusId) setMood("idle", true); }, 4200);
   }
 
   document.addEventListener("click", e => {
@@ -3625,7 +3598,7 @@
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap"],
     polls: ["chartType", "chartStyle"],
-    look: ["brand", "mascot", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
+    look: ["brand", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
@@ -3889,12 +3862,11 @@
     if (entering) {
       notesPresentSnapshot = {
         brand: prefs.brand,
-        mascot: prefs.mascot,
         qr: prefs.qr,
         status: prefs.status,
         filters: prefs.filters
       };
-      ["brand", "mascot", "qr", "status", "filters"].forEach(key => { prefs[key] = false; });
+      ["brand", "qr", "status", "filters"].forEach(key => { prefs[key] = false; });
     } else if (!on && notesPresentSnapshot) {
       Object.assign(prefs, notesPresentSnapshot);
       notesPresentSnapshot = null;
@@ -3926,7 +3898,7 @@
   extrasShowAll?.addEventListener("click", () => {
     showNotesWall();
     setNotesPresentation(false);
-    ["brand", "mascot", "qr", "status", "filters"].forEach(key => { prefs[key] = true; });
+    ["brand", "qr", "status", "filters"].forEach(key => { prefs[key] = true; });
     savePrefs();
     applyPrefs(true);
     setExtrasOpen(false);
