@@ -68,11 +68,14 @@
 
   /* ── presenter preferences (what the wall shows) ───────────── */
   const PREFS_KEY = "sticky_board_prefs";
+  const QR_MARGIN = 8;
   const HIDDEN_KEY = "sticky_hidden_notes";
   const PREF_DEFAULTS = {
     columns: false,
     brand: true,
     qr: true,
+    qrX: -1,
+    qrY: -1,
     status: true,
     filters: true,
     gap: 12,
@@ -93,7 +96,7 @@
     mediaPhotoSeconds: 6,
     mediaVideoRate: 1
   };
-  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]);
+  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate", "qrX", "qrY"]);
   const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo", "chartType", "chartStyle"]);
   const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
   const CHART_STYLE_KEYS = ["hand", "clean"];
@@ -167,6 +170,7 @@
     });
     if (!prefs.filters) $("filters")?.classList.remove("on");
     syncPrefInputs();
+    applyQrPosition();
     if (relayout) layout();
   }
   applyPrefs(false);
@@ -3598,7 +3602,7 @@
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap"],
     polls: ["chartType", "chartStyle"],
-    look: ["brand", "qr", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
+    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
@@ -4274,6 +4278,111 @@
 
 
   /* ── phone QR ──────────────────────────────────────────────── */
+  let qrDrag = null, qrDragReady = false;
+
+  function qrLimits() {
+    return {
+      x: Math.max(0, window.innerWidth - qrCard.offsetWidth - QR_MARGIN * 2),
+      y: Math.max(0, window.innerHeight - qrCard.offsetHeight - QR_MARGIN * 2)
+    };
+  }
+
+  /* The card floats at the top right until the presenter moves it.
+     Positions are saved as fractions of the free space, so they survive
+     a resize or a switch into full screen. */
+  function applyQrPosition() {
+    if (!qrCard) return;
+    if (!(prefs.qrX >= 0) || !(prefs.qrY >= 0)) {
+      qrCard.style.left = "";
+      qrCard.style.top = "";
+      qrCard.style.right = "";
+      return;
+    }
+    const max = qrLimits();
+    const x = Math.min(1, Math.max(0, prefs.qrX));
+    const y = Math.min(1, Math.max(0, prefs.qrY));
+    qrCard.style.left = (QR_MARGIN + x * max.x) + "px";
+    qrCard.style.top = (QR_MARGIN + y * max.y) + "px";
+    qrCard.style.right = "auto";
+  }
+
+  function saveQrPosition() {
+    const max = qrLimits();
+    const left = Number.parseFloat(qrCard.style.left);
+    const top = Number.parseFloat(qrCard.style.top);
+    prefs.qrX = max.x > 0 ? Math.min(1, Math.max(0, (left - QR_MARGIN) / max.x)) : 0;
+    prefs.qrY = max.y > 0 ? Math.min(1, Math.max(0, (top - QR_MARGIN) / max.y)) : 0;
+    savePrefs();
+  }
+
+  function setupQrDrag() {
+    if (qrDragReady || !qrCard) return;
+    qrDragReady = true;
+
+    qrCard.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      const style = getComputedStyle(qrCard);
+      const rect = qrCard.getBoundingClientRect();
+      const left = Number.parseFloat(style.left);
+      const top = Number.parseFloat(style.top);
+      qrDrag = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        left: Number.isFinite(left) ? left : rect.left,
+        top: Number.isFinite(top) ? top : rect.top,
+        max: qrLimits(),
+        moved: false
+      };
+      try { qrCard.setPointerCapture(e.pointerId); } catch {}
+    });
+
+    qrCard.addEventListener("pointermove", e => {
+      if (!qrDrag || e.pointerId !== qrDrag.id) return;
+      const dx = e.clientX - qrDrag.x;
+      const dy = e.clientY - qrDrag.y;
+      if (!qrDrag.moved) {
+        if (Math.abs(dx) + Math.abs(dy) < 4) return;
+        qrDrag.moved = true;
+        qrCard.classList.add("is-dragging");
+      }
+      e.preventDefault();
+      const left = Math.min(Math.max(qrDrag.left + dx, QR_MARGIN), QR_MARGIN + qrDrag.max.x);
+      const top = Math.min(Math.max(qrDrag.top + dy, QR_MARGIN), QR_MARGIN + qrDrag.max.y);
+      qrCard.style.left = left + "px";
+      qrCard.style.top = top + "px";
+      qrCard.style.right = "auto";
+    });
+
+    const endDrag = e => {
+      if (!qrDrag || (e.pointerId !== undefined && e.pointerId !== qrDrag.id)) return;
+      const moved = qrDrag.moved;
+      const id = qrDrag.id;
+      qrDrag = null;
+      qrCard.classList.remove("is-dragging");
+      try { qrCard.releasePointerCapture(id); } catch {}
+      if (moved) saveQrPosition();
+    };
+    qrCard.addEventListener("pointerup", endDrag);
+    qrCard.addEventListener("pointercancel", endDrag);
+
+    /* Double-click returns the card to its original corner. */
+    qrCard.addEventListener("dblclick", () => {
+      prefs.qrX = -1;
+      prefs.qrY = -1;
+      savePrefs();
+      applyQrPosition();
+    });
+
+    window.addEventListener("resize", () => { if (!qrDrag) applyQrPosition(); });
+
+    /* The card changes width in split screen, so keep a saved position
+       inside the viewport without saving a new fraction. */
+    if (typeof ResizeObserver === "function") {
+      new ResizeObserver(() => { if (!qrDrag) applyQrPosition(); }).observe(qrCard);
+    }
+  }
+
   function setupQR() {
     if (!qrCard || !qrCode) return;
     if (typeof qrcode !== "function") { qrCard.hidden = true; return; }
@@ -4291,6 +4400,8 @@
       qr.make();
       qrCode.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
       qrCard.title = t("Open {url}", { url });
+      setupQrDrag();
+      applyQrPosition();
     } catch (err) {
       console.error("QR code failed", err);
       qrCard.hidden = true;

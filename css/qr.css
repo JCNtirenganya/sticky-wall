@@ -20,8 +20,26 @@
     0 12px 26px rgba(0,0,0,.38),
     0 34px 60px rgba(0,0,0,.3);
   transform:rotate(1.5deg);
-  pointer-events:none;
+  pointer-events:auto;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-user-drag:none;
   transition:opacity .5s var(--ease-soft),transform .5s var(--ease-out),visibility .5s;
+}
+#qr-card.is-dragging{cursor:grabbing;z-index:175;transition:none}
+.qr-grip{
+  position:absolute;
+  top:3px;
+  left:5px;
+  z-index:2;
+  width:18px;
+  height:12px;
+  background-image:radial-gradient(circle,rgba(56,38,23,.5) 1.2px,transparent 1.5px);
+  background-size:6px 6px;
+  opacity:.55;
+  pointer-events:none;
 }
 #qr-card::before{
   content:"";
@@ -56,7 +74,7 @@
     inset 0 0 0 1px rgba(43,27,18,.08),
     0 1px 2px rgba(43,27,18,.1);
 }
-.qr-code svg{display:block;width:100%;height:auto;shape-rendering:crispEdges}
+.qr-code svg{display:block;width:100%;height:auto;shape-rendering:crispEdges;pointer-events:none}
 
 .qr-caption{
   position:relative;
@@ -68,7 +86,7 @@
   transform:rotate(-1.2deg);
 }
 
-body.reading #qr-card{opacity:0;transform:rotate(1.5deg) translateY(-10px)}
+body.reading #qr-card{opacity:0;transform:rotate(1.5deg) translateY(-10px);pointer-events:none}
 body.hide-qr #qr-card{opacity:0;visibility:hidden;transform:rotate(1.5deg) translateY(-10px) scale(.96)}
 
 @media (max-width:800px){

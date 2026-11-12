@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261112e"><link rel="stylesheet" href="css/postit.css?v=20261112e"><link rel="stylesheet" href="css/board.css?v=20261112e"><link rel="stylesheet" href="css/piles.css?v=20261112e"><link rel="stylesheet" href="css/qr.css?v=20261112e"><link rel="stylesheet" href="css/charts.css?v=20261112e">
+<link rel="stylesheet" href="css/paper.css?v=20261112f"><link rel="stylesheet" href="css/postit.css?v=20261112f"><link rel="stylesheet" href="css/board.css?v=20261112f"><link rel="stylesheet" href="css/piles.css?v=20261112f"><link rel="stylesheet" href="css/qr.css?v=20261112f"><link rel="stylesheet" href="css/charts.css?v=20261112f">
 </head>
 <body>
 <main id="board">
@@ -429,6 +429,7 @@
 
 <!-- presentation QR: opens the phone page -->
 <aside id="qr-card" aria-label="Scan to take part" data-i18n-aria="Scan to take part">
+  <span class="qr-grip" aria-hidden="true"></span>
   <div id="qr-code" class="qr-code"></div>
   <p class="qr-caption" data-i18n="Scan to take part">Scan to take part</p>
 </aside>
@@ -764,6 +765,6 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261112e"></script><script src="js/i18n.js?v=20261112e"></script><script src="js/polls.js?v=20261112e"></script><script src="js/store.js?v=20261112e"></script><script src="js/shared.js?v=20261112e"></script><script src="js/charts.js?v=20261112e"></script><script src="js/qrcode.js?v=20261112e"></script><script src="js/export.js?v=20261112e"></script><script src="js/live.js?v=20261112e"></script><script src="js/board.js?v=20261112e"></script>
+<script src="js/config.js?v=20261112f"></script><script src="js/i18n.js?v=20261112f"></script><script src="js/polls.js?v=20261112f"></script><script src="js/store.js?v=20261112f"></script><script src="js/shared.js?v=20261112f"></script><script src="js/charts.js?v=20261112f"></script><script src="js/qrcode.js?v=20261112f"></script><script src="js/export.js?v=20261112f"></script><script src="js/live.js?v=20261112f"></script><script src="js/board.js?v=20261112f"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

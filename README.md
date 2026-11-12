@@ -5,7 +5,7 @@ Two static pages + Supabase realtime. Hosted free on GitHub Pages.
 | Page | Who | URL |
 |---|---|---|
 | `index.html` | Audience (phones) — the board's QR code points here | `https://<you>.github.io/<repo>/` |
-| `board.html` | Main monitor — includes the scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://<you>.github.io/<repo>/board.html` |
+| `board.html` | Main monitor — includes the draggable scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://<you>.github.io/<repo>/board.html` |
 
 ## Try it now (demo mode)
 Leave `js/config.js` empty. Open `board.html` and `index.html` in two tabs of the same browser (serve with `python3 -m http.server`). Press **S** on the board (or use **Extras → Demo data**) to add sample notes; pressing again adds a second, different batch. **Add sample polls** works the same way and appends a new round of polls instead of replacing the old ones.
@@ -64,6 +64,7 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **C** or the slider button beside the logo → edit categories: add, rename, recolour, change the emoji, or remove one (its notes move to the first category). Up to nine categories. Saved locally in demo, in Supabase when live.
 - **Filters** are hidden: hover the top edge, press **F**, or double-tap the top edge. Keys **1–9** pick categories in their current order; **0** = all.
 - **Extras** dock at the bottom centre (or **H**): a faded button that appears on pointer movement. A **Full screen** button sits beside it (or press **Shift+F**): that is the only thing that asks for real fullscreen, and it leaves every board control visible. The **Extras** button hides or shows the header/logo, QR card, note count and filter bar, and offers a **Categories in columns** layout. **Notes only** turns the wall into a full-screen presentation with no chrome at all (press **Esc** or **H** to return); **Show all** restores every extra.
+- **Move the QR card**: drag it anywhere on the wall; the board remembers where you put it, even after a resize, split screen or full screen. Double-click the card to return it to the top-right corner, or use **Extras → Look → Defaults**.
 - **Category piles** appear automatically only when the entire screen is full. Click a pile to show only that category; **All piles** (or the filter bar) returns to the grouped view.
 - Cursor hides itself after 2.5 s; the Extras button and the header edit buttons fade in again when the pointer moves. Extras choices persist in this browser.
 
@@ -133,7 +134,7 @@ Two downloads are available from the dashboard (**Wall summary PDF**, **Notes im
 - `css/board.css` — cork wall, vignette, dust motes, brand/status/filter UI, Extras dock and hide states, category editor, poll room/editor/dashboard strip, option media editor, live chart race, print-only PDF sheet, focus stage, empty state
 - `css/postit.css` — matte post-it paper: gum line, fibre grain, adhesive sheen, layered shadows, folded corners, hover lift
 - `css/piles.css` — dynamic same-colour category paper stacks, pile hover/fan, back-to-piles chip
-- `css/qr.css` — paper QR card in the top-right corner
+- `css/qr.css` — draggable paper QR card, top-right by default
 - `css/charts.css` — hand-drawn poll charts shared by the board and phone: wobbly rails, crayon fills, handwriting labels, reduced-motion handling
 - `css/mobile.css` — phone screens, generated category cards, poll banner/list/voting with option media and charts, paper sheet, send/fly and toast
 - `js/shared.js` — default categories, derived paper/pile palettes, eight handwriting fonts, deterministic per-note look, `paintNote()` recolouring
@@ -167,7 +168,7 @@ Two downloads are available from the dashboard (**Wall summary PDF**, **Notes im
 - Presentation: choose **Extras → Notes only**. Every banner, the QR card, the filter bar and the Extras dock must disappear, the cursor hides, and the browser chrome plus the OS taskbar should vanish (real fullscreen); notes fill the whole screen. Press **Escape** to leave fullscreen and bring back exactly the extras that were visible before (**H** also restores them and opens Extras). In the Poll Room press **F**: the header, filters, footer hints and card buttons disappear, the screen goes fullscreen, and only the poll results remain; **Escape** leaves fullscreen and restores the room without closing it.
 - One-by-one + autoplay: in **Extras → Presentation** set **Start after** to 2 s and **Seconds per slide** to 3 s. Choose **Notes only** and leave the mouse alone — after a couple of seconds notes should start advancing one at a time and loop. In the Poll Room press **O** (or **Extras → Present one by one**): one poll per slide, **←/→**/Space change slides, autoplay advances on its own, and any mouse movement pauses it until the countdown runs out again. **Esc** leaves fullscreen but keeps the room open.
 - Manual presentation: choose **Extras → No auto** (or press **M**). The notes go fullscreen with no autoplay; leave the mouse alone for a minute and nothing should move, while the arrow keys still step through notes. In the Poll Room press **M** (or **Extras → Manual**): one poll per slide that only changes on **←/→**, Space or Page Up/Down; no slide advances on its own. Press **M** again or **Esc** to leave.
-- QR: the top-right card should show a crisp code; scan it with a phone and confirm it opens `index.html` (or `MOBILE_URL`).
+- QR: the top-right card should show a crisp code; scan it with a phone and confirm it opens `index.html` (or `MOBILE_URL`). Drag the card to the middle of the wall, refresh, and confirm it stays there. Double-click it once to return it to the top-right corner; drag it again and use **Extras → Look → Defaults** to reset it. It must not move while in **Notes only**, **Present**, **One by one** or **Manual**, and notes must never cover it.
 - Branding: logo appears top-left, press **E** or the pencil, enter an event name, save, refresh — it should persist.
 - Reading mode: click a note, arrow through all notes, press **Esc**.
 - Filters: **1–5**, then **0**; hidden filter bar via **F** (press **F** again to restore it if it was hidden in Extras).
