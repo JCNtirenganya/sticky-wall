@@ -263,18 +263,18 @@
   let brandState = { ...brandDefaults, ...(storedBrand() || {}) };
 
   /* The main header is the only header: its title stays the event name and its
-     subtitle names whichever module is on screen. */
+     subtitle names whichever module is on screen — including the notes wall,
+     which shows "Notes" rather than the event's date/venue line. */
   function brandSubtitle() {
     const cl = document.body.classList;
-    let key = "";
-    if (cl.contains("split-mode")) key = "Split screen";
-    else if (cl.contains("show-dashboard")) key = "Dashboard";
-    else if (cl.contains("show-race")) key = "Chart race";
-    else if (cl.contains("show-polls")) key = "Poll room";
-    else if (cl.contains("show-media")) key = "Event media";
-    else if (cl.contains("show-stream")) key = "Live stream";
-    else if (cl.contains("show-modules")) key = "Modules";
-    return key ? t(key) : String(brandState.subtitle || "").trim();
+    if (cl.contains("split-mode")) return t("Split screen");
+    if (cl.contains("show-dashboard")) return t("Dashboard");
+    if (cl.contains("show-race")) return t("Chart race");
+    if (cl.contains("show-polls")) return t("Poll room");
+    if (cl.contains("show-media")) return t("Event media");
+    if (cl.contains("show-stream")) return t("Live stream");
+    if (cl.contains("show-modules")) return t("Modules");
+    return t("Notes");
   }
 
   function syncBrandSubtitle() {
