@@ -3084,6 +3084,39 @@ body.present-media .media-stage__item video{
    go-live requests and reactions.
    ───────────────────────────────────────────────────────────── */
 
+/* ── counts of the modules that are not on screen ───────────── */
+.module-counts{
+  flex:0 0 100%;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin:0;
+  padding:0;
+}
+.module-count{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 11px;
+  border:1px solid rgba(255,242,224,.16);
+  border-radius:999px;
+  background:rgba(31,17,8,.45);
+  color:rgba(255,244,230,.72);
+  font:600 10px/1 var(--font-ui);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.module-count__n{
+  font:700 12px/1 var(--font-ui);
+  letter-spacing:0;
+  color:#fff2da;
+  font-variant-numeric:tabular-nums;
+}
+.module-count.is-zero{opacity:.45}
+
 /* ── module home ────────────────────────────────────────────── */
 .module-home{
   position:fixed;
@@ -3378,6 +3411,15 @@ body.show-polls:not(.present-polls):not(.split-mode) .poll-foot kbd{color:rgba(5
 body.show-polls:not(.present-polls):not(.split-mode) .poll-empty h3{color:#2a1a10}
 body.show-polls:not(.present-polls):not(.split-mode) .poll-foot kbd{background:rgba(56,38,23,.09)}
 body.show-media:not(.present-media):not(.split-mode) .media-empty{color:rgba(56,38,23,.6)}
+/* Other-module count chips follow the wall they sit on. */
+body.show-polls:not(.present-polls):not(.split-mode) .module-count,
+body.show-media:not(.present-media):not(.split-mode) .module-count{
+  border-color:rgba(56,38,23,.2);
+  background:rgba(56,38,23,.08);
+  color:rgba(56,38,23,.68);
+}
+body.show-polls:not(.present-polls):not(.split-mode) .module-count__n,
+body.show-media:not(.present-media):not(.split-mode) .module-count__n{color:#2a1a10}
 /* A module takes over the wall: the notes layer steps aside so notes never
    show through the transparent media or poll wall. Only the cork, its tint
    and the branding stay behind the module. */

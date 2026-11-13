@@ -641,6 +641,7 @@
     syncPollBadge();
     document.body.classList.toggle("has-notes", total > 0);
     if (dashboardOpen()) renderDashboard();
+    renderModuleCounts();
   }
 
   /* ── dashboard: the entry card and received-notes control ──── */
@@ -982,6 +983,7 @@
       pollGrid.replaceChildren(...list.map(pollCard));
       if (pollStageMode) renderPollStage();
     }
+    renderModuleCounts();
   }
 
   function renderDashPolls() {
@@ -1841,6 +1843,7 @@
 
   function renderMediaWall() {
     if (!mediaGrid) return;
+    renderModuleCounts();
     if (mediaPresent) { renderMediaStage(); return; }
     const list = mediaVisible();
     mediaGrid.replaceChildren(...list.map(mediaCard));
@@ -1887,6 +1890,7 @@
     }
     renderLiveRequestChrome();
     updateMediaSummary();
+    renderModuleCounts();
   }
 
   function paintLiveSound(entry) {
@@ -2422,6 +2426,40 @@
   const streamWallOpenNow = () => document.body.classList.contains("show-stream");
   const splitActive = () => splitModules.length > 1 && !!splitStage && !splitStage.hidden;
 
+  /* Counts of the modules that are not on screen: while one module fills the
+     wall, the others still report how much content is waiting inside them. */
+  const countHosts = [...document.querySelectorAll("[data-module-counts]")];
+
+  function moduleCount(key) {
+    if (key === "notes") return notes.length - notes.filter(n => hidden.has(n.id)).length;
+    if (key === "media") return mediaVisible().length;
+    if (key === "poll") return polls.length;
+    if (key === "stream") return liveStreams.size;
+    return 0;
+  }
+
+  function renderModuleCounts() {
+    if (!countHosts.length) return;
+    countHosts.forEach(host => {
+      const own = host.closest(".poll-room") ? "poll"
+        : host.closest(".stream-wall") ? "stream"
+        : "media";
+      host.replaceChildren(...MODULE_KEYS.filter(key => key !== own).map(key => {
+        const n = moduleCount(key);
+        const chip = document.createElement("span");
+        chip.className = "module-count" + (n ? "" : " is-zero");
+        const label = document.createElement("span");
+        label.className = "module-count__label";
+        label.textContent = moduleLabel(key);
+        const num = document.createElement("b");
+        num.className = "module-count__n";
+        num.textContent = String(n);
+        chip.append(label, num);
+        return chip;
+      }));
+    });
+  }
+
   /* Only one module is visible at a time: every open* entry point closes the
      others first, so switching modules never leaves the old one underneath. */
   function closeModulesExcept(...keep) {
@@ -2476,6 +2514,7 @@
     else { layout(); updateStatus(); }
     document.body.dataset.module = name;
     setExtrasOpen(false);
+    renderModuleCounts();
   }
 
   function openStreamWall() {
