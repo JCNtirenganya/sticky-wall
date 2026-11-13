@@ -13,7 +13,7 @@
   const extras = $("extras"), extrasPanel = $("extras-panel"), extrasToggle = $("extras-toggle");
   const extrasNotesOnly = $("extras-notes-only"), extrasShowAll = $("extras-show-all");
   const pollRoom = $("poll-room"), pollGrid = $("poll-grid"), pollFilters = $("poll-filters");
-  const pollEmpty = $("poll-empty"), pollSummary = $("poll-summary");
+  const pollEmpty = $("poll-empty");
   const pollDialog = $("poll-dialog"), pollForm = $("poll-form"), pollDialogTitle = $("poll-dialog-title");
   const pollQuestion = $("poll-question"), pollDescription = $("poll-description");
   const pollTypeSelect = $("poll-type"), pollCategory = $("poll-category"), pollCategoryList = $("poll-category-list");
@@ -24,13 +24,13 @@
   const raceBox = $("poll-race"), raceStage = $("race-stage"), raceTitle = $("race-title"), raceSub = $("race-sub");
   const raceProgress = $("race-progress"), raceClock = $("race-clock"), raceLive = $("race-live");
   const racePlay = $("race-play"), raceReplay = $("race-replay"), raceClose = $("race-close");
-  const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty"), mediaCount = $("media-count");
+  const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty");
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
   const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
   const mediaLiveStrip = $("media-live-strip"), mediaLiveGrid = $("media-live-grid"), mediaLiveCount = $("media-live-count");
   const moduleHome = $("module-home"), splitStage = $("split-stage"), splitPanes = $("split-panes"), splitLabel = $("split-label");
   const splitDialog = $("split-dialog"), splitOptions = $("split-options"), splitHint = $("split-hint");
-  const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty"), streamSub = $("stream-sub");
+  const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty");
   const liveFloat = $("live-float"), liveFloatGrid = $("live-float-grid");
   const liveRequestDialog = $("live-request-dialog"), liveRequestList = $("live-request-list"), liveRequestEmpty = $("live-request-empty");
   const resetDialog = $("reset-dialog"), resetForm = $("reset-form"), resetPassphrase = $("reset-passphrase");
@@ -262,18 +262,37 @@
   }
   let brandState = { ...brandDefaults, ...(storedBrand() || {}) };
 
+  /* The main header is the only header: its title stays the event name and its
+     subtitle names whichever module is on screen. */
+  function brandSubtitle() {
+    const cl = document.body.classList;
+    let key = "";
+    if (cl.contains("split-mode")) key = "Split screen";
+    else if (cl.contains("show-dashboard")) key = "Dashboard";
+    else if (cl.contains("show-race")) key = "Chart race";
+    else if (cl.contains("show-polls")) key = "Poll room";
+    else if (cl.contains("show-media")) key = "Event media";
+    else if (cl.contains("show-stream")) key = "Live stream";
+    else if (cl.contains("show-modules")) key = "Modules";
+    return key ? t(key) : String(brandState.subtitle || "").trim();
+  }
+
+  function syncBrandSubtitle() {
+    const subtitle = brandSubtitle();
+    if (brandSub.textContent !== subtitle) brandSub.textContent = subtitle;
+    brandSub.hidden = !subtitle;
+  }
+
   function applyBrand() {
     const title = String(brandState.title || "").trim();
-    const subtitle = String(brandState.subtitle || "").trim();
     const logo = String(prefs.logo || brandDefaults.logo || "").trim();
     brandTitle.textContent = title;
     brandTitle.hidden = !title;
-    brandSub.textContent = subtitle;
-    brandSub.hidden = !subtitle;
+    syncBrandSubtitle();
     brandLogo.hidden = !logo;
     if (logo) { brandLogo.src = logo; brandLogo.alt = brandDefaults.logoAlt; }
-    brand.classList.toggle("brand-logo-only", !!logo && !title && !subtitle);
-    brand.classList.toggle("hidden", !logo && !title && !subtitle);
+    brand.classList.toggle("brand-logo-only", !!logo && !title && !brandSub.textContent);
+    brand.classList.toggle("hidden", !logo && !title && !brandSub.textContent);
     document.title = title ? t("{title} · Board", { title }) : t("Board");
   }
 
@@ -312,6 +331,10 @@
   eventDialog.addEventListener("click", e => { if (e.target === eventDialog) eventDialog.close(); });
   applyBrand();
   applyLook();
+  new MutationObserver(syncBrandSubtitle).observe(document.body, {
+    attributes: true,
+    attributeFilter: ["class"]
+  });
 
   /* ── share: read-only live view + iframe embed ─────────────── */
   function shareUrl(params) {
@@ -622,7 +645,7 @@
 
   /* ── dashboard: the entry card and received-notes control ──── */
   const welcomeCard = $("welcome-card"), dashCard = $("dash-card");
-  const dashTitle = $("dash-title"), dashLead = $("dash-lead"), dashCats = $("dash-cats");
+  const dashTitle = $("dash-title"), dashCats = $("dash-cats");
   const dashCount = $("dash-count"), dashNotes = $("dash-notes"), dashRestore = $("dash-restore");
 
   function renderDashboard() {
@@ -637,9 +660,6 @@
     dashTitle.textContent = total === 0
       ? t("You received 0 notes.")
       : total === 1 ? t("You received 1 note.") : t("You received {n} notes.", { n: total });
-    dashLead.textContent = hiddenCount
-      ? t("{alive} on the wall · {hidden} hidden. Restore anything you want back.", { alive, hidden: hiddenCount })
-      : t("Everything received is on the wall.");
 
     dashCats.replaceChildren();
     categoryList().forEach(cat => {
@@ -732,7 +752,6 @@
     (a.position - b.position) || String(a.created_at).localeCompare(String(b.created_at)));
   const pollPositionNext = () => polls.reduce((max, p) => Math.max(max, Number(p.position) || 0), 0) + 1;
   const pollOpenCount = () => polls.filter(p => p.status === "open").length;
-  const pollResponseTotal = () => polls.reduce((sum, p) => sum + pollStats(p, votes).total, 0);
 
   function pollWhen(value) {
     if (!value) return "";
@@ -944,15 +963,6 @@
 
   function renderPollRoom() {
     if (!pollRoom) return;
-    const open = pollOpenCount();
-    const total = pollResponseTotal();
-    if (pollSummary) {
-      pollSummary.textContent = polls.length
-        ? (polls.length === 1 ? t("1 poll") : t("{n} polls", { n: polls.length })) + " · " +
-          t("{n} open", { n: open }) + " · " +
-          (total === 1 ? t("1 response") : t("{n} responses", { n: total }))
-        : t("No polls yet.");
-    }
 
     if (pollFilters) {
       pollFilters.replaceChildren(...POLL_FILTERS.map(filter => {
@@ -1850,14 +1860,7 @@
 
   function updateMediaSummary(storedCount) {
     const stored = Number.isFinite(storedCount) ? storedCount : mediaVisible().length;
-    const live = liveStreams.size;
-    if (mediaEmpty) mediaEmpty.hidden = stored > 0 || live > 0;
-    if (mediaCount) {
-      const parts = [];
-      if (live) parts.push(t("{n} live", { n: live }));
-      if (stored) parts.push(stored === 1 ? t("1 item") : t("{n} items", { n: stored }));
-      mediaCount.textContent = parts.join(" · ");
-    }
+    if (mediaEmpty) mediaEmpty.hidden = stored > 0 || liveStreams.size > 0;
   }
 
   /* ── live streams from phones (WebRTC) ─────────────────────── */
@@ -1878,11 +1881,6 @@
         : "";
     }
     if (streamEmpty) streamEmpty.hidden = liveStreams.size > 0;
-    if (streamSub) {
-      streamSub.textContent = liveStreams.size
-        ? t("{n} live from phones", { n: liveStreams.size })
-        : t("When someone asks to go live, approve the request and their camera appears here.");
-    }
     if (liveFloat) {
       const floating = [...liveStreams.values()].some(entry => entry.placement === "float");
       liveFloat.hidden = !floating;

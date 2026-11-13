@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261113g"><link rel="stylesheet" href="css/postit.css?v=20261113g"><link rel="stylesheet" href="css/board.css?v=20261113g"><link rel="stylesheet" href="css/piles.css?v=20261113g"><link rel="stylesheet" href="css/qr.css?v=20261113g"><link rel="stylesheet" href="css/charts.css?v=20261113g">
+<link rel="stylesheet" href="css/paper.css?v=20261113i"><link rel="stylesheet" href="css/postit.css?v=20261113i"><link rel="stylesheet" href="css/board.css?v=20261113i"><link rel="stylesheet" href="css/piles.css?v=20261113i"><link rel="stylesheet" href="css/qr.css?v=20261113i"><link rel="stylesheet" href="css/charts.css?v=20261113i">
 </head>
 <body>
 <main id="board">
@@ -31,9 +31,7 @@
       </div>
     </div>
     <section class="dash-card" id="dash-card" aria-label="Presenter dashboard" data-i18n-aria="Presenter dashboard" hidden>
-      <p class="dash-kicker" data-i18n="Presenter · received notes">Presenter · received notes</p>
       <h1 id="dash-title">You received 0 notes.</h1>
-      <p class="dash-lead" id="dash-lead">Everything received is on the wall.</p>
       <div class="dash-cats" id="dash-cats"></div>
       <div id="dash-polls" class="dash-polls" hidden>
         <div class="dash-polls-head">
@@ -90,7 +88,6 @@
 <section id="module-home" class="module-home" aria-label="Choose a module" data-i18n-aria="Choose a module" aria-hidden="false">
   <div class="module-home__shell">
     <header class="module-home__head">
-      <p class="poll-kicker" data-i18n="Presenter · modules">Presenter · modules</p>
       <h2 data-i18n="What should fill the screen?">What should fill the screen?</h2>
       <p data-i18n="Pick one module to activate. You can split the screen later.">Pick one module to activate. You can split the screen later.</p>
     </header>
@@ -453,11 +450,6 @@
 <section id="poll-room" class="poll-room" aria-label="Poll room" data-i18n-aria="Poll room" aria-hidden="true">
   <div class="poll-room__shell">
     <header class="poll-room__head">
-      <div class="poll-room__title">
-        <p class="poll-kicker" data-i18n="Presenter · live audience">Presenter · live audience</p>
-        <h2 data-i18n="Poll room">Poll room</h2>
-        <p id="poll-summary" class="poll-summary">No polls yet.</p>
-      </div>
       <div class="poll-room__actions">
         <button id="poll-new" class="poll-btn poll-btn--primary" type="button"><span data-i18n="+ New poll">+ New poll</span> <kbd>N</kbd></button>
         <button id="poll-samples" class="poll-btn poll-btn--samples" type="button"><span data-i18n="Sample polls">Sample polls</span> <kbd>S</kbd></button>
@@ -474,7 +466,6 @@
     <div id="poll-empty" class="poll-empty" hidden>
       <p class="poll-empty__icon" aria-hidden="true">▣</p>
       <h3 data-i18n="No polls yet">No polls yet</h3>
-      <p data-i18n="Create a poll and it appears on every phone instantly.">Create a poll and it appears on every phone instantly.</p>
       <div class="poll-empty__actions">
         <button id="poll-empty-new" class="poll-btn poll-btn--primary" type="button" data-i18n="Create the first poll">Create the first poll</button>
         <button id="poll-empty-samples" class="poll-btn poll-btn--samples" type="button" data-i18n="Load sample polls">Load sample polls</button>
@@ -488,11 +479,6 @@
 <section id="media-wall" class="media-wall" aria-label="Event media wall" data-i18n-aria="Event media wall" aria-hidden="true">
   <div class="media-wall__shell">
     <header class="media-wall__head">
-      <div>
-        <p class="poll-kicker" data-i18n="Presenter · event media">Presenter · event media</p>
-        <h2 data-i18n="Shared moments">Shared moments</h2>
-        <p id="media-count" class="media-wall__sub"></p>
-      </div>
       <div class="media-wall__actions">
         <span class="race-live media-live">
           <span class="race-live__dot" aria-hidden="true"></span>
@@ -531,11 +517,6 @@
 <section id="stream-wall" class="stream-wall" aria-label="Live stream" data-i18n-aria="Live stream" aria-hidden="true">
   <div class="stream-wall__shell">
     <header class="stream-wall__head">
-      <div>
-        <p class="poll-kicker" data-i18n="Presenter · live stream">Presenter · live stream</p>
-        <h2 data-i18n="Live from phones">Live from phones</h2>
-        <p id="stream-sub" class="stream-wall__sub"></p>
-      </div>
       <div class="stream-wall__actions">
         <button id="stream-requests" class="poll-btn" type="button" hidden><span data-i18n="Requests">Requests</span> <span id="stream-request-count" class="extras-badge">0</span></button>
         <button id="stream-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
@@ -547,7 +528,6 @@
     <div id="stream-empty" class="stream-empty" hidden>
       <p class="stream-empty__icon" aria-hidden="true">📹</p>
       <h3 data-i18n="No live stream yet">No live stream yet</h3>
-      <p data-i18n="When someone asks to go live, approve the request and their camera appears here.">When someone asks to go live, approve the request and their camera appears here.</p>
       <div class="stream-empty__actions">
         <button id="stream-empty-requests" class="poll-btn" type="button" hidden data-i18n="Review requests">Review requests</button>
         <button id="stream-empty-media" class="poll-btn" type="button" data-i18n="Open media wall">Open media wall</button>
@@ -571,7 +551,6 @@
   <div class="poll-race__shell">
     <header class="poll-race__head">
       <div class="poll-race__copy">
-        <p class="poll-kicker" data-i18n="Presenter · live results">Presenter · live results</p>
         <h2 id="race-title"></h2>
         <p id="race-sub" class="poll-race__sub"></p>
       </div>
@@ -780,6 +759,6 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261113g"></script><script src="js/i18n.js?v=20261113g"></script><script src="js/polls.js?v=20261113g"></script><script src="js/store.js?v=20261113g"></script><script src="js/shared.js?v=20261113g"></script><script src="js/charts.js?v=20261113g"></script><script src="js/qrcode.js?v=20261113g"></script><script src="js/export.js?v=20261113g"></script><script src="js/live.js?v=20261113g"></script><script src="js/board.js?v=20261113g"></script>
+<script src="js/config.js?v=20261113i"></script><script src="js/i18n.js?v=20261113i"></script><script src="js/polls.js?v=20261113i"></script><script src="js/store.js?v=20261113i"></script><script src="js/shared.js?v=20261113i"></script><script src="js/charts.js?v=20261113i"></script><script src="js/qrcode.js?v=20261113i"></script><script src="js/export.js?v=20261113i"></script><script src="js/live.js?v=20261113i"></script><script src="js/board.js?v=20261113i"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

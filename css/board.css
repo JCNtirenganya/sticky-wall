@@ -258,24 +258,12 @@ body.show-dashboard #hot{opacity:0;visibility:hidden;pointer-events:none}
   from{opacity:0;transform:rotate(-2deg) translateY(22px) scale(.96)}
   to{opacity:1;transform:rotate(-.5deg) translateY(0) scale(1)}
 }
-.dash-kicker{
-  margin:0 0 6px;
-  font:600 9.5px/1 var(--font-ui);
-  letter-spacing:.18em;
-  text-transform:uppercase;
-  color:rgba(var(--dash-ink-rgb,56,38,23),.48);
-}
 .dash-card h1{
-  margin:0;
+  margin:0 0 14px;
   font:700 clamp(32px,4vw,46px)/.98 var(--font-hand);
   letter-spacing:-.01em;
   transform:rotate(-.8deg);
   transform-origin:left center;
-}
-.dash-lead{
-  margin:7px 0 14px;
-  font:400 13px/1.45 var(--font-ui);
-  color:rgba(var(--dash-ink-rgb,56,38,23),.66);
 }
 .dash-cats{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
 .dash-chip{
@@ -1742,30 +1730,10 @@ body.show-polls .poll-foot{padding-bottom:28px}
 .poll-room__head{
   flex:none;
   display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:flex-end;
   gap:18px;
   flex-wrap:wrap;
-}
-.poll-kicker{
-  margin:0 0 6px;
-  font:600 9.5px/1 var(--font-ui);
-  letter-spacing:.2em;
-  text-transform:uppercase;
-  color:rgba(255,239,218,.48);
-}
-.poll-room h2{
-  margin:0;
-  font:700 clamp(34px,4vw,54px)/.95 var(--font-hand);
-  letter-spacing:-.01em;
-  color:#fff2da;
-  transform:rotate(-1deg);
-  transform-origin:left center;
-}
-.poll-summary{
-  margin:7px 0 0;
-  font:400 13px/1.4 var(--font-ui);
-  color:rgba(255,239,218,.55);
 }
 .poll-room__actions{display:flex;gap:8px;flex-wrap:wrap}
 .poll-btn{
@@ -1968,7 +1936,6 @@ body.show-polls .poll-foot{padding-bottom:28px}
 .poll-empty[hidden]{display:none}
 .poll-empty__icon{font-size:44px;opacity:.38}
 .poll-empty h3{margin:0;font:700 34px/1 var(--font-hand);color:#fff2da}
-.poll-empty p{margin:0;font:400 13px/1.5 var(--font-ui)}
 .poll-empty__actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
 .poll-foot{
   flex:none;
@@ -2239,7 +2206,6 @@ body.present-notes #focus-ui{display:none!important}
 }
 @media (max-width:700px){
   .poll-room{padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
-  .poll-room h2{font-size:38px}
   .poll-room__actions{width:100%}
   .poll-btn{flex:1 1 auto;justify-content:center;height:38px}
   .poll-grid{grid-template-columns:1fr}
@@ -2652,26 +2618,12 @@ body.show-media .media-wall{opacity:1;visibility:visible;pointer-events:auto}
 }
 .media-wall__head{
   display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:flex-end;
   gap:18px;
   flex-wrap:wrap;
 }
-.media-wall h2{
-  margin:0;
-  font:700 clamp(30px,4.2vw,56px)/.98 var(--font-hand);
-  color:#fff2da;
-  transform:rotate(-.8deg);
-  overflow-wrap:anywhere;
-}
-.media-wall__sub{
-  margin:0;
-  font:600 9.5px/1 var(--font-ui);
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:rgba(255,239,218,.48);
-}
-.media-wall__actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.media-wall__actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
 .media-live{flex:none}
 
 /* live streams beamed from phones */
@@ -3381,13 +3333,8 @@ body.show-modules #focus{opacity:0;visibility:hidden;pointer-events:none}
 .split-pane .media-wall__head,
 .split-pane .poll-room__head,
 .split-pane .stream-wall__head,
-.split-pane .media-wall__sub,
-.split-pane .poll-room__sub,
-.split-pane .stream-wall__sub,
 .split-pane .poll-foot,
 .split-pane .stream-foot{display:none!important}
-.split-pane .media-wall h2,
-.split-pane .poll-room h2{font-size:clamp(18px,2vw,28px)}
 .split-pane .media-live-grid{max-height:32%}
 .split-pane .media-stage__item img,
 .split-pane .media-stage__item video{max-height:calc(100% - 4px)}
@@ -3423,18 +3370,13 @@ body.show-stream .stream-wall{
 }
 body.show-media .media-wall__shell{max-height:100%}
 body.show-polls .poll-foot{padding-bottom:0}
-/* Poll/media headings sit on the cork like notes, so use wall ink outside immersive modes. */
-body.show-polls:not(.present-polls):not(.split-mode) .poll-kicker,
-body.show-polls:not(.present-polls):not(.split-mode) .poll-summary,
+/* Empty states and keyboard hints sit on the cork like notes, so use wall ink
+   outside immersive modes. */
 body.show-polls:not(.present-polls):not(.split-mode) .poll-empty,
-body.show-polls:not(.present-polls):not(.split-mode) .poll-empty p,
 body.show-polls:not(.present-polls):not(.split-mode) .poll-foot,
 body.show-polls:not(.present-polls):not(.split-mode) .poll-foot kbd{color:rgba(56,38,23,.6)}
-body.show-polls:not(.present-polls):not(.split-mode) .poll-room h2,
 body.show-polls:not(.present-polls):not(.split-mode) .poll-empty h3{color:#2a1a10}
 body.show-polls:not(.present-polls):not(.split-mode) .poll-foot kbd{background:rgba(56,38,23,.09)}
-body.show-media:not(.present-media):not(.split-mode) .media-wall h2{color:#2a1a10}
-body.show-media:not(.present-media):not(.split-mode) .media-wall__sub,
 body.show-media:not(.present-media):not(.split-mode) .media-empty{color:rgba(56,38,23,.6)}
 /* A module takes over the wall: the notes layer steps aside so notes never
    show through the transparent media or poll wall. Only the cork, its tint
@@ -3476,25 +3418,12 @@ body.split-mode #qr-card .qr-caption{display:none}
 .stream-wall__head{
   flex:none;
   display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:flex-end;
   gap:18px;
   flex-wrap:wrap;
 }
-.stream-wall h2{
-  margin:0 0 6px;
-  font:700 clamp(30px,4.2vw,56px)/.98 var(--font-hand);
-  color:#fff2da;
-  transform:rotate(-.8deg);
-}
-.stream-wall__sub{
-  margin:0;
-  font:600 9.5px/1.4 var(--font-ui);
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:rgba(255,239,218,.48);
-}
-.stream-wall__actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stream-wall__actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:auto}
 .stream-grid{
   flex:1 1 auto;
   min-height:0;
@@ -3538,7 +3467,6 @@ body.split-mode #qr-card .qr-caption{display:none}
   font:700 clamp(20px,2.4vw,32px)/1.1 var(--font-hand);
   color:#fff2da;
 }
-.stream-empty p{margin:0;max-width:46ch;font:400 13px/1.5 var(--font-ui)}
 .stream-empty__actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
 .stream-foot{
   flex:none;
