@@ -3436,6 +3436,19 @@ body.show-polls:not(.present-polls):not(.split-mode) .poll-foot kbd{background:r
 body.show-media:not(.present-media):not(.split-mode) .media-wall h2{color:#2a1a10}
 body.show-media:not(.present-media):not(.split-mode) .media-wall__sub,
 body.show-media:not(.present-media):not(.split-mode) .media-empty{color:rgba(56,38,23,.6)}
+/* A module takes over the wall: the notes layer steps aside so notes never
+   show through the transparent media or poll wall. Only the cork, its tint
+   and the branding stay behind the module. */
+body.show-polls #piles-back,
+body.show-media #sheet,
+body.show-media #piles,
+body.show-media #piles-back,
+body.show-media #filters,
+body.show-media #hot,
+body.show-media #empty,
+body.show-media #focus,
+body.show-stream #sheet,
+body.show-stream #piles-back{opacity:0;visibility:hidden;pointer-events:none}
 body.split-mode .split-stage__bar{
   padding-left:clamp(250px,27vw,340px);
   padding-right:clamp(150px,15vw,190px);
