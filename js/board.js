@@ -698,10 +698,10 @@
   }
 
   function setDashboard(open) {
+    /* Opening a module also closes whichever module was open before it. */
+    if (open) closeModulesExcept("dashboard");
     document.body.classList.toggle("show-dashboard", !!open);
     if (!open) return;
-    closePollRoom();
-    setNotesPresentation(false);
     closeFocus();
     setExtrasOpen(false);
     renderDashboard();
@@ -1189,15 +1189,11 @@
 
   function openPollRoom() {
     if (!pollRoom) return;
-    if (splitActive()) exitSplit(false);
-    closeModuleHome();
-    if (streamWallOpenNow()) closeStreamWall();
-    if (mediaOpenNow()) closeMediaWall();
+    closeModulesExcept("poll");
     activeModule = "poll";
+    document.body.dataset.module = "poll";
     closeFocus();
-    setDashboard(false);
     setExtrasOpen(false);
-    setNotesPresentation(false);
     document.body.classList.add("show-polls");
     pollRoom.setAttribute("aria-hidden", "false");
     pollFilter = "all";
@@ -1671,6 +1667,7 @@
       return;
     }
     if (raceOpenNow()) closePollRace();
+    closeModulesExcept("poll", "race");
     setPollsPresentation(false);
     racePollId = poll.id;
     raceSpeed = 1;
@@ -2376,16 +2373,10 @@
 
   function openMediaWall() {
     if (!mediaWall) return;
-    if (splitActive()) exitSplit(false);
-    closeModuleHome();
-    if (streamWallOpenNow()) closeStreamWall();
+    closeModulesExcept("media");
     if (focusId) closeFocus();
-    if (dashboardOpen()) closeDashboard();
-    if (pollRoomOpenNow()) closePollRoom();
-    if (pollsPresent) setPollsPresentation(false);
-    if (notesPresent) setNotesPresentation(false);
-    if (raceOpenNow()) closePollRace();
     activeModule = "media";
+    document.body.dataset.module = "media";
     setExtrasOpen(false);
     mediaPresent = false;
     presentationManual = false;
@@ -2433,13 +2424,22 @@
   const streamWallOpenNow = () => document.body.classList.contains("show-stream");
   const splitActive = () => splitModules.length > 1 && !!splitStage && !splitStage.hidden;
 
+  /* Only one module is visible at a time: every open* entry point closes the
+     others first, so switching modules never leaves the old one underneath. */
+  function closeModulesExcept(...keep) {
+    const kept = new Set(keep);
+    if (splitActive() && !kept.has("split")) exitSplit(false);
+    if (notesPresent && !kept.has("notes")) setNotesPresentation(false);
+    if (pollRoomOpenNow() && !kept.has("poll")) closePollRoom();
+    if (raceOpenNow() && !kept.has("race")) closePollRace();
+    if (mediaOpenNow() && !kept.has("media")) closeMediaWall();
+    if (streamWallOpenNow() && !kept.has("stream")) closeStreamWall();
+    if (dashboardOpen() && !kept.has("dashboard")) closeDashboard();
+    if (moduleHomeOpen && !kept.has("home")) closeModuleHome();
+  }
+
   function closeAllModules() {
-    if (mediaOpenNow()) closeMediaWall();
-    if (pollRoomOpenNow()) closePollRoom();
-    if (raceOpenNow()) closePollRace();
-    if (streamWallOpenNow()) closeStreamWall();
-    if (notesPresent) setNotesPresentation(false);
-    if (dashboardOpen()) closeDashboard();
+    closeModulesExcept();
     closeFocus();
   }
 
@@ -2482,16 +2482,10 @@
 
   function openStreamWall() {
     if (!streamWall || streamWallOpenNow()) return;
-    if (splitActive()) return;
-    closeModuleHome();
+    closeModulesExcept("stream");
     closeFocus();
-    setDashboard(false);
-    if (pollRoomOpenNow()) closePollRoom();
-    if (pollsPresent) setPollsPresentation(false);
-    if (raceOpenNow()) closePollRace();
-    if (mediaOpenNow()) closeMediaWall();
-    if (notesPresent) setNotesPresentation(false);
     activeModule = "stream";
+    document.body.dataset.module = "stream";
     streamWall.setAttribute("aria-hidden", "false");
     document.body.classList.add("show-stream");
     renderLiveStrip();
@@ -3903,6 +3897,7 @@
     on = !!on;
     if (!on && !notesPresent) { presentationManual = false; return; }
     const entering = on && !notesPresent;
+    if (entering) closeModulesExcept("notes");
     notesPresent = on;
     presentationManual = on ? !!manual : false;
     if (entering) {
