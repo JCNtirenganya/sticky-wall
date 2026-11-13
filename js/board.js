@@ -7,7 +7,7 @@
   const eventTitleInput = $("event-title"), eventSubInput = $("event-subtitle"), eventReset = $("event-reset"), eventCancel = $("event-cancel");
   const catEdit = $("cat-edit"), categoryDialog = $("category-dialog"), categoryForm = $("category-form");
   const categoryListEl = $("category-list"), categoryAdd = $("category-add"), categoryReset = $("category-reset"), categoryCancel = $("category-cancel");
-  const status = $("status"), statusText = $("status-text"), statusMode = $("status-mode"), emptyHint = $("empty-hint");
+  const status = $("status"), statusText = $("status-text"), statusMode = $("status-mode");
   const focusMeta = $("focus-meta"), focusCat = $("focus-cat"), focusCount = $("focus-count");
   const pilesHost = $("piles"), pilesBack = $("piles-back"), qrCard = $("qr-card"), qrCode = $("qr-code");
   const extras = $("extras"), extrasPanel = $("extras-panel"), extrasToggle = $("extras-toggle");
@@ -80,6 +80,7 @@
     filters: true,
     gap: 12,
     bgColor: "",
+    dashColor: "",
     bgImage: "",
     bgDim: 35,
     logo: "",
@@ -97,7 +98,7 @@
     mediaVideoRate: 1
   };
   const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate", "qrX", "qrY"]);
-  const PREF_STRINGS = new Set(["bgColor", "bgImage", "logo", "chartType", "chartStyle"]);
+  const PREF_STRINGS = new Set(["bgColor", "dashColor", "bgImage", "logo", "chartType", "chartStyle"]);
   const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
   const CHART_STYLE_KEYS = ["hand", "clean"];
   function loadPrefs() {
@@ -123,6 +124,7 @@
   prefs.mediaPhotoSeconds = Math.max(2, Math.min(60, prefs.mediaPhotoSeconds || 6));
   prefs.mediaVideoRate = Math.max(0.5, Math.min(2, prefs.mediaVideoRate || 1));
   prefs.bgColor = normaliseHex(prefs.bgColor) || "";
+  prefs.dashColor = normaliseHex(prefs.dashColor) || "";
   prefs.bgImage = String(prefs.bgImage || "");
   if (!CHART_TYPE_KEYS.includes(prefs.chartType)) prefs.chartType = "auto";
   if (!CHART_STYLE_KEYS.includes(prefs.chartStyle)) prefs.chartStyle = "hand";
@@ -138,13 +140,16 @@
       const key = input.dataset.extra;
       if (!(key in prefs)) return;
       if (input.type === "checkbox") input.checked = !!prefs[key];
-      else if (input.type === "color") input.value = prefs.bgColor || "#000000";
+      else if (input.type === "color") input.value = normaliseHex(prefs[key]) || input.dataset.defaultColor || "#000000";
       else input.value = prefs[key];
       const out = extrasPanel.querySelector('output[data-for="' + key + '"]');
       if (out) out.textContent = String(prefs[key]);
     });
     extrasPanel.querySelectorAll("#extras-swatches button").forEach(btn => {
       btn.classList.toggle("act", (btn.dataset.wall || "") === (prefs.bgColor || ""));
+    });
+    extrasPanel.querySelectorAll("#extras-dash-swatches button").forEach(btn => {
+      btn.classList.toggle("act", (btn.dataset.dash || "") === (prefs.dashColor || ""));
     });
     extrasPanel.querySelectorAll("[data-chart-type]").forEach(btn => {
       const on = btn.dataset.chartType === prefs.chartType;
@@ -175,6 +180,18 @@
   }
   applyPrefs(false);
 
+  /* Dashboard paper: keep the ink readable on light or dark custom paper. */
+  function dashInk(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return "56,38,23";
+    const channel = value => {
+      const c = value / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const luminance = 0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2]);
+    return luminance < 0.42 ? "255,244,230" : "56,38,23";
+  }
+
   /* Presenter look: wall tint, optional background image, logo. */
   function applyLook() {
     const rgb = prefs.bgColor ? hexToRgb(prefs.bgColor) : null;
@@ -200,6 +217,20 @@
       if (logo) { brandLogo.src = logo; brandLogo.alt = brandDefaults.logoAlt; }
     }
     document.documentElement.style.setProperty("--logo-scale", (prefs.logoSize / 100).toFixed(2));
+
+    const dash = normaliseHex(prefs.dashColor) || "";
+    const ink = dash ? dashInk(dash) : "";
+    [$("welcome-card"), $("dash-card")].forEach(card => {
+      if (!card) return;
+      if (dash) {
+        card.style.setProperty("--dash-paper", dash);
+        card.style.setProperty("--dash-ink-rgb", ink);
+      } else {
+        card.style.removeProperty("--dash-paper");
+        card.style.removeProperty("--dash-ink-rgb");
+      }
+    });
+    document.body.classList.toggle("dash-dark", ink === "255,244,230");
     syncPrefInputs();
   }
 
@@ -585,7 +616,6 @@
     statusMode.textContent = Store.mode === "demo" ? t("demo") : t("live");
     status.classList.toggle("is-demo", Store.mode === "demo");
     syncPollBadge();
-    emptyHint.hidden = Store.mode !== "demo";
     document.body.classList.toggle("has-notes", total > 0);
     if (dashboardOpen()) renderDashboard();
   }
@@ -3602,7 +3632,7 @@
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap"],
     polls: ["chartType", "chartStyle"],
-    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
+    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "dashColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
@@ -3650,7 +3680,7 @@
     savePrefs();
 
     if (key === "gap") { syncPrefInputs(); layout(); }
-    else if (key === "bgDim" || key === "bgColor") applyLook();
+    else if (key === "bgDim" || key === "bgColor" || key === "dashColor") applyLook();
     else if (key === "logoSize") { applyLook(); layout(); }
     else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") syncPrefInputs();
     else if (String(key).startsWith("media")) {
@@ -3789,6 +3819,13 @@
     savePrefs();
     applyLook();
   });
+  $("extras-dash-swatches")?.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-dash]");
+    if (!btn) return;
+    prefs.dashColor = normaliseHex(btn.dataset.dash) || "";
+    savePrefs();
+    applyLook();
+  });
 
   extrasPanel?.addEventListener("click", e => {
     const typeBtn = e.target.closest("[data-chart-type]");
@@ -3801,6 +3838,11 @@
   });
   $("extras-bg-color-reset")?.addEventListener("click", () => {
     prefs.bgColor = "";
+    savePrefs();
+    applyLook();
+  });
+  $("extras-dash-color-reset")?.addEventListener("click", () => {
+    prefs.dashColor = "";
     savePrefs();
     applyLook();
   });
@@ -4118,7 +4160,7 @@
         if (cat) setFilter(cat.key);
       }
     }
-    else if (k === "s" && Store.mode === "demo") seed();
+    else if (k === "s") seedNotes();
   });
 
   /* hide cursor when idle */
@@ -4259,23 +4301,30 @@
     ]
   ];
   let noteSampleRound = 0;
+  let seedingNotes = false;
 
-  function seedNotes() {
-    if (Store.mode !== "demo") return;
+  async function seedNotes() {
+    if (seedingNotes) return;
+    seedingNotes = true;
+    const button = $("extras-demo-notes");
+    if (button) button.disabled = true;
     const keys = categoryKeys(), fallback = keys[0];
     const set = SAMPLE_NOTE_SETS[noteSampleRound % SAMPLE_NOTE_SETS.length];
     noteSampleRound++;
-    set.forEach(([name, category, text], i) => setTimeout(() => {
-      Store.add({ name, category: CATS[category] ? category : fallback, text });
-    }, i * 240));
-    flashPollStatus(t("{n} sample notes added", { n: set.length }));
+    try {
+      for (const [name, category, text] of set) {
+        await Store.add({ name, category: CATS[category] ? category : fallback, text });
+      }
+      await syncNotes();
+      flashPollStatus(t("{n} sample notes added", { n: set.length }));
+    } catch (err) {
+      console.error("Sample notes could not be loaded", err);
+      flashPollStatus("Could not load sample notes");
+    } finally {
+      seedingNotes = false;
+      if (button) button.disabled = false;
+    }
   }
-
-  /* Kept for the S shortcut and the old call sites. */
-  function seed() {
-    seedNotes();
-  }
-
 
   /* ── phone QR ──────────────────────────────────────────────── */
   let qrDrag = null, qrDragReady = false;
