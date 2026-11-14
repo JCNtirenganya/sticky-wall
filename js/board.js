@@ -73,7 +73,6 @@
     qr: true,
     qrX: -1,
     qrY: -1,
-    status: true,
     filters: true,
     gap: 12,
     bgColor: "",
@@ -164,7 +163,6 @@
     const hideClasses = {
       brand: "hide-brand",
       qr: "hide-qr",
-      status: "hide-status",
       filters: "hide-filters"
     };
     Object.entries(hideClasses).forEach(([key, cls]) => {
@@ -3573,7 +3571,7 @@
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap", "dashColor"],
     polls: ["chartType", "chartStyle"],
-    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
+    look: ["brand", "qr", "qrX", "qrY", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
@@ -3851,10 +3849,9 @@
       notesPresentSnapshot = {
         brand: prefs.brand,
         qr: prefs.qr,
-        status: prefs.status,
         filters: prefs.filters
       };
-      ["brand", "qr", "status", "filters"].forEach(key => { prefs[key] = false; });
+      ["brand", "qr", "filters"].forEach(key => { prefs[key] = false; });
     } else if (!on && notesPresentSnapshot) {
       Object.assign(prefs, notesPresentSnapshot);
       notesPresentSnapshot = null;
@@ -3886,7 +3883,7 @@
   extrasShowAll?.addEventListener("click", () => {
     showNotesWall();
     setNotesPresentation(false);
-    ["brand", "qr", "status", "filters"].forEach(key => { prefs[key] = true; });
+    ["brand", "qr", "filters"].forEach(key => { prefs[key] = true; });
     savePrefs();
     applyPrefs(true);
     setExtrasOpen(false);

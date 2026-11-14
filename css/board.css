@@ -822,7 +822,6 @@ body.idle .brand-edit{opacity:0;pointer-events:none}
 #status.is-demo .dot{background:#f0c46b;box-shadow:0 0 0 3px rgba(240,196,107,.14)}
 #status .sep{opacity:.32}
 .status-notes{display:inline-flex;align-items:center;gap:8px}
-body.hide-status .status-notes{display:none}
 
 /* ── note choreography ──────────────────────────────────────── */
 .note.new{animation:noteIn .95s var(--ease-spring) both}
