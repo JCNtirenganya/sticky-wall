@@ -7,7 +7,7 @@
   const eventTitleInput = $("event-title"), eventSubInput = $("event-subtitle"), eventReset = $("event-reset"), eventCancel = $("event-cancel");
   const catEdit = $("cat-edit"), categoryDialog = $("category-dialog"), categoryForm = $("category-form");
   const categoryListEl = $("category-list"), categoryAdd = $("category-add"), categoryReset = $("category-reset"), categoryCancel = $("category-cancel");
-  const status = $("status"), statusText = $("status-text"), statusMode = $("status-mode");
+  const status = $("status"), statusText = $("status-text");
   const focusMeta = $("focus-meta"), focusCat = $("focus-cat"), focusCount = $("focus-count");
   const pilesHost = $("piles"), pilesBack = $("piles-back"), qrCard = $("qr-card"), qrCode = $("qr-code");
   const extras = $("extras"), extrasPanel = $("extras-panel"), extrasToggle = $("extras-toggle");
@@ -45,11 +45,8 @@
   const liveRequests = new Map();
   const splitOrigins = new Map();
   let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [];
-  /* Sample material stays out of the way until the presenter asks for it.
-     Production may still contain rows created by earlier sample buttons. */
+  /* Earlier builds could add sample rows; keep those out of a real wall. */
   const SAMPLE_POLL_PREFIX = "sample-";
-  let samplesVisible = false;
-  let samplePollRoundSeen = 0;
   const isSamplePoll = poll => String(poll?.id || "").startsWith(SAMPLE_POLL_PREFIX);
   const isSampleMedia = item => String(item?.author || "").trim().toLowerCase() === "sample";
   let cats = new Set(categoryKeys()), focusId = null, closeTimer = 0;
@@ -636,7 +633,6 @@
       : activeFilter === "all"
         ? (hiddenCount ? plural(shown) + " · " + t("{n} hidden", { n: hiddenCount }) : plural(total))
         : t("{shown} of {alive}", { shown, alive });
-    statusMode.textContent = Store.mode === "demo" ? t("demo") : t("live");
     status.classList.toggle("is-demo", Store.mode === "demo");
     syncPollBadge();
     document.body.classList.toggle("has-notes", total > 0);
@@ -821,15 +817,6 @@
 
   function renderPollChrome() {
     syncPollBadge();
-    const sampleLabel = document.querySelector("#poll-samples span");
-    if (sampleLabel) {
-      const more = polls.some(p => String(p.id).startsWith("sample-"));
-      const key = more ? "More samples" : "Sample polls";
-      if (sampleLabel.dataset.i18n !== key) {
-        sampleLabel.dataset.i18n = key;
-        sampleLabel.textContent = t(key);
-      }
-    }
     renderDashPolls();
     if (pollRoomOpenNow()) renderPollRoom();
     if (raceOpenNow()) refreshRaceLive();
@@ -1504,17 +1491,11 @@
     try {
       const [freshPolls, freshVotes] = await Promise.all([Store.listPolls(), Store.listVotes()]);
       const allPolls = normalisePolls(freshPolls);
-      /* Remember the highest sample round even while samples are hidden,
-         so a new batch never overwrites an older one. */
-      allPolls.forEach(poll => {
-        const match = /^sample-r(\d+)-/.exec(String(poll.id || ""));
-        if (match) samplePollRoundSeen = Math.max(samplePollRoundSeen, Number(match[1]) + 1);
-      });
-      const shownPolls = samplesVisible ? allPolls : allPolls.filter(poll => !isSamplePoll(poll));
+      const shownPolls = allPolls.filter(poll => !isSamplePoll(poll));
       polls.splice(0, polls.length, ...shownPolls);
       const shownIds = new Set(shownPolls.map(poll => poll.id));
       votes.splice(0, votes.length, ...normalisePollVotes(freshVotes)
-        .filter(vote => samplesVisible || shownIds.has(vote.poll_id)));
+        .filter(vote => shownIds.has(vote.poll_id)));
       pollSyncWarned = false;
     } catch (err) {
       if (!pollSyncWarned) {
@@ -2406,7 +2387,7 @@
   async function syncMedia() {
     try {
       const list = await Store.listMedia();
-      const shown = samplesVisible ? (list || []) : (list || []).filter(item => !isSampleMedia(item));
+      const shown = (list || []).filter(item => !isSampleMedia(item));
       media.splice(0, media.length, ...shown);
     } catch (err) {
       console.warn("Could not load media. In live mode run supabase/migration-media.sql.", err);
@@ -2447,8 +2428,7 @@
           : host.closest(".stream-wall") ? "stream"
           : "media");
       }
-      const compact = host.classList.contains("module-counts--status");
-      const keys = MODULE_KEYS.filter(key => !skip.has(key) && (!compact || moduleCount(key) > 0));
+      const keys = MODULE_KEYS.filter(key => !skip.has(key));
       if (!keys.length) { host.replaceChildren(); return; }
       host.replaceChildren(...keys.map(key => {
         const n = moduleCount(key);
@@ -2693,75 +2673,6 @@
     }
   }
 
-  function sampleCanvas(index) {
-    const palettes = [
-      ["#0b1220", "#1f6feb", "#9ecbff"],
-      ["#2b1b12", "#e4572e", "#ffd166"],
-      ["#10251f", "#2a9d8f", "#e9f5db"]
-    ];
-    const [dark, mid, light] = palettes[index % palettes.length];
-    const canvas = document.createElement("canvas");
-    canvas.width = 1400;
-    canvas.height = 900;
-    const ctx = canvas.getContext("2d");
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    grad.addColorStop(0, dark);
-    grad.addColorStop(.55, mid);
-    grad.addColorStop(1, light);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.globalAlpha = .16;
-    for (let i = 0; i < 16; i++) {
-      ctx.beginPath();
-      ctx.arc((i * 173 + index * 311) % canvas.width, (i * 97 + index * 211) % canvas.height, 40 + (i % 5) * 31, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = "rgba(0,0,0,.34)";
-    ctx.fillRect(0, canvas.height - 230, canvas.width, 230);
-    ctx.fillStyle = "#fff";
-    ctx.font = "700 78px Caveat, 'Segoe UI', sans-serif";
-    ctx.fillText(t("Sample photo"), 70, canvas.height - 120);
-    ctx.font = "500 36px 'Segoe UI', sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,.82)";
-    ctx.fillText(t("Shared from a phone at the event"), 70, canvas.height - 62);
-    return canvas;
-  }
-
-  async function seedSampleMedia(button) {
-    const label = button?.textContent || t("Add sample media");
-    samplesVisible = true;
-    if (button) {
-      button.disabled = true;
-      button.textContent = t("Adding…");
-    }
-    try {
-      for (let i = 0; i < 3; i++) {
-        const canvas = sampleCanvas(i);
-        const blob = await new Promise((resolve, reject) => {
-          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Could not draw the sample")), "image/jpeg", .9);
-        });
-        const file = new File([blob], `sample-media-${Date.now()}-${i}.jpg`, { type: "image/jpeg" });
-        /* Keep the marker stable across languages, so samples stay hidden by default. */
-        await Store.addMedia({ file, author: "Sample", kind: "photo", width: 1400, height: 900 });
-      }
-      await syncMedia();
-      if (!mediaOpenNow()) openMediaWall();
-      if (button) button.textContent = t("Added 3 photos");
-    } catch (err) {
-      console.error("Could not seed media", err);
-      if (button) button.textContent = t("Could not add media");
-    } finally {
-      if (button) {
-        button.disabled = false;
-        setTimeout(() => { button.textContent = label; }, 1900);
-      }
-    }
-  }
-
   /* ── exports: PDF summary + notes-only JPEG ───────────────── */
   function exportCategories() {
     return categoryList().map(cat => ({ key: cat.key, label: cat.label, color: cat.color }));
@@ -2825,7 +2736,6 @@
     openMediaWall();
     setMediaPresentation(true);
   });
-  $("extras-demo-media")?.addEventListener("click", event => seedSampleMedia(event.currentTarget));
   mediaClose?.addEventListener("click", closeMediaWall);
   $("media-present")?.addEventListener("click", () => {
     if (mediaPresent && !presentationManual) setMediaPresentation(false);
@@ -2910,11 +2820,6 @@
 
   $("poll-close")?.addEventListener("click", closePollRoom);
   $("poll-new")?.addEventListener("click", () => openPollEditor(null));
-  $("poll-samples")?.addEventListener("click", () => seedSamplePolls());
-  $("extras-demo-notes")?.addEventListener("click", () => { showNotesWall(); seedNotes(); });
-  $("extras-demo-polls")?.addEventListener("click", () => seedSamplePolls());
-  $("extras-demo-reset")?.addEventListener("click", event =>
-    armButton(event.currentTarget, t("Confirm reset"), () => seedSamplePolls({ reset: true })));
   $("poll-present")?.addEventListener("click", () => setPollsPresentation(!pollsPresent, "all"));
   $("poll-present-one")?.addEventListener("click", () => {
     if (pollsPresent && pollStageMode) setPollsPresentation(false);
@@ -2925,7 +2830,6 @@
     else setPollsPresentation(true, "one", true);
   });
   $("poll-empty-new")?.addEventListener("click", () => openPollEditor(null));
-  $("poll-empty-samples")?.addEventListener("click", () => seedSamplePolls());
   $("extras-poll-room")?.addEventListener("click", openPollRoom);
   $("extras-poll-new")?.addEventListener("click", () => { setExtrasOpen(false); openPollEditor(null); });
   $("extras-poll-present")?.addEventListener("click", () => {
@@ -4143,7 +4047,6 @@
       else if (pollsPresent && (k === "arrowleft" || k === "arrowup" || k === "pageup")) { e.preventDefault(); stepPollStage(-1); }
       else if (k === "n") openPollEditor(null);
       else if (k === "g") { e.preventDefault(); if (e.shiftKey) cycleChartStyle(); else cycleChartType(e.altKey ? -1 : 1); }
-      else if (k === "s") seedSamplePolls();
       else if (k === "h") {
         if (pollsPresent) { setPollsPresentation(false); setExtrasOpen(true); }
         else setExtrasOpen(!extras?.classList.contains("open"));
@@ -4198,7 +4101,6 @@
         if (cat) setFilter(cat.key);
       }
     }
-    else if (k === "s") seedNotes();
   });
 
   /* hide cursor when idle */
@@ -4265,106 +4167,7 @@
     setChartStyle(prefs.chartStyle === "hand" ? "clean" : "hand");
   }
 
-  /* demo helpers: sample content loads in rounds, so the buttons and the
-     S shortcut keep adding material instead of replacing the wall */
-  let seedingSamples = false;
-  const samplePollRound = () => Math.max(samplePollRoundSeen, polls.reduce((max, poll) => {
-    if (!isSamplePoll(poll)) return max;
-    const match = /^sample-r(\d+)-/.exec(poll.id);
-    return Math.max(max, match ? Number(match[1]) + 1 : 1);
-  }, 0));
-
-  async function seedSamplePolls(options) {
-    if (seedingSamples) return;
-    const reset = !!(options && options.reset === true);
-    seedingSamples = true;
-    samplesVisible = true;
-    const buttons = [...document.querySelectorAll("#poll-samples, #poll-empty-samples, #extras-demo-polls, #extras-demo-reset")];
-    buttons.forEach(button => { button.disabled = true; });
-    try {
-      if (reset) {
-        const allPolls = await Store.listPolls();
-        const existing = allPolls.map(p => p.id).filter(id => String(id).startsWith(SAMPLE_POLL_PREFIX));
-        for (const id of existing) await Store.deletePoll(id);
-        samplePollRoundSeen = 0;
-      }
-      const round = reset ? 0 : samplePollRound();
-      const set = pollSampleSet(Date.now(), round);
-      for (const poll of set.polls) await Store.savePoll(poll);
-      if (typeof Store.submitVotes === "function") await Store.submitVotes(set.votes);
-      else for (const vote of set.votes) await Store.submitVote(vote);
-      pollFilter = "all";
-      await syncPolls();
-      flashPollStatus(reset
-        ? t("{n} sample polls loaded", { n: set.polls.length })
-        : t("{n} more sample polls added", { n: set.polls.length }));
-    } catch (err) {
-      console.error("Sample polls could not be loaded", err);
-      flashPollStatus("Could not load sample polls");
-    } finally {
-      seedingSamples = false;
-      buttons.forEach(button => { button.disabled = false; });
-    }
-  }
-
-  /* Two rounds of hand-written notes: every load adds a different batch. */
-  const SAMPLE_NOTE_SETS = [
-    [
-      ["Amina", "question", "How do we make sure the maps stay useful after the event?"],
-      ["Tunde", "idea", "A map of every coffee washing station in Rwanda!"],
-      ["Lerato", "appreciation", "Thank you for bringing this community together 💚"],
-      ["Sofia", "question", "Which open data sources can we trust?"],
-      ["Kwame", "idea", "Mapathon every first Saturday"],
-      ["Nadia", "appreciation", "Loved the demo."],
-      ["Ibrahim", "idea", "Use drones to map Kigali's hills and then publish everything openly for schools to use in geography lessons"],
-      ["Chen", "question", "Three things we could map next:\n1. bus stops\n2. water points\n3. school routes"],
-      ["Maya", "appreciation", "The coffee was excellent ☕"],
-      ["Zola", "resources", "OpenStreetMap has a great beginner guide [here](https://learnosm.org)."],
-      ["Kofi", "requests", "Could someone help me export the map as a PDF?"],
-      ["Nia", "resources", "The community toolkit is in the shared folder."]
-    ],
-    [
-      ["Ayo", "idea", "A shared calendar for every mapping meetup."],
-      ["Fatima", "question", "Who can host the next training in Kigali?"],
-      ["Peter", "appreciation", "The live results screen made the room cheer."],
-      ["Grace", "resources", "The school data set is available [here](https://data.humdata.org/dataset/?q=Rwanda+schools)."],
-      ["Samuel", "requests", "Please add a French version of the poster."],
-      ["Aisha", "idea", "A school map challenge with a small prize."],
-      ["Diego", "question", "Can we map the new bus routes before Friday?"],
-      ["Lina", "appreciation", "Great facilitation today, thank you!"],
-      ["Musa", "idea", "Print QR codes for every table."],
-      ["Chidi", "resources", "The open data portal is [here](https://data.gov.rw)."],
-      ["Elena", "requests", "Could we get a quiet room for the afternoon session?"],
-      ["Yara", "question", "What should we map after the roads?"]
-    ]
-  ];
-  let noteSampleRound = 0;
-  let seedingNotes = false;
-
-  async function seedNotes() {
-    if (seedingNotes) return;
-    seedingNotes = true;
-    const button = $("extras-demo-notes");
-    if (button) button.disabled = true;
-    const keys = categoryKeys(), fallback = keys[0];
-    const set = SAMPLE_NOTE_SETS[noteSampleRound % SAMPLE_NOTE_SETS.length];
-    noteSampleRound++;
-    try {
-      for (const [name, category, text] of set) {
-        await Store.add({ name, category: CATS[category] ? category : fallback, text });
-      }
-      await syncNotes();
-      flashPollStatus(t("{n} sample notes added", { n: set.length }));
-    } catch (err) {
-      console.error("Sample notes could not be loaded", err);
-      flashPollStatus("Could not load sample notes");
-    } finally {
-      seedingNotes = false;
-      if (button) button.disabled = false;
-    }
-  }
-
-  /* ── phone QR ──────────────────────────────────────────────── */
+  /* phone QR */
   let qrDrag = null, qrDragReady = false;
 
   function qrLimits() {
@@ -4551,13 +4354,13 @@
     await syncPolls();
     Store.subscribePolls({
       onPoll: poll => {
-        if (!samplesVisible && isSamplePoll(poll)) return;
+        if (isSamplePoll(poll)) return;
         upsertPollLocal(poll);
         renderPollChrome();
       },
       onDelete: id => { removePollLocal(id); renderPollChrome(); },
       onVote: vote => {
-        if (!samplesVisible && !polls.some(poll => poll.id === vote.poll_id)) return;
+        if (!polls.some(poll => poll.id === vote.poll_id)) return;
         upsertVoteLocal(vote);
         renderPollChrome();
       },
@@ -4570,7 +4373,7 @@
     Store.subscribeMedia({
       onAdd: item => {
         if (!item?.id) return;
-        if (!samplesVisible && isSampleMedia(item)) return;
+        if (isSampleMedia(item)) return;
         if (!media.some(m => m.id === item.id)) {
           media.push(item);
           /* live album: a new upload takes over the full-screen show */
@@ -4579,7 +4382,7 @@
         renderMediaWall();
       },
       onUpdate: item => {
-        if (!samplesVisible && isSampleMedia(item)) return;
+        if (isSampleMedia(item)) return;
         const i = media.findIndex(m => m.id === item.id);
         if (i >= 0) media[i] = item;
         else media.push(item);

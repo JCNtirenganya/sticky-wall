@@ -1531,9 +1531,10 @@ body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
 @media (max-width:800px){
   #brand{max-width:calc(100vw - 32px)}
 }
-/* Narrow windows keep the status pill clear of the Extras dock. */
-@media (max-width:980px){
-  #status .module-counts{display:none!important}
+/* Narrow windows would let the status pill and the centred Extras dock meet,
+   so the pill steps above the dock instead of dropping counts. */
+@media (max-width:1160px){
+  #status{bottom:calc(clamp(14px,2.2vh,24px) + 42px)}
 }
 @media (max-width:700px){
   #brand{gap:9px;max-width:calc(100vw - 24px)}
@@ -1755,8 +1756,6 @@ body.show-polls .poll-foot{padding-bottom:28px}
 .poll-btn:hover{transform:translateY(-1px);background:rgba(255,244,230,.14);color:#fff4e6}
 .poll-btn--primary{background:#fff4e0;border-color:#fff4e0;color:#2a1a10;box-shadow:0 7px 18px rgba(0,0,0,.28)}
 .poll-btn--primary:hover{background:#fff;color:#2a1a10}
-.poll-btn--samples{border-color:rgba(230,230,0,.45);background:rgba(230,230,0,.1);color:#fff7b8}
-.poll-btn--samples:hover{background:rgba(230,230,0,.22);border-color:rgba(230,230,0,.7);color:#fffbe0}
 .poll-btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .poll-btn kbd{
   margin-left:5px;
@@ -3120,8 +3119,8 @@ body.present-media .media-stage__item video{
   font-variant-numeric:tabular-nums;
 }
 .module-count.is-zero{opacity:.45}
-/* On the notes wall the status strip already reports notes and polls, so it
-   only adds the media and live counts while they have something to show. */
+/* On the notes wall the status strip reports the note and poll counts itself
+   and adds the media and live counts, so all four stay in fixed places. */
 #status .module-counts{flex:0 0 auto;justify-content:flex-start;gap:6px}
 #status .module-count{
   padding:3px 7px;
@@ -3132,6 +3131,11 @@ body.present-media .media-stage__item video{
   letter-spacing:.1em;
 }
 #status .module-count__n{font-size:10px}
+/* Very narrow windows stack the counts under the rest of the pill. */
+@media (max-width:760px){
+  #status{flex-wrap:wrap;max-width:calc(100vw - 32px)}
+  #status .module-counts{flex:1 0 100%;justify-content:flex-start}
+}
 body.show-dashboard #status .module-counts,
 body.show-race #status .module-counts,
 body.show-modules #status .module-counts,

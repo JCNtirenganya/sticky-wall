@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261113l"><link rel="stylesheet" href="css/postit.css?v=20261113l"><link rel="stylesheet" href="css/board.css?v=20261113l"><link rel="stylesheet" href="css/piles.css?v=20261113l"><link rel="stylesheet" href="css/qr.css?v=20261113l"><link rel="stylesheet" href="css/charts.css?v=20261113l">
+<link rel="stylesheet" href="css/paper.css?v=20261113q"><link rel="stylesheet" href="css/postit.css?v=20261113q"><link rel="stylesheet" href="css/board.css?v=20261113q"><link rel="stylesheet" href="css/piles.css?v=20261113q"><link rel="stylesheet" href="css/qr.css?v=20261113q"><link rel="stylesheet" href="css/charts.css?v=20261113q">
 </head>
 <body>
 <main id="board">
@@ -24,7 +24,6 @@
       <h1 data-i18n="The wall is waiting.">The wall is waiting.</h1>
       <p data-i18n="Notes land here the moment someone sends one. Scan the QR code or open the link to add the first note.">Notes land here the moment someone sends one. Scan the QR code or open the link to add the first note.</p>
       <div class="empty-hints">
-        <span class="empty-hint" id="empty-hint"><kbd>S</kbd> <span data-i18n="drop sample notes">drop sample notes</span></span>
         <span class="empty-hint"><kbd>E</kbd> <span data-i18n="name this wall">name this wall</span></span>
         <span class="empty-hint"><kbd>C</kbd> <span data-i18n="edit categories">edit categories</span></span>
         <span class="empty-hint"><kbd>P</kbd> <span data-i18n="poll room">poll room</span></span>
@@ -72,7 +71,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><span id="status-mode">live</span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button><span class="module-counts module-counts--status" data-module-counts data-counts-skip="notes poll"></span></div>
+<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><span class="module-counts module-counts--status" data-module-counts data-counts-skip="notes poll"></span><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button></div>
 <aside id="live-request-alert" class="live-request-alert" role="status" aria-live="assertive" hidden>
   <span class="live-request-alert__pulse" aria-hidden="true"></span>
   <span class="live-request-alert__copy">
@@ -267,9 +266,6 @@
           <button id="extras-restore" class="extras-btn" type="button"><span data-i18n="Restore hidden">Restore hidden</span> <span id="extras-hidden-count" class="extras-badge">0</span></button>
           <button id="extras-clear" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
         </div>
-        <div class="extras-grid extras-grid--single">
-          <button id="extras-demo-notes" class="extras-btn" type="button" title="Add 12 more sample notes (S)" data-i18n-title="Add 12 more sample notes (S)"><span data-i18n="Add sample notes">Add sample notes</span> <kbd>S</kbd></button>
-        </div>
         <details class="extras-advanced">
           <summary data-i18n="Advanced">Advanced</summary>
           <label class="extra-row" title="Each category starts its own column when the wall has room" data-i18n-title="Each category starts its own column when the wall has room">
@@ -292,9 +288,6 @@
           <button id="extras-media-open" class="extras-btn" type="button"><span data-i18n="Show media wall">Show media wall</span> <kbd>V</kbd></button>
           <button id="extras-media-close" class="extras-btn" type="button" data-i18n="Hide media wall">Hide media wall</button>
           <button id="extras-media-present" class="extras-btn extras-btn--wide" type="button"><span data-i18n="Play media full screen">Play media full screen</span> <kbd>F</kbd></button>
-        </div>
-        <div class="extras-grid extras-grid--single">
-          <button id="extras-demo-media" class="extras-btn" type="button" title="Add 3 sample photos" data-i18n-title="Add 3 sample photos"><span data-i18n="Add sample media">Add sample media</span></button>
         </div>
         <p class="extras-note" data-i18n="Phones upload here; only this board shows the wall.">Phones upload here; only this board shows the wall.</p>
         <details class="extras-advanced">
@@ -337,10 +330,6 @@
           <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
           <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
           <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-        </div>
-        <div class="extras-grid">
-          <button id="extras-demo-polls" class="extras-btn" type="button" title="Add another set of sample polls (S)" data-i18n-title="Add another set of sample polls (S)"><span data-i18n="Add sample polls">Add sample polls</span> <kbd>S</kbd></button>
-          <button id="extras-demo-reset" class="extras-btn extras-btn--danger" type="button" title="Replace all sample polls with one fresh set" data-i18n-title="Replace all sample polls with one fresh set" data-i18n="Reset sample polls">Reset sample polls</button>
         </div>
         <details class="extras-advanced">
           <summary data-i18n="Charts">Charts</summary>
@@ -452,7 +441,6 @@
     <header class="poll-room__head">
       <div class="poll-room__actions">
         <button id="poll-new" class="poll-btn poll-btn--primary" type="button"><span data-i18n="+ New poll">+ New poll</span> <kbd>N</kbd></button>
-        <button id="poll-samples" class="poll-btn poll-btn--samples" type="button"><span data-i18n="Sample polls">Sample polls</span> <kbd>S</kbd></button>
         <button id="poll-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
         <button id="poll-present" class="poll-btn" type="button" aria-pressed="false" title="Present the results full screen (F)" data-i18n-title="Present the results full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
         <button id="poll-present-one" class="poll-btn" type="button" aria-pressed="false" title="Present the results one by one (O)" data-i18n-title="Present the results one by one (O)"><span data-i18n="One by one">One by one</span> <kbd>O</kbd></button>
@@ -469,10 +457,9 @@
       <h3 data-i18n="No polls yet">No polls yet</h3>
       <div class="poll-empty__actions">
         <button id="poll-empty-new" class="poll-btn poll-btn--primary" type="button" data-i18n="Create the first poll">Create the first poll</button>
-        <button id="poll-empty-samples" class="poll-btn poll-btn--samples" type="button" data-i18n="Load sample polls">Load sample polls</button>
       </div>
     </div>
-    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>S</kbd> <span data-i18n="loads sample polls">loads sample polls</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
+    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
   </div>
 </section>
 
@@ -762,6 +749,6 @@
 <!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261113l"></script><script src="js/i18n.js?v=20261113l"></script><script src="js/polls.js?v=20261113l"></script><script src="js/store.js?v=20261113l"></script><script src="js/shared.js?v=20261113l"></script><script src="js/charts.js?v=20261113l"></script><script src="js/qrcode.js?v=20261113l"></script><script src="js/export.js?v=20261113l"></script><script src="js/live.js?v=20261113l"></script><script src="js/board.js?v=20261113l"></script>
+<script src="js/config.js?v=20261113q"></script><script src="js/i18n.js?v=20261113q"></script><script src="js/polls.js?v=20261113q"></script><script src="js/store.js?v=20261113q"></script><script src="js/shared.js?v=20261113q"></script><script src="js/charts.js?v=20261113q"></script><script src="js/qrcode.js?v=20261113q"></script><script src="js/export.js?v=20261113q"></script><script src="js/live.js?v=20261113q"></script><script src="js/board.js?v=20261113q"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>
