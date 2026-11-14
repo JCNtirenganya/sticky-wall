@@ -2441,10 +2441,16 @@
   function renderModuleCounts() {
     if (!countHosts.length) return;
     countHosts.forEach(host => {
-      const own = host.closest(".poll-room") ? "poll"
-        : host.closest(".stream-wall") ? "stream"
-        : "media";
-      host.replaceChildren(...MODULE_KEYS.filter(key => key !== own).map(key => {
+      const skip = new Set((host.dataset.countsSkip || "").split(/\s+/).filter(Boolean));
+      if (!skip.size) {
+        skip.add(host.closest(".poll-room") ? "poll"
+          : host.closest(".stream-wall") ? "stream"
+          : "media");
+      }
+      const compact = host.classList.contains("module-counts--status");
+      const keys = MODULE_KEYS.filter(key => !skip.has(key) && (!compact || moduleCount(key) > 0));
+      if (!keys.length) { host.replaceChildren(); return; }
+      host.replaceChildren(...keys.map(key => {
         const n = moduleCount(key);
         const chip = document.createElement("span");
         chip.className = "module-count" + (n ? "" : " is-zero");

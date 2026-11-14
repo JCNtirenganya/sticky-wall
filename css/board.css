@@ -1531,6 +1531,10 @@ body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
 @media (max-width:800px){
   #brand{max-width:calc(100vw - 32px)}
 }
+/* Narrow windows keep the status pill clear of the Extras dock. */
+@media (max-width:980px){
+  #status .module-counts{display:none!important}
+}
 @media (max-width:700px){
   #brand{gap:9px;max-width:calc(100vw - 24px)}
   .brand-logo{height:calc(38px * var(--logo-scale,1))}
@@ -3116,6 +3120,26 @@ body.present-media .media-stage__item video{
   font-variant-numeric:tabular-nums;
 }
 .module-count.is-zero{opacity:.45}
+/* On the notes wall the status strip already reports notes and polls, so it
+   only adds the media and live counts while they have something to show. */
+#status .module-counts{flex:0 0 auto;justify-content:flex-start;gap:6px}
+#status .module-count{
+  padding:3px 7px;
+  border-color:rgba(255,242,224,.14);
+  background:rgba(255,244,230,.07);
+  color:rgba(255,244,230,.78);
+  font-size:9px;
+  letter-spacing:.1em;
+}
+#status .module-count__n{font-size:10px}
+body.show-dashboard #status .module-counts,
+body.show-race #status .module-counts,
+body.show-modules #status .module-counts,
+body.show-media #status .module-counts,
+body.show-polls #status .module-counts,
+body.show-stream #status .module-counts,
+body.split-mode #status .module-counts,
+body.present-notes #status .module-counts{display:none!important}
 
 /* ── module home ────────────────────────────────────────────── */
 .module-home{
