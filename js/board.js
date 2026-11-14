@@ -3571,9 +3571,9 @@
   /* Per-card defaults: reset just the settings that belong to that module,
      leaving the rest of the wall untouched. */
   const EXTRAS_DEFAULTS = {
-    notes: ["columns", "gap"],
+    notes: ["columns", "gap", "dashColor"],
     polls: ["chartType", "chartStyle"],
-    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "dashColor", "bgImage", "bgDim", "logo", "logoSize"],
+    look: ["brand", "qr", "qrX", "qrY", "status", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
@@ -3584,7 +3584,7 @@
     keys.forEach(key => { prefs[key] = PREF_DEFAULTS[key]; });
     savePrefs();
     applyPrefs(true);
-    if (module === "look") applyLook();
+    if (module === "look" || module === "notes") applyLook();
     if (module === "polls") renderPollChrome();
     if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
