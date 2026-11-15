@@ -720,6 +720,7 @@
     closeFocus();
     setExtrasOpen(false);
     renderDashboard();
+    renderModuleCounts();
     syncHiddenChrome();
     board.scrollTo({ top: 0, behavior: "auto" });
   }
@@ -816,6 +817,7 @@
   function renderPollChrome() {
     syncPollBadge();
     renderDashPolls();
+    renderModuleCounts();
     if (pollRoomOpenNow()) renderPollRoom();
     if (raceOpenNow()) refreshRaceLive();
   }
@@ -1670,6 +1672,7 @@
     if (raceTitle) raceTitle.textContent = poll.question;
     buildRaceStage();
     raceRenderFrame();
+    renderModuleCounts();
     startRace(true);
     racePlay?.focus({ preventScroll: true });
   }
