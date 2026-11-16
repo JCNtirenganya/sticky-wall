@@ -13,7 +13,7 @@
 <title data-i18n="Sticky note">Sticky note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261114d"><link rel="stylesheet" href="css/mobile.css?v=20261114d"><link rel="stylesheet" href="css/charts.css?v=20261114d">
+<link rel="stylesheet" href="css/paper.css?v=20261116a"><link rel="stylesheet" href="css/mobile.css?v=20261116a">
 <script>
 /* Apply the saved phone theme before the first paint. */
 try {
@@ -97,22 +97,6 @@ try {
             <small data-i18n="Share a photo or short video.">Share a photo or short video.</small>
           </span>
         </button>
-        <button id="home-poll" class="home-card home-card--poll" type="button">
-          <span class="home-card__icon" aria-hidden="true">▣</span>
-          <span class="home-card__go" aria-hidden="true">→</span>
-          <span class="home-card__copy">
-            <b data-i18n="Poll">Poll</b>
-            <small data-i18n="Answer live polls.">Answer live polls.</small>
-          </span>
-        </button>
-        <button id="home-stream" class="home-card home-card--stream" type="button">
-          <span class="home-card__icon" aria-hidden="true">📹</span>
-          <span class="home-card__go" aria-hidden="true">→</span>
-          <span class="home-card__copy">
-            <b data-i18n="Stream">Stream</b>
-            <small data-i18n="Go live from your camera.">Go live from your camera.</small>
-          </span>
-        </button>
       </div>
 
       <button id="home-who" class="home-who" type="button"></button>
@@ -170,11 +154,11 @@ try {
 
   <!-- 5 · share a photo or short video -->
   <section id="s-media" class="screen media-screen hidden">
-    <header class="poll-head">
+    <header class="phone-head">
       <button id="media-back" class="back" aria-label="Back to modules" data-i18n-aria="Back to modules">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
       </button>
-      <div class="poll-head__copy">
+      <div class="phone-head__copy">
         <p class="eyebrow" data-i18n="Event media">Event media</p>
         <h1 data-i18n="Share a moment">Share a moment</h1>
       </div>
@@ -198,7 +182,7 @@ try {
               <span class="media-cap__icon" aria-hidden="true">🎥</span>
               <span class="media-cap__copy">
                 <b data-i18n="Record a video">Record a video</b>
-                <small data-i18n="Up to 30 seconds">Up to 30 seconds</small>
+                <small data-i18n="Up to 15 seconds">Up to 15 seconds</small>
               </span>
             </button>
           </div>
@@ -213,7 +197,7 @@ try {
           <p class="media-effects" data-i18n="Use your camera app's filters, effects or AI editing, then capture or pick the result here.">Use your camera app's filters, effects or AI editing, then capture or pick the result here.</p>
         </div>
         <div id="media-preview" class="media-preview" hidden></div>
-        <button id="media-send" class="poll-submit media-send" type="button" disabled data-i18n="Send to the big screen">Send to the big screen</button>
+        <button id="media-send" class="phone-submit media-send" type="button" disabled data-i18n="Send to the big screen">Send to the big screen</button>
         <p id="media-note" class="media-note" hidden></p>
       </article>
     </div>
@@ -221,11 +205,11 @@ try {
 
   <!-- 6 · go live from the phone camera -->
   <section id="s-live" class="screen media-screen live-screen hidden">
-    <header class="poll-head">
+    <header class="phone-head">
       <button id="live-back" class="back" aria-label="Back to modules" data-i18n-aria="Back to modules">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
       </button>
-      <div class="poll-head__copy">
+      <div class="phone-head__copy">
         <p class="eyebrow" data-i18n="Live from your phone">Live from your phone</p>
         <h1 data-i18n="Go live">Go live</h1>
       </div>
@@ -245,7 +229,7 @@ try {
         <p id="live-status" class="live-status" role="status" data-i18n="Camera off">Camera off</p>
         <p class="live-request-note" data-i18n="The presenter must allow your camera before it opens.">The presenter must allow your camera before it opens.</p>
         <div class="live-actions">
-          <button id="live-start" class="poll-submit live-start" type="button" data-i18n="Start live">Start live</button>
+          <button id="live-start" class="phone-submit live-start" type="button" data-i18n="Start live">Start live</button>
           <button id="live-stop" class="live-stop" type="button" hidden data-i18n="Stop live">Stop live</button>
         </div>
         <div id="live-tools" class="live-tools" hidden>
@@ -259,46 +243,6 @@ try {
             <small data-i18n="Works when a network blocks live video">Works when a network blocks live video</small>
           </span>
         </button>
-      </article>
-    </div>
-  </section>
-
-  <!-- 7 · live polls list -->
-  <section id="s-polls" class="screen poll-screen hidden">
-    <header class="poll-head">
-      <button id="poll-list-back" class="back" aria-label="Back to modules" data-i18n-aria="Back to modules">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-      </button>
-      <div class="poll-head__copy">
-        <p class="eyebrow" data-i18n="Live polls">Live polls</p>
-        <h1 data-i18n="Have your say">Have your say</h1>
-      </div>
-    </header>
-    <div class="poll-list-wrap">
-      <div id="poll-list" class="poll-list" aria-label="Open polls" data-i18n-aria="Open polls"></div>
-      <p id="poll-list-empty" class="poll-list-empty" hidden data-i18n="No polls yet. The presenter will open one soon.">No polls yet. The presenter will open one soon.</p>
-    </div>
-  </section>
-
-  <!-- 8 · answer one poll -->
-  <section id="s-poll" class="screen poll-screen poll-vote hidden">
-    <header class="poll-head poll-head--vote">
-      <button id="poll-back" class="back" aria-label="Back to polls" data-i18n-aria="Back to polls">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-      </button>
-      <span class="cat-pill poll-cat-pill"><span class="dot"></span><span id="poll-cat-label">Feedback</span></span>
-      <span id="poll-status" class="poll-status">Open</span>
-    </header>
-    <div class="poll-scroll">
-      <article class="poll-paper">
-        <h1 id="poll-question"></h1>
-        <p id="poll-desc" class="poll-desc"></p>
-        <p id="poll-meta" class="poll-meta"></p>
-        <div id="poll-answer" class="poll-answer"></div>
-        <div id="poll-your" class="poll-your" hidden></div>
-        <button id="poll-submit" class="poll-submit" type="button">Send answer</button>
-        <div id="poll-results" class="poll-results"></div>
-        <p id="poll-note" class="poll-note" hidden></p>
       </article>
     </div>
   </section>
@@ -322,8 +266,8 @@ try {
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261114d"></script><script src="js/i18n.js?v=20261114d"></script><script src="js/polls.js?v=20261114d"></script><script src="js/store.js?v=20261114d"></script><script src="js/shared.js?v=20261114d"></script><script src="js/charts.js?v=20261114d"></script>
-<script src="js/live.js?v=20261114d"></script>
-<script src="js/mobile.js?v=20261114d"></script>
+<script src="js/config.js?v=20261116a"></script><script src="js/i18n.js?v=20261116a"></script><script src="js/store.js?v=20261116a"></script><script src="js/shared.js?v=20261116a"></script>
+<script src="js/live.js?v=20261116a"></script>
+<script src="js/mobile.js?v=20261116a"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

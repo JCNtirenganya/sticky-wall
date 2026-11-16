@@ -1,13 +1,10 @@
-/* Wall exports for the presenter board.
+/* Notes-only image export for the presenter board.
 
    window.StickyExport.downloadJPEG(payload)
      Draws only the notes view — wall background + notes, no UI — on a
      high-resolution canvas and saves it as a .jpg.
 
-   window.StickyExport.downloadPDF(payload)
-     Fills the print-only #print-sheet with every note in natural arrival
-     order (oldest first), the event title and the event logo, then opens
-     the browser print dialog. "Save as PDF" produces the summary.
+   The highlights report lives in js/highlights.js.
 
    payload = {
      notes: [{ id, author|name, text, category, created_at }],
@@ -315,90 +312,6 @@
     }
   }
 
-  /* ── print sheet: PDF ─────────────────────────────────────── */
-  function element(tag, cls, text) {
-    const node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text != null) node.textContent = text;
-    return node;
-  }
-
-  function buildPrintSheet(payload) {
-    const sheet = $("print-sheet");
-    if (!sheet) return 0;
-    const notes = sortedNotes(payload?.notes);
-    const brand = payload?.brand || {};
-    sheet.replaceChildren();
-
-    const head = element("header", "print-head");
-    if (brand.logo) {
-      const logo = document.createElement("img");
-      logo.className = "print-logo";
-      logo.src = brand.logo;
-      logo.alt = "";
-      head.appendChild(logo);
-    }
-    const copy = element("div", "print-copy");
-    copy.appendChild(element("p", "print-kicker", t("Wall summary")));
-    copy.appendChild(element("h1", "print-title", clean(brand.title) || t("Sticky Wall")));
-    if (clean(brand.subtitle)) copy.appendChild(element("p", "print-sub", clean(brand.subtitle)));
-    head.appendChild(copy);
-
-    const meta = element("div", "print-meta");
-    meta.appendChild(element("b", null, notes.length === 1 ? t("1 note") : t("{n} notes", { n: notes.length })));
-    meta.appendChild(element("span", null, new Date().toLocaleDateString()));
-    head.appendChild(meta);
-    sheet.appendChild(head);
-
-    sheet.appendChild(element("p", "print-section-title", t("All notes in arrival order")));
-
-    if (!notes.length) {
-      sheet.appendChild(element("p", "print-empty", t("No notes to show.")));
-      return 0;
-    }
-
-    const grid = element("div", "print-grid");
-    notes.forEach((note, i) => {
-      const cat = catFor(payload, note.category);
-      const card = element("article", "print-note");
-      card.style.setProperty("--pc", cat.color || "#f0d88c");
-      card.style.setProperty("--tint", typeof mixColor === "function"
-        ? mixColor(cat.color || "#f0d88c", "#FFFFFF", .74)
-        : "#fff8dc");
-
-      const top = element("div", "print-note__top");
-      top.appendChild(element("span", "print-note__cat", t(cat.label || cat.key)));
-      top.appendChild(element("span", "print-note__index", String(i + 1)));
-      card.appendChild(top);
-      card.appendChild(element("p", "print-note__text", clean(typeof notePlainText === "function" ? notePlainText(note.text) : note.text)));
-      const author = String(note.author || note.name || "").trim();
-      if (author) card.appendChild(element("p", "print-note__author", "— " + author));
-      grid.appendChild(card);
-    });
-    sheet.appendChild(grid);
-    return notes.length;
-  }
-
-  async function downloadPDF(payload) {
-    if (!payload?.notes?.length) {
-      notify(t("Nothing to export yet"));
-      return false;
-    }
-    notify(t("Preparing PDF…"));
-    try {
-      if (document.fonts?.ready) await document.fonts.ready;
-      buildPrintSheet(payload);
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      notify(t("Save as PDF in the print dialog"));
-      window.print();
-      return true;
-    } catch (err) {
-      console.error("Could not prepare the PDF", err);
-      notify(t("Could not save the image"));
-      return false;
-    }
-  }
-
   function notify(message) {
     const el = $("status-text");
     if (!el) return;
@@ -410,5 +323,5 @@
     }, 2200);
   }
 
-  window.StickyExport = { downloadJPEG, downloadPDF };
+  window.StickyExport = { downloadJPEG };
 })();

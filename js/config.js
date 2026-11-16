@@ -18,6 +18,11 @@ window.STICKY_CONFIG = {
   // the mobile page sitting next to the board (index.html).
   MOBILE_URL: "",
 
+  // Optional: Supabase Edge Function that writes the highlights report with an
+  // AI model. Leave empty to use the built-in local extractor, which needs no key.
+  // Example: "https://<project>.supabase.co/functions/v1/highlights"
+  HIGHLIGHTS_URL: "",
+
   MAX_CHARS: 200,
   MIN_SECONDS_BETWEEN_NOTES: 6,
 

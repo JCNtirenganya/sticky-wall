@@ -175,6 +175,27 @@
   text-shadow: .2px .4px 0 color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
+/* the day and time a note arrived, quiet under the signature */
+.note-date{
+  position: relative;
+  z-index: 1;
+  flex: none;
+  margin-top: calc(var(--s) * .012);
+  padding-right: calc(var(--fold) * .55);
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: calc(var(--s) * .046);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: .06em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  opacity: .34;
+}
+
 .note:focus-visible{outline:none}
 .note:focus-visible .paper{
   outline:3px solid #ffe9b8;

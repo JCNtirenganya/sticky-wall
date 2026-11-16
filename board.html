@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261114d"><link rel="stylesheet" href="css/postit.css?v=20261114d"><link rel="stylesheet" href="css/board.css?v=20261114d"><link rel="stylesheet" href="css/piles.css?v=20261114d"><link rel="stylesheet" href="css/qr.css?v=20261114d"><link rel="stylesheet" href="css/charts.css?v=20261114d">
+<link rel="stylesheet" href="css/paper.css?v=20261116a"><link rel="stylesheet" href="css/postit.css?v=20261116a"><link rel="stylesheet" href="css/board.css?v=20261116a"><link rel="stylesheet" href="css/piles.css?v=20261116a"><link rel="stylesheet" href="css/qr.css?v=20261116a">
 </head>
 <body>
 <main id="board">
@@ -26,33 +26,26 @@
       <div class="empty-hints">
         <span class="empty-hint"><kbd>E</kbd> <span data-i18n="name this wall">name this wall</span></span>
         <span class="empty-hint"><kbd>C</kbd> <span data-i18n="edit categories">edit categories</span></span>
-        <span class="empty-hint"><kbd>P</kbd> <span data-i18n="poll room">poll room</span></span>
       </div>
     </div>
     <section class="dash-card" id="dash-card" aria-label="Presenter dashboard" data-i18n-aria="Presenter dashboard" hidden>
       <h1 id="dash-title">You received 0 notes.</h1>
       <div class="dash-cats" id="dash-cats"></div>
-      <div id="dash-polls" class="dash-polls" hidden>
-        <div class="dash-polls-head">
-          <span data-i18n="Live polls">Live polls</span>
-          <button id="dash-poll-new" type="button" data-i18n="+ New poll">+ New poll</button>
-        </div>
-        <div id="dash-poll-list" class="dash-poll-list"></div>
-      </div>
       <div class="dash-actions">
         <button id="dash-back" class="dash-btn" type="button" data-i18n="Back to the wall">Back to the wall</button>
         <button id="dash-reset" class="dash-btn dash-btn--quiet" type="button" data-i18n="Reset view">Reset view</button>
         <button id="dash-restore" class="dash-btn dash-btn--quiet" type="button" data-i18n="Restore hidden" hidden>Restore hidden</button>
-        <button id="dash-download-pdf" class="dash-btn dash-btn--quiet" type="button" data-i18n="Wall summary PDF">Wall summary PDF</button>
+        <button id="dash-highlights" class="dash-btn dash-btn--quiet" type="button" data-i18n="Highlights report">Highlights report</button>
         <button id="dash-download-jpeg" class="dash-btn dash-btn--quiet" type="button" data-i18n="Notes image JPEG">Notes image JPEG</button>
         <button id="dash-clear" class="dash-btn dash-btn--danger" type="button" data-i18n="Clear wall">Clear wall</button>
         <div class="lang-switch" data-lang-switch></div>
       </div>
+      <div id="dash-days" class="day-rail day-rail--paper" hidden></div>
       <div class="dash-list-head"><span data-i18n="Notes">Notes</span><span id="dash-count"></span></div>
       <ul id="dash-notes" class="dash-notes"></ul>
       <p class="dash-foot"><kbd>D</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="returns to the wall · hidden notes stay here until restored">returns to the wall · hidden notes stay here until restored</span></p>
+      <div class="module-counts dash-counts" data-module-counts data-counts-skip="notes"></div>
     </section>
-    <div class="module-counts dash-counts" data-module-counts data-counts-skip="notes"></div>
   </div>
   <div id="sheet"></div>
   <div id="piles" aria-label="Notes grouped by category" data-i18n-aria="Notes grouped by category" hidden></div>
@@ -72,7 +65,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
   </button>
 </header>
-<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><button id="status-polls" type="button" title="Open the poll room (P)" data-i18n-title="Open the poll room (P)"><span class="status-polls__icon" aria-hidden="true">▣</span><span id="status-poll-count">0 polls</span></button><span class="module-counts module-counts--status" data-module-counts data-counts-skip="notes poll"></span><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-polls__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button><button id="status-modules" type="button" title="Choose a module (0)" data-i18n-title="Choose a module (0)"><span class="status-polls__icon" aria-hidden="true">▦</span><span data-i18n="Modules">Modules</span></button></div>
+<div id="status"><span class="status-notes"><span class="dot"></span><span id="status-text">0 notes</span><span class="sep">·</span></span><span class="module-counts module-counts--status" data-module-counts data-counts-skip="notes"></span><button id="status-live-requests" type="button" title="Review live requests" data-i18n-title="Review live requests" hidden><span class="status-live__icon" aria-hidden="true">●</span><span id="status-live-count">0</span></button></div>
 <aside id="live-request-alert" class="live-request-alert" role="status" aria-live="assertive" hidden>
   <span class="live-request-alert__pulse" aria-hidden="true"></span>
   <span class="live-request-alert__copy">
@@ -104,22 +97,15 @@
         <b data-i18n="Media">Media</b>
         <small data-i18n="Photos and short videos from phones.">Photos and short videos from phones.</small>
       </button>
-      <button type="button" class="module-card module-card--poll" data-module="poll">
-        <kbd>3</kbd>
-        <span class="module-card__icon" aria-hidden="true">▣</span>
-        <b data-i18n="Poll">Poll</b>
-        <small data-i18n="Live questions and results.">Live questions and results.</small>
-      </button>
       <button type="button" class="module-card module-card--stream" data-module="stream">
-        <kbd>4</kbd>
+        <kbd>3</kbd>
         <span class="module-card__icon" aria-hidden="true">📹</span>
         <b data-i18n="Stream">Stream</b>
         <small data-i18n="Approved phone cameras, live.">Approved phone cameras, live.</small>
       </button>
     </div>
     <footer class="module-home__foot">
-      <span><kbd>1</kbd>–<kbd>4</kbd> <span data-i18n="pick a module">pick a module</span></span>
-      <span><kbd>0</kbd> <span data-i18n="opens this window">opens this window</span></span>
+      <span><kbd>1</kbd>–<kbd>3</kbd> <span data-i18n="pick a module">pick a module</span></span>
       <button id="module-fullscreen" class="module-home__fullscreen" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
         <span data-i18n="Full screen">Full screen</span>
@@ -133,16 +119,15 @@
   <div class="split-stage__bar">
     <span id="split-label" class="split-stage__label"></span>
     <div class="split-stage__actions">
-      <button id="split-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
-      <button id="split-home" class="poll-btn" type="button"><span data-i18n="Modules">Modules</span> <kbd>0</kbd></button>
-      <button id="split-exit" class="poll-btn" type="button"><span data-i18n="Exit split">Exit split</span> <kbd>Esc</kbd></button>
+      <button id="split-controls" class="wall-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Settings">Settings</span> <kbd>H</kbd></button>
+      <button id="split-exit" class="wall-btn" type="button"><span data-i18n="Exit split">Exit split</span> <kbd>Esc</kbd></button>
     </div>
   </div>
   <div id="split-panes" class="split-panes"></div>
 </div>
 
 <!-- presenter extras: washed-out dock, appears on pointer movement -->
-<div id="extras" aria-label="Board extras" data-i18n-aria="Board extras">
+<div id="extras" aria-label="Board settings" data-i18n-aria="Board settings">
   <div id="extras-panel" class="extras-panel" role="dialog" aria-label="Presenter controls" data-i18n-aria="Presenter controls">
     <header class="extras-head">
       <div>
@@ -159,7 +144,7 @@
           <h3 data-i18n="Modules">Modules</h3>
         </header>
         <div class="extras-grid">
-          <button id="extras-home" class="extras-btn" type="button"><span data-i18n="Module home">Module home</span> <kbd>0</kbd></button>
+          <button id="extras-home" class="extras-btn" type="button" data-i18n="Module home">Module home</button>
           <button id="extras-split" class="extras-btn" type="button" data-i18n="Split screen…">Split screen…</button>
         </div>
         <p class="extras-note" data-i18n="Choose what fills the screen, or show two or more modules side by side.">Choose what fills the screen, or show two or more modules side by side.</p>
@@ -315,36 +300,6 @@
         </details>
       </section>
 
-      <section class="extras-card extras-card--poll">
-        <header class="extras-card__head">
-          <h3 data-i18n="Polls">Polls</h3>
-          <button id="extras-defaults-polls" class="extras-mini" type="button" data-i18n="Defaults">Defaults</button>
-        </header>
-        <div class="extras-grid">
-          <button id="extras-poll-room" class="extras-btn" type="button"><span data-i18n="Poll room">Poll room</span> <kbd>P</kbd></button>
-          <button id="extras-poll-new" class="extras-btn" type="button"><span data-i18n="New poll">New poll</span> <kbd>N</kbd></button>
-          <button id="extras-poll-present" class="extras-btn" type="button"><span data-i18n="Present results">Present results</span> <kbd>F</kbd></button>
-          <button id="extras-poll-present-one" class="extras-btn" type="button"><span data-i18n="Present one by one">Present one by one</span> <kbd>O</kbd></button>
-          <button id="extras-poll-present-manual" class="extras-btn" type="button" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-        </div>
-        <details class="extras-advanced">
-          <summary data-i18n="Charts">Charts</summary>
-          <p class="extras-note"><span data-i18n="Chart type">Chart type</span> <kbd>G</kbd> · <span data-i18n="Chart style">Chart style</span> <kbd>Shift</kbd>+<kbd>G</kbd></p>
-          <div class="chart-picks" role="group" aria-label="Chart type" data-i18n-aria="Chart type">
-            <button type="button" data-chart-type="auto" data-i18n="Auto">Auto</button>
-            <button type="button" data-chart-type="bars" data-i18n="Bars">Bars</button>
-            <button type="button" data-chart-type="columns" data-i18n="Columns">Columns</button>
-            <button type="button" data-chart-type="donut" data-i18n="Donut">Donut</button>
-            <button type="button" data-chart-type="line" data-i18n="Trend">Trend</button>
-            <button type="button" data-chart-type="cloud" data-i18n="Word cloud">Word cloud</button>
-          </div>
-          <div class="chart-picks chart-picks--style" role="group" aria-label="Chart style" data-i18n-aria="Chart style">
-            <button type="button" data-chart-style="hand" data-i18n="Hand-drawn">Hand-drawn</button>
-            <button type="button" data-chart-style="clean" data-i18n="Standard">Standard</button>
-          </div>
-        </details>
-      </section>
-
       <section class="extras-card extras-card--stream">
         <header class="extras-card__head">
           <h3 data-i18n="Live stream">Live stream</h3>
@@ -386,12 +341,11 @@
         </header>
         <div class="extras-grid">
           <button id="extras-share-wall" class="extras-btn" type="button"><span data-i18n="Live wall link">Live wall link</span></button>
-          <button id="extras-share-polls" class="extras-btn" type="button"><span data-i18n="Poll results link">Poll results link</span></button>
         </div>
         <p class="extras-note" data-i18n="Copy a read-only link or iframe. It updates live and needs no login.">Copy a read-only link or iframe. It updates live and needs no login.</p>
         <p class="extras-kicker" data-i18n="Data">Data</p>
         <div class="extras-grid">
-          <button id="extras-download-pdf" class="extras-btn" type="button"><span data-i18n="Wall summary PDF">Wall summary PDF</span></button>
+          <button id="extras-highlights" class="extras-btn" type="button"><span data-i18n="Highlights report">Highlights report</span></button>
           <button id="extras-download-jpeg" class="extras-btn" type="button"><span data-i18n="Notes image JPEG">Notes image JPEG</span></button>
         </div>
         <div class="extras-lang">
@@ -407,7 +361,7 @@
         <div class="extras-grid extras-grid--single">
           <button id="extras-reset-submissions" class="extras-btn extras-btn--danger" type="button" data-i18n="Clear all submissions">Clear all submissions</button>
         </div>
-        <p class="extras-note" data-i18n="Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.">Deletes every note, poll, vote, and media file for everyone. Needs the presenter passphrase.</p>
+        <p class="extras-note" data-i18n="Deletes every note and media file for everyone. Needs the presenter passphrase.">Deletes every note and media file for everyone. Needs the presenter passphrase.</p>
       </section>
 
     </div>
@@ -419,7 +373,7 @@
     </button>
     <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
-      <span data-i18n="Extras">Extras</span>
+      <span data-i18n="Settings">Settings</span>
     </button>
   </div>
 </div>
@@ -428,54 +382,26 @@
 <aside id="qr-card" aria-label="Scan to take part" data-i18n-aria="Scan to take part">
   <span class="qr-grip" aria-hidden="true"></span>
   <div id="qr-code" class="qr-code"></div>
-  <p class="qr-caption" data-i18n="Scan to take part">Scan to take part</p>
+  <p class="qr-caption">Sikana winjire</p>
 </aside>
-
-<!-- presenter: live poll room -->
-<section id="poll-room" class="poll-room" aria-label="Poll room" data-i18n-aria="Poll room" aria-hidden="true">
-  <div class="poll-room__shell">
-    <header class="poll-room__head">
-      <div class="poll-room__actions">
-        <button id="poll-new" class="poll-btn poll-btn--primary" type="button"><span data-i18n="+ New poll">+ New poll</span> <kbd>N</kbd></button>
-        <button id="poll-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
-        <button id="poll-present" class="poll-btn" type="button" aria-pressed="false" title="Present the results full screen (F)" data-i18n-title="Present the results full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
-        <button id="poll-present-one" class="poll-btn" type="button" aria-pressed="false" title="Present the results one by one (O)" data-i18n-title="Present the results one by one (O)"><span data-i18n="One by one">One by one</span> <kbd>O</kbd></button>
-        <button id="poll-present-manual" class="poll-btn" type="button" aria-pressed="false" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-        <button id="poll-race-open" class="poll-btn" type="button"><span data-i18n="Chart race">Chart race</span> <kbd>R</kbd></button>
-        <button id="poll-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>P</kbd></button>
-      </div>
-      <div class="module-counts" data-module-counts></div>
-    </header>
-    <div id="poll-filters" class="poll-filters" aria-label="Filter polls" data-i18n-aria="Filter polls"></div>
-    <div id="poll-grid" class="poll-grid"></div>
-    <div id="poll-empty" class="poll-empty" hidden>
-      <p class="poll-empty__icon" aria-hidden="true">▣</p>
-      <h3 data-i18n="No polls yet">No polls yet</h3>
-      <div class="poll-empty__actions">
-        <button id="poll-empty-new" class="poll-btn poll-btn--primary" type="button" data-i18n="Create the first poll">Create the first poll</button>
-      </div>
-    </div>
-    <p class="poll-foot"><kbd>P</kbd> <span data-i18n="or">or</span> <kbd>Esc</kbd> <span data-i18n="closes">closes</span> · <kbd>N</kbd> <span data-i18n="creates a poll">creates a poll</span> · <kbd>F</kbd> <span data-i18n="presents full screen">presents full screen</span> · <kbd>O</kbd> <span data-i18n="One by one">One by one</span> · <kbd>M</kbd> <span data-i18n="Manual">Manual</span></p>
-  </div>
-</section>
 
 <!-- presenter: event media wall (phones upload, board shows) -->
 <section id="media-wall" class="media-wall" aria-label="Event media wall" data-i18n-aria="Event media wall" aria-hidden="true">
   <div class="media-wall__shell">
     <header class="media-wall__head">
       <div class="media-wall__actions">
-        <span class="race-live media-live">
-          <span class="race-live__dot" aria-hidden="true"></span>
-          <span data-i18n="Live">Live</span>
+        <span class="media-live" role="status" aria-label="Live" data-i18n-aria="Live">
+          <span class="media-live__dot" aria-hidden="true"></span>
         </span>
-        <button id="media-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
-        <button id="media-present" class="poll-btn" type="button" aria-pressed="false" title="Play media full screen (F)" data-i18n-title="Play media full screen (F)"><span data-i18n="Play full screen">Play full screen</span> <kbd>F</kbd></button>
-        <button id="media-present-manual" class="poll-btn" type="button" aria-pressed="false" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
-        <button id="media-hide-all" class="poll-btn" type="button" data-i18n="Hide all">Hide all</button>
-        <button id="media-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
+        <button id="media-controls" class="wall-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Settings">Settings</span> <kbd>H</kbd></button>
+        <button id="media-present" class="wall-btn" type="button" aria-pressed="false" title="Play media full screen (F)" data-i18n-title="Play media full screen (F)"><span data-i18n="Play full screen">Play full screen</span> <kbd>F</kbd></button>
+        <button id="media-present-manual" class="wall-btn" type="button" aria-pressed="false" title="Present without autoplay (M)" data-i18n-title="Present without autoplay (M)"><span data-i18n="Manual">Manual</span> <kbd>M</kbd></button>
+        <button id="media-hide-all" class="wall-btn" type="button" data-i18n="Hide all">Hide all</button>
+        <button id="media-close" class="wall-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
       </div>
       <div class="module-counts" data-module-counts></div>
     </header>
+    <div id="media-days" class="day-rail day-rail--wall" hidden></div>
     <div id="media-live-strip" class="media-live-strip" hidden>
       <div class="media-live-strip__head">
         <span class="media-live-strip__label"><span class="media-live-strip__dot" aria-hidden="true"></span><span data-i18n="Live from phones">Live from phones</span></span>
@@ -492,7 +418,7 @@
         <span id="media-stage-count" class="media-stage__count"></span>
         <span id="media-stage-auto" class="media-stage__auto" hidden data-i18n="Autoplay">Autoplay</span>
         <button id="media-stage-next" class="media-stage__nav" type="button" aria-label="Next" data-i18n-aria="Next">›</button>
-        <button id="media-stage-exit" class="poll-btn media-stage__exit" type="button"><span data-i18n="Exit full screen">Exit full screen</span> <kbd>Esc</kbd></button>
+        <button id="media-stage-exit" class="wall-btn media-stage__exit" type="button"><span data-i18n="Exit full screen">Exit full screen</span> <kbd>Esc</kbd></button>
       </div>
     </div>
   </div>
@@ -503,10 +429,10 @@
   <div class="stream-wall__shell">
     <header class="stream-wall__head">
       <div class="stream-wall__actions">
-        <button id="stream-requests" class="poll-btn" type="button" hidden><span data-i18n="Requests">Requests</span> <span id="stream-request-count" class="extras-badge">0</span></button>
-        <button id="stream-controls" class="poll-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Extras">Extras</span> <kbd>H</kbd></button>
-        <button id="stream-present" class="poll-btn" type="button" aria-pressed="false" title="Present the stream full screen (F)" data-i18n-title="Present the stream full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
-        <button id="stream-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
+        <button id="stream-requests" class="wall-btn" type="button" hidden><span data-i18n="Requests">Requests</span> <span id="stream-request-count" class="extras-badge">0</span></button>
+        <button id="stream-controls" class="wall-btn" type="button" aria-controls="extras-panel" aria-expanded="false"><span data-i18n="Settings">Settings</span> <kbd>H</kbd></button>
+        <button id="stream-present" class="wall-btn" type="button" aria-pressed="false" title="Present the stream full screen (F)" data-i18n-title="Present the stream full screen (F)"><span data-i18n="Present">Present</span> <kbd>F</kbd></button>
+        <button id="stream-close" class="wall-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
       </div>
       <div class="module-counts" data-module-counts></div>
     </header>
@@ -515,11 +441,11 @@
       <p class="stream-empty__icon" aria-hidden="true">📹</p>
       <h3 data-i18n="No live stream yet">No live stream yet</h3>
       <div class="stream-empty__actions">
-        <button id="stream-empty-requests" class="poll-btn" type="button" hidden data-i18n="Review requests">Review requests</button>
-        <button id="stream-empty-media" class="poll-btn" type="button" data-i18n="Open media wall">Open media wall</button>
+        <button id="stream-empty-requests" class="wall-btn" type="button" hidden data-i18n="Review requests">Review requests</button>
+        <button id="stream-empty-media" class="wall-btn" type="button" data-i18n="Open media wall">Open media wall</button>
       </div>
     </div>
-    <p class="stream-foot"><kbd>0</kbd> <span data-i18n="modules">modules</span> · <kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
+    <p class="stream-foot"><kbd>Esc</kbd> <span data-i18n="closes">closes</span></p>
   </div>
 </section>
 
@@ -531,88 +457,6 @@
   </div>
   <div id="live-float-grid" class="live-float__grid"></div>
 </div>
-
-<!-- presenter: live bar-chart race -->
-<section id="poll-race" class="poll-race" aria-label="Live chart race" data-i18n-aria="Live chart race" aria-hidden="true">
-  <div class="poll-race__shell">
-    <header class="poll-race__head">
-      <div class="poll-race__copy">
-        <h2 id="race-title"></h2>
-        <p id="race-sub" class="poll-race__sub"></p>
-      </div>
-      <div class="poll-race__actions">
-        <span id="race-live" class="race-live">
-          <span class="race-live__dot" aria-hidden="true"></span>
-          <span data-i18n="Live">Live</span>
-        </span>
-        <button id="race-close" class="poll-btn" type="button"><span data-i18n="Close">Close</span> <kbd>Esc</kbd></button>
-      </div>
-      <div class="module-counts race-counts" data-module-counts data-counts-skip="poll"></div>
-    </header>
-    <div id="race-stage" class="race-stage" aria-live="polite"></div>
-    <footer class="poll-race__foot">
-      <button id="race-play" class="poll-btn poll-btn--primary" type="button" data-playing="0">Pause</button>
-      <button id="race-replay" class="poll-btn" type="button" data-i18n="Replay">Replay</button>
-      <label class="race-progress-wrap">
-        <span class="race-progress-label" data-i18n="Race progress">Race progress</span>
-        <input id="race-progress" class="race-progress" type="range" min="0" max="100" step="1" value="0" aria-label="Race progress" data-i18n-aria="Race progress">
-      </label>
-      <span id="race-clock" class="race-clock">0:00</span>
-      <div class="race-speeds" role="group" aria-label="Playback speed" data-i18n-aria="Playback speed">
-        <button type="button" data-race-speed="0.5" class="race-speed">0.5×</button>
-        <button type="button" data-race-speed="1" class="race-speed act">1×</button>
-        <button type="button" data-race-speed="2" class="race-speed">2×</button>
-        <button type="button" data-race-speed="4" class="race-speed">4×</button>
-      </div>
-    </footer>
-  </div>
-</section>
-
-<!-- presenter: poll editor -->
-<dialog id="poll-dialog" class="event-dialog poll-dialog">
-  <form id="poll-form" method="dialog">
-    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
-    <h2 id="poll-dialog-title">New poll</h2>
-    <p class="event-lead" data-i18n="Only you can change the question, options and settings. Phones can only answer.">Only you can change the question, options and settings. Phones can only answer.</p>
-    <div class="poll-form-scroll">
-      <label for="poll-question" data-i18n="Question">Question</label>
-      <input id="poll-question" maxlength="160" autocomplete="off" placeholder="e.g. Which topic should we cover next?" data-i18n-placeholder="e.g. Which topic should we cover next?" required>
-      <label for="poll-description"><span data-i18n="Description">Description</span> <span data-i18n="optional">optional</span></label>
-      <textarea id="poll-description" maxlength="320" rows="2" placeholder="A little context for the room…" data-i18n-placeholder="A little context for the room…"></textarea>
-      <div class="poll-form-row">
-        <label for="poll-type"><span data-i18n="Type">Type</span>
-          <select id="poll-type"></select>
-        </label>
-        <label for="poll-category"><span data-i18n="Category">Category</span>
-          <input id="poll-category" maxlength="32" list="poll-category-list" autocomplete="off" placeholder="Feedback" data-i18n-placeholder="Feedback">
-          <datalist id="poll-category-list"></datalist>
-        </label>
-      </div>
-      <div id="poll-options-wrap" class="poll-options-wrap">
-        <span class="poll-field-label" data-i18n="Options">Options</span>
-        <div id="poll-options" class="poll-options"></div>
-        <button id="poll-add-option" class="poll-add-option" type="button" data-i18n="+ Add option">+ Add option</button>
-        <label id="poll-max-wrap" class="poll-max" for="poll-max">
-          <span><span data-i18n="Max choices">Max choices</span> <output id="poll-max-out">2</output></span>
-          <input id="poll-max" type="range" min="2" max="8" step="1" value="2">
-        </label>
-      </div>
-      <div class="poll-form-row">
-        <label for="poll-status"><span data-i18n="Status">Status</span>
-          <select id="poll-status"></select>
-        </label>
-        <label for="poll-results"><span data-i18n="Results on phones">Results on phones</span>
-          <select id="poll-results"></select>
-        </label>
-      </div>
-    </div>
-    <div class="event-actions">
-      <button id="poll-cancel" type="button" class="event-btn event-btn--quiet" data-i18n="Cancel">Cancel</button>
-      <span class="event-spacer"></span>
-      <button type="submit" class="event-btn" id="poll-save">Save poll</button>
-    </div>
-  </form>
-</dialog>
 
 <!-- presenter: name the wall -->
 <dialog id="event-dialog" class="event-dialog">
@@ -659,7 +503,6 @@
     <div id="split-options" class="split-options" role="group" aria-label="Modules" data-i18n-aria="Modules">
       <label class="split-option"><input type="checkbox" value="notes"><span class="split-option__icon" aria-hidden="true">📝</span><b data-i18n="Notes">Notes</b></label>
       <label class="split-option"><input type="checkbox" value="media"><span class="split-option__icon" aria-hidden="true">🖼️</span><b data-i18n="Media">Media</b></label>
-      <label class="split-option"><input type="checkbox" value="poll"><span class="split-option__icon" aria-hidden="true">▣</span><b data-i18n="Poll">Poll</b></label>
       <label class="split-option"><input type="checkbox" value="stream"><span class="split-option__icon" aria-hidden="true">📹</span><b data-i18n="Stream">Stream</b></label>
     </div>
     <p id="split-hint" class="split-hint" role="status"></p>
@@ -692,7 +535,7 @@
   <form id="reset-form" method="dialog">
     <p class="event-kicker" data-i18n="Presenter">Presenter</p>
     <h2 data-i18n="Clear all submissions?">Clear all submissions?</h2>
-    <p class="event-lead" data-i18n="This permanently deletes every note, poll, vote, and media file. It cannot be undone.">This permanently deletes every note, poll, vote, and media file. It cannot be undone.</p>
+    <p class="event-lead" data-i18n="This permanently deletes every note and media file. It cannot be undone.">This permanently deletes every note and media file. It cannot be undone.</p>
     <label for="reset-passphrase" data-i18n="Presenter passphrase">Presenter passphrase</label>
     <input id="reset-passphrase" type="password" autocomplete="current-password" required>
     <p id="reset-error" class="event-error" role="alert" hidden></p>
@@ -743,9 +586,29 @@
   </div>
 </div>
 
-<!-- print-only wall summary: filled by js/export.js, shown by the browser print dialog -->
+<!-- presenter: highlights report, written from every note on the wall -->
+<dialog id="highlights-dialog" class="event-dialog highlights-dialog" aria-labelledby="highlights-title">
+  <form method="dialog">
+    <div class="highlights-head">
+      <div>
+        <p class="event-kicker" data-i18n="Highlights">Highlights</p>
+        <h2 id="highlights-title" data-i18n="Highlights report">Highlights report</h2>
+      </div>
+      <span id="highlights-source" class="highlights-badge" hidden></span>
+    </div>
+    <p class="event-lead" data-i18n="Themes, quotes and participation drawn from every note on the wall.">Themes, quotes and participation drawn from every note on the wall.</p>
+    <div id="highlights-body" class="highlights-body" aria-live="polite"></div>
+    <div class="event-actions">
+      <button id="highlights-close" type="button" class="event-btn event-btn--quiet" data-i18n="Close">Close</button>
+      <span class="event-spacer"></span>
+      <button id="highlights-pdf" type="button" class="event-btn" data-i18n="Save as PDF">Save as PDF</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- print-only highlights report: filled by js/highlights.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261114d"></script><script src="js/i18n.js?v=20261114d"></script><script src="js/polls.js?v=20261114d"></script><script src="js/store.js?v=20261114d"></script><script src="js/shared.js?v=20261114d"></script><script src="js/charts.js?v=20261114d"></script><script src="js/qrcode.js?v=20261114d"></script><script src="js/export.js?v=20261114d"></script><script src="js/live.js?v=20261114d"></script><script src="js/board.js?v=20261114d"></script>
+<script src="js/config.js?v=20261116a"></script><script src="js/i18n.js?v=20261116a"></script><script src="js/store.js?v=20261116a"></script><script src="js/shared.js?v=20261116a"></script><script src="js/qrcode.js?v=20261116a"></script><script src="js/export.js?v=20261116a"></script><script src="js/highlights.js?v=20261116a"></script><script src="js/live.js?v=20261116a"></script><script src="js/board.js?v=20261116a"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

@@ -1,41 +1,30 @@
-/* Read-only live results page.
+/* Read-only live notes page.
    Query parameters:
-     module = notes | polls | poll      (default: notes)
-     id     = poll id when module=poll
-     lang   = en | rw | fr
+     module = notes                    (kept for old links)
+     lang   = en | fr
      theme  = dark | light              (default: dark)
-     style  = hand | clean              (default: hand)
-     type   = auto | bars | columns | donut | line | cloud  (default: auto)
      title  = optional heading override
-     limit  = max polls or notes to show (default: 24) */
+     limit  = max notes to show (default: 24) */
 (function () {
   const C = window.STICKY_CONFIG || {};
   const params = new URLSearchParams(location.search);
-  const module = (params.get("module") || "notes").toLowerCase();
-  const pollId = params.get("id") || "";
-  const style = params.get("style") === "clean" ? "clean" : "hand";
-  const type = ["auto", "bars", "columns", "donut", "line", "cloud"].includes(params.get("type"))
-    ? params.get("type") : "auto";
   const theme = params.get("theme") === "light" ? "light" : "dark";
   const limit = Math.max(1, Math.min(60, Number(params.get("limit")) || 24));
-  const title = params.get("title") || (module === "notes" ? (C.EVENT_TITLE || "Sticky Wall") : t("Live results"));
+  const title = params.get("title") || C.EVENT_TITLE || "Sticky Wall";
 
   const main = document.getElementById("embed-main");
   const titleEl = document.getElementById("embed-title");
   const kickerEl = document.getElementById("embed-kicker");
   const countEl = document.getElementById("embed-count");
   const footHint = document.getElementById("embed-foot-hint");
-  const statusEl = document.getElementById("embed-status");
 
   document.body.classList.add("embed--" + theme);
   titleEl.textContent = title;
-  kickerEl.textContent = t("Live results");
+  kickerEl.textContent = t("Live notes");
   footHint.textContent = t("Updates live");
-  document.title = title + " · " + t("Live results");
+  document.title = title + " · " + t("Live notes");
 
   let notes = [];
-  let polls = [];
-  let votes = [];
   let cats = [];
 
   const el = (tag, cls, text) => {
@@ -95,65 +84,6 @@
     setStatus(notes.length === 1 ? t("1 note") : t("{n} notes", { n: notes.length }));
   }
 
-  /* ── polls ─────────────────────────────────────────────────── */
-  function visiblePolls() {
-    let list = polls.filter(p => p.status !== "draft");
-    if (module === "poll" && pollId) list = list.filter(p => p.id === pollId);
-    return list.slice(0, limit);
-  }
-
-  function renderPolls() {
-    const list = visiblePolls();
-    if (!list.length) {
-      empty(t("Waiting for the first poll…"));
-      setStatus(t("0 polls"));
-      return;
-    }
-    const grid = el("div", "embed-polls");
-    let responses = 0;
-    list.forEach(poll => {
-      const stats = pollStats(poll, votes);
-      responses += stats.total;
-      const card = el("article", "embed-poll");
-      const head = el("header", "embed-poll__head");
-      const chip = el("span", "embed-poll__chip", t(poll.category || "Poll"));
-      chip.style.setProperty("--chip", pollCategoryColor(poll.category));
-      head.append(chip, el("span", "embed-poll__status", pollStatus(poll).label));
-      card.append(head, el("h2", "embed-poll__q", poll.question));
-      if (poll.description) card.append(el("p", "embed-poll__desc", poll.description));
-
-      const chartHost = el("div", "embed-poll__chart");
-      const chart = typeof pollChart === "function"
-        ? pollChart(poll, stats, { type, style })
-        : null;
-      if (chart) {
-        chartHost.append(chart);
-      } else if (poll.type === "text") {
-        const texts = el("div", "embed-texts");
-        (stats.texts || []).slice(0, 8).forEach(vote => {
-          const row = el("div", "embed-text", vote.text);
-          row.append(el("small", null, vote.author || t("Anonymous")));
-          texts.append(row);
-        });
-        if (!stats.texts || !stats.texts.length) texts.append(el("p", "embed-empty", t("No answers yet.")));
-        chartHost.append(texts);
-      } else {
-        chartHost.append(el("p", "embed-empty", t("No answers yet.")));
-      }
-      card.append(chartHost);
-      grid.append(card);
-    });
-    main.replaceChildren(grid);
-    const pollLabel = list.length === 1 ? t("1 poll") : t("{n} polls", { n: list.length });
-    const answerLabel = responses === 1 ? t("1 response") : t("{n} responses", { n: responses });
-    setStatus(pollLabel + " · " + answerLabel);
-  }
-
-  function render() {
-    if (module === "polls" || module === "poll") renderPolls();
-    else renderNotes();
-  }
-
   function upsert(list, item, key) {
     const i = list.findIndex(x => x[key] === item[key]);
     if (i >= 0) list[i] = item;
@@ -165,13 +95,7 @@
   async function loadNotes() {
     notes = await Store.list();
     notes.sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
-    render();
-  }
-
-  async function loadPolls() {
-    [polls, votes] = await Promise.all([Store.listPolls(), Store.listVotes()]);
-    polls.sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
-    render();
+    renderNotes();
   }
 
   async function start() {
@@ -182,47 +106,14 @@
       console.warn("Categories unavailable", err);
     }
 
-    if (module === "polls" || module === "poll") {
-      await loadPolls();
-      Store.subscribePolls({
-        onPoll(poll) {
-          if (!poll) return;
-          upsert(polls, poll, "id");
-          polls.sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
-          render();
-        },
-        onDelete(id) {
-          polls = polls.filter(p => p.id !== id);
-          votes = votes.filter(v => v.poll_id !== id);
-          render();
-        },
-        onVote(vote) {
-          if (!vote) return;
-          upsert(votes, vote, "id");
-          render();
-        },
-        onVoteDelete(vote) {
-          if (!vote) return;
-          votes = votes.filter(v => v.id !== vote.id &&
-            !(v.poll_id === vote.poll_id && v.voter_key === vote.voter_key));
-          render();
-        },
-        onResetVotes(id) {
-          votes = votes.filter(v => v.poll_id !== id);
-          render();
-        },
-        resync() { loadPolls().catch(err => console.warn(err)); }
-      });
-    } else {
-      await loadNotes();
-      Store.subscribe({
-        onAdd(note) { upsert(notes, note, "id"); render(); },
-        onRemove(id) { notes = notes.filter(n => n.id !== id); render(); },
-        onUpdate(note) { if (note) { upsert(notes, note, "id"); render(); } },
-        onReassign() { loadNotes().catch(err => console.warn(err)); },
-        resync() { loadNotes().catch(err => console.warn(err)); }
-      });
-    }
+    await loadNotes();
+    Store.subscribe({
+      onAdd(note) { upsert(notes, note, "id"); renderNotes(); },
+      onRemove(id) { notes = notes.filter(n => n.id !== id); renderNotes(); },
+      onUpdate(note) { if (note) { upsert(notes, note, "id"); renderNotes(); } },
+      onReassign() { loadNotes().catch(err => console.warn(err)); },
+      resync() { loadNotes().catch(err => console.warn(err)); }
+    });
   }
 
   start().catch(err => {

@@ -9,15 +9,6 @@
      Store.subscribeCategories(cb) → unsubscribe
      Store.reassign(fromKeys, toKey) → Promise<number>
 
-     Store.listPolls() → Promise<poll[]>
-     Store.savePoll(poll) → Promise<poll>
-     Store.deletePoll(id) → Promise<void>
-     Store.listVotes(pollId?) → Promise<vote[]>
-     Store.submitVote(vote) → Promise<vote>
-     Store.submitVotes(votes) → Promise<vote[]>
-     Store.resetVotes(pollId) → Promise<void>
-     Store.subscribePolls({onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync})
-
      Store.listMedia() → Promise<media[]>
      Store.addMedia({file, author, kind, width, height, onProgress}) → Promise<media>
      Store.hideMedia(id) → Promise<void>
@@ -35,54 +26,6 @@
     key: c.key, label: c.label, short: c.short, action: c.action,
     emoji: c.emoji, hint: c.hint, color: c.color
   }));
-  const normPoll = r => ({
-    id: r.id,
-    created_at: r.created_at,
-    updated_at: r.updated_at,
-    question: r.question,
-    description: r.description || "",
-    type: r.type,
-    category: r.category || "Feedback",
-    options: Array.isArray(r.options) ? r.options : [],
-    maxChoices: r.max_choices ?? 1,
-    status: r.status || "draft",
-    results: r.results || "after",
-    position: r.position ?? 0
-  });
-  const normVote = r => ({
-    id: r.id,
-    poll_id: r.poll_id,
-    voter_key: r.voter_key,
-    author: r.author_name || "",
-    choice_ids: Array.isArray(r.choice_ids) ? r.choice_ids : [],
-    rating: r.rating,
-    text: r.text || "",
-    created_at: r.created_at,
-    updated_at: r.updated_at
-  });
-  const pollRow = p => ({
-    id: p.id,
-    question: p.question,
-    description: p.description || "",
-    type: p.type,
-    category: p.category,
-    options: p.options,
-    max_choices: p.maxChoices,
-    status: p.status,
-    results: p.results,
-    position: p.position || 0,
-    updated_at: new Date().toISOString()
-  });
-  const voteRow = v => ({
-    poll_id: v.poll_id,
-    voter_key: v.voter_key,
-    author_name: v.author || "",
-    choice_ids: v.choice_ids || [],
-    rating: v.rating || null,
-    text: v.text || "",
-    updated_at: new Date().toISOString()
-  });
-
   if (live) {
     const sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
 
@@ -243,66 +186,6 @@
           .subscribe();
         return () => sb.removeChannel(channel);
       },
-      async listPolls() {
-        const { data, error } = await sb.from("polls").select("*")
-          .order("position", { ascending: true }).order("created_at", { ascending: true }).limit(200);
-        if (error) throw error;
-        return (data || []).map(normPoll);
-      },
-      async savePoll(poll) {
-        const { data, error } = await sb.from("polls").upsert(pollRow(poll), { onConflict: "id" }).select().single();
-        if (error) throw error;
-        return normPoll(data);
-      },
-      async deletePoll(id) {
-        const { error: voteError } = await sb.from("poll_votes").delete().eq("poll_id", id);
-        if (voteError) throw voteError;
-        const { error } = await sb.from("polls").delete().eq("id", id);
-        if (error) throw error;
-      },
-      async listVotes(pollId) {
-        let query = sb.from("poll_votes").select("*");
-        if (pollId) query = query.eq("poll_id", pollId);
-        const { data, error } = await query.order("updated_at", { ascending: true }).limit(5000);
-        if (error) throw error;
-        return (data || []).map(normVote);
-      },
-      async submitVote(vote) {
-        const { data, error } = await sb.from("poll_votes")
-          .upsert(voteRow(vote), { onConflict: "poll_id,voter_key" })
-          .select().single();
-        if (error) throw error;
-        return normVote(data);
-      },
-      async submitVotes(votes) {
-        if (!votes || !votes.length) return [];
-        const { data, error } = await sb.from("poll_votes")
-          .upsert(votes.map(voteRow), { onConflict: "poll_id,voter_key" })
-          .select();
-        if (error) throw error;
-        return (data || []).map(normVote);
-      },
-      async resetVotes(pollId) {
-        const { error } = await sb.from("poll_votes").delete().eq("poll_id", pollId);
-        if (error) throw error;
-      },
-      subscribePolls({ onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync } = {}) {
-        sb.channel("polls-feed")
-          .on("postgres_changes", { event: "*", schema: "public", table: "polls" }, p => {
-            if (p.eventType === "DELETE") onDelete?.(p.old.id);
-            else onPoll?.(normPoll(p.new));
-          })
-          .on("postgres_changes", { event: "*", schema: "public", table: "poll_votes" }, p => {
-            if (p.eventType === "DELETE") {
-              if (onVoteDelete) onVoteDelete(normVote(p.old));
-              else onResetVotes?.(p.old.poll_id);
-            } else {
-              onVote?.(normVote(p.new));
-            }
-          })
-          .subscribe();
-        if (resync) setInterval(resync, 20000);
-      },
       async listMedia() {
         const { data, error } = await sb.from("event_media").select("*")
           .eq("hidden", false).order("created_at", { ascending: true }).limit(500);
@@ -373,7 +256,6 @@
     };
   } else {
     const NOTE_KEY = "sticky_demo_notes", CAT_KEY = "sticky_categories";
-    const POLL_KEY = "sticky_demo_polls", VOTE_KEY = "sticky_demo_votes";
     const MEDIA_KEY = "sticky_demo_media";
     const bc = "BroadcastChannel" in window ? new BroadcastChannel("sticky_demo") : null;
     const readNotes = () => { try { return JSON.parse(localStorage.getItem(NOTE_KEY) || "[]"); } catch { return []; } };
@@ -385,24 +267,6 @@
         const value = JSON.parse(localStorage.getItem(CAT_KEY) || "null");
         return Array.isArray(value) && value.length ? value : null;
       } catch { return null; }
-    };
-    const readPolls = () => {
-      try {
-        const value = JSON.parse(localStorage.getItem(POLL_KEY) || "[]");
-        return Array.isArray(value) ? value : [];
-      } catch { return []; }
-    };
-    const writePolls = list => {
-      try { localStorage.setItem(POLL_KEY, JSON.stringify(list)); } catch {}
-    };
-    const readVotes = () => {
-      try {
-        const value = JSON.parse(localStorage.getItem(VOTE_KEY) || "[]");
-        return Array.isArray(value) ? value : [];
-      } catch { return []; }
-    };
-    const writeVotes = list => {
-      try { localStorage.setItem(VOTE_KEY, JSON.stringify(list)); } catch {}
     };
     const readMedia = () => {
       try {
@@ -419,7 +283,6 @@
       categoryHandlers.forEach(cb => { try { cb(categories); } catch (err) { console.error(err); } });
     };
     let noteHandlers = null;
-    let pollHandlers = null;
     let mediaHandlers = null;
 
     function emitAdd(note) {
@@ -431,21 +294,6 @@
     }
     function emitReassign(from, to) {
       noteHandlers?.onReassign?.(from, to);
-    }
-    function emitPoll(poll) {
-      pollHandlers?.onPoll?.(poll);
-    }
-    function emitPollDelete(id) {
-      pollHandlers?.onDelete?.(id);
-    }
-    function emitVote(vote) {
-      pollHandlers?.onVote?.(vote);
-    }
-    function emitVoteDelete(vote) {
-      pollHandlers?.onVoteDelete?.(vote);
-    }
-    function emitResetVotes(pollId) {
-      pollHandlers?.onResetVotes?.(pollId);
     }
     function emitMedia(media) {
       mediaHandlers?.onAdd?.(media);
@@ -461,14 +309,8 @@
       else if (m.type === "reassign") emitReassign(m.from, m.to);
       else if (m.type === "categories") notifyCategories(m.categories);
       else if (m.type === "resync") noteHandlers?.resync?.();
-      else if (m.type === "poll-save" && m.poll) emitPoll(m.poll);
-      else if (m.type === "poll-delete") emitPollDelete(m.id);
-      else if (m.type === "vote-save" && m.vote) emitVote(m.vote);
-      else if (m.type === "vote-delete" && m.vote) emitVoteDelete(m.vote);
-      else if (m.type === "votes-reset") emitResetVotes(m.pollId);
       else if (m.type === "media-add" && m.media) emitMedia(m.media);
       else if (m.type === "media-remove") removeMediaLocal(m.id);
-      else if (m.type === "resync-polls") pollHandlers?.resync?.();
       else if (m.type === "resync-media") mediaHandlers?.resync?.();
     }
     if (bc) bc.onmessage = e => handleMessage(e.data || {});
@@ -545,65 +387,6 @@
         categoryHandlers.add(cb);
         return () => categoryHandlers.delete(cb);
       },
-      async listPolls() {
-        return normalisePolls(readPolls());
-      },
-      async savePoll(poll) {
-        const clean = normalisePoll(poll);
-        const all = readPolls();
-        const i = all.findIndex(p => p.id === clean.id);
-        if (i >= 0) all[i] = clean; else all.push(clean);
-        writePolls(all);
-        bc && bc.postMessage({ type: "poll-save", poll: clean });
-        window.dispatchEvent(new CustomEvent("sticky-local-poll-save", { detail: clean }));
-        return clean;
-      },
-      async deletePoll(id) {
-        writePolls(readPolls().filter(p => p.id !== id));
-        writeVotes(readVotes().filter(v => v.poll_id !== id));
-        bc && bc.postMessage({ type: "poll-delete", id });
-        window.dispatchEvent(new CustomEvent("sticky-local-poll-delete", { detail: id }));
-      },
-      async listVotes(pollId) {
-        const all = normalisePollVotes(readVotes());
-        return pollId ? all.filter(v => v.poll_id === pollId) : all;
-      },
-      async submitVote(vote) {
-        const clean = normalisePollVote(vote);
-        if (!clean.poll_id || !clean.voter_key) throw new Error("poll_id and voter_key are required");
-        const all = readVotes();
-        const i = all.findIndex(v => v.poll_id === clean.poll_id && v.voter_key === clean.voter_key);
-        if (i >= 0) {
-          clean.id = all[i].id || clean.id;
-          clean.created_at = all[i].created_at || clean.created_at;
-          all[i] = clean;
-        } else all.push(clean);
-        writeVotes(all);
-        bc && bc.postMessage({ type: "vote-save", vote: clean });
-        window.dispatchEvent(new CustomEvent("sticky-local-vote-save", { detail: clean }));
-        return clean;
-      },
-      async submitVotes(votes) {
-        const out = [];
-        for (const vote of votes || []) out.push(await this.submitVote(vote));
-        return out;
-      },
-      async resetVotes(pollId) {
-        writeVotes(readVotes().filter(v => v.poll_id !== pollId));
-        bc && bc.postMessage({ type: "votes-reset", pollId });
-        window.dispatchEvent(new CustomEvent("sticky-local-votes-reset", { detail: pollId }));
-      },
-      subscribePolls({ onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync } = {}) {
-        pollHandlers = { onPoll, onDelete, onVote, onVoteDelete, onResetVotes, resync };
-        window.addEventListener("sticky-local-poll-save", e => emitPoll(e.detail));
-        window.addEventListener("sticky-local-poll-delete", e => emitPollDelete(e.detail));
-        window.addEventListener("sticky-local-vote-save", e => emitVote(e.detail));
-        window.addEventListener("sticky-local-votes-reset", e => emitResetVotes(e.detail));
-        window.addEventListener("storage", e => {
-          if (e.key === POLL_KEY && !bc) resync?.();
-          else if (e.key === VOTE_KEY && !bc) resync?.();
-        });
-      },
       async listMedia() {
         return readMedia().slice().sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
       },
@@ -647,13 +430,10 @@
       },
       async clearSubmissions() {
         localStorage.removeItem(NOTE_KEY);
-        localStorage.removeItem(POLL_KEY);
-        localStorage.removeItem(VOTE_KEY);
         localStorage.removeItem(MEDIA_KEY);
         bc && bc.postMessage({ type: "resync" });
-        bc && bc.postMessage({ type: "resync-polls" });
         bc && bc.postMessage({ type: "resync-media" });
-        return { notes: 0, polls: 0, votes: 0, media: 0, files: 0 };
+        return { notes: 0, media: 0, files: 0 };
       },
       subscribeMedia({ onAdd, onRemove, onUpdate, resync } = {}) {
         mediaHandlers = { onAdd, onRemove, onUpdate, resync };

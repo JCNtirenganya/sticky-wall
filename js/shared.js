@@ -224,6 +224,14 @@ function paintNote(el, n) {
 }
 
 /* Builds one post-it element. */
+function noteDateLabel(value) {
+  const d = new Date(value || "");
+  if (Number.isNaN(d.getTime())) return "";
+  const loc = typeof window.I18N?.locale === "function" ? window.I18N.locale() : undefined;
+  return d.toLocaleDateString(loc, { day: "numeric", month: "short" }) + " · " +
+    d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
+}
+
 function buildNote(n) {
   const L = noteLook(n);
   const author = String(n.author || n.name || "").trim();
@@ -254,6 +262,13 @@ function buildNote(n) {
     sig.className = "note-author";
     sig.textContent = "— " + author;
     el.appendChild(sig);
+  }
+  const stamp = noteDateLabel(n.created_at);
+  if (stamp) {
+    const date = document.createElement("span");
+    date.className = "note-date";
+    date.textContent = stamp;
+    el.appendChild(date);
   }
   return el;
 }

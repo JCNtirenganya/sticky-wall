@@ -12,22 +12,11 @@
   const pilesHost = $("piles"), pilesBack = $("piles-back"), qrCard = $("qr-card"), qrCode = $("qr-code");
   const extras = $("extras"), extrasPanel = $("extras-panel"), extrasToggle = $("extras-toggle");
   const extrasNotesOnly = $("extras-notes-only"), extrasShowAll = $("extras-show-all");
-  const pollRoom = $("poll-room"), pollGrid = $("poll-grid"), pollFilters = $("poll-filters");
-  const pollEmpty = $("poll-empty");
-  const pollDialog = $("poll-dialog"), pollForm = $("poll-form"), pollDialogTitle = $("poll-dialog-title");
-  const pollQuestion = $("poll-question"), pollDescription = $("poll-description");
-  const pollTypeSelect = $("poll-type"), pollCategory = $("poll-category"), pollCategoryList = $("poll-category-list");
-  const pollOptionsWrap = $("poll-options-wrap"), pollOptions = $("poll-options"), pollAddOption = $("poll-add-option");
-  const pollMaxWrap = $("poll-max-wrap"), pollMax = $("poll-max"), pollMaxOut = $("poll-max-out");
-  const pollStatusSelect = $("poll-status"), pollResultsSelect = $("poll-results");
-  const pollSave = $("poll-save"), pollCancel = $("poll-cancel");
-  const raceBox = $("poll-race"), raceStage = $("race-stage"), raceTitle = $("race-title"), raceSub = $("race-sub");
-  const raceProgress = $("race-progress"), raceClock = $("race-clock"), raceLive = $("race-live");
-  const racePlay = $("race-play"), raceReplay = $("race-replay"), raceClose = $("race-close");
   const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty");
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
   const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
   const mediaLiveStrip = $("media-live-strip"), mediaLiveGrid = $("media-live-grid"), mediaLiveCount = $("media-live-count");
+  const mediaDays = $("media-days");
   const moduleHome = $("module-home"), splitStage = $("split-stage"), splitPanes = $("split-panes"), splitLabel = $("split-label");
   const splitDialog = $("split-dialog"), splitOptions = $("split-options"), splitHint = $("split-hint");
   const streamWall = $("stream-wall"), streamGrid = $("stream-grid"), streamEmpty = $("stream-empty");
@@ -40,28 +29,21 @@
   let liveAlertTitleBase = "", liveAlertDismissed = false, requestChimeCtx = null, requestChimeAt = 0;
   const C = window.STICKY_CONFIG || {};
   const notes = [], els = new Map();
-  const polls = [], votes = [], media = [];
+  const media = [];
   const liveStreams = new Map();
   const liveRequests = new Map();
   const splitOrigins = new Map();
   let liveHost = null, moduleHomeOpen = true, activeModule = null, splitModules = [];
   /* Earlier builds could add sample rows; keep those out of a real wall. */
-  const SAMPLE_POLL_PREFIX = "sample-";
-  const isSamplePoll = poll => String(poll?.id || "").startsWith(SAMPLE_POLL_PREFIX);
   const isSampleMedia = item => String(item?.author || "").trim().toLowerCase() === "sample";
   let cats = new Set(categoryKeys()), focusId = null, closeTimer = 0;
   let activeFilter = "all", pileView = false, pileSignature = "";
-  let pollFilter = "all", pollEditing = null, pollStatusTimer = 0;
   let notesPresent = false, notesPresentSnapshot = null;
-  let pollsPresent = false, pollStageMode = false, pollStageIndex = 0;
   let mediaPresent = false, mediaStageIndex = 0;
   /* manual presentation: full screen, but the slides only move on command */
   let presentationManual = false;
   let autoplayIdle = 0, autoplayStep = 0, autoplayLive = false, autoplayTouched = 0;
   let mediaAdvanceTimer = 0;
-  let racePollId = null, raceData = null, raceIndex = 0, raceClockValue = 0;
-  let racePlaying = false, raceSpeed = 1, raceRaf = 0, raceLastTick = 0;
-  const raceRows = new Map();
 
   /* ── presenter preferences (what the wall shows) ───────────── */
   const PREFS_KEY = "sticky_board_prefs";
@@ -84,8 +66,6 @@
     autoplay: true,
     autoplayDelay: 10,
     autoplayDuration: 6,
-    chartType: "auto",
-    chartStyle: "hand",
     mediaAutoplay: true,
     mediaMute: true,
     mediaLoop: true,
@@ -94,9 +74,7 @@
     mediaVideoRate: 1
   };
   const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate", "qrX", "qrY"]);
-  const PREF_STRINGS = new Set(["bgColor", "dashColor", "bgImage", "logo", "chartType", "chartStyle"]);
-  const CHART_TYPE_KEYS = ["auto", "bars", "columns", "donut", "line", "cloud"];
-  const CHART_STYLE_KEYS = ["hand", "clean"];
+  const PREF_STRINGS = new Set(["bgColor", "dashColor", "bgImage", "logo"]);
   function loadPrefs() {
     try {
       const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
@@ -122,8 +100,6 @@
   prefs.bgColor = normaliseHex(prefs.bgColor) || "";
   prefs.dashColor = normaliseHex(prefs.dashColor) || "";
   prefs.bgImage = String(prefs.bgImage || "");
-  if (!CHART_TYPE_KEYS.includes(prefs.chartType)) prefs.chartType = "auto";
-  if (!CHART_STYLE_KEYS.includes(prefs.chartStyle)) prefs.chartStyle = "hand";
 
   function savePrefs() {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); return true; }
@@ -146,16 +122,6 @@
     });
     extrasPanel.querySelectorAll("#extras-dash-swatches button").forEach(btn => {
       btn.classList.toggle("act", (btn.dataset.dash || "") === (prefs.dashColor || ""));
-    });
-    extrasPanel.querySelectorAll("[data-chart-type]").forEach(btn => {
-      const on = btn.dataset.chartType === prefs.chartType;
-      btn.classList.toggle("act", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-    extrasPanel.querySelectorAll("[data-chart-style]").forEach(btn => {
-      const on = btn.dataset.chartStyle === prefs.chartStyle;
-      btn.classList.toggle("act", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
 
@@ -264,8 +230,6 @@
     const cl = document.body.classList;
     if (cl.contains("split-mode")) return t("Split screen");
     if (cl.contains("show-dashboard")) return t("Dashboard");
-    if (cl.contains("show-race")) return t("Chart race");
-    if (cl.contains("show-polls")) return t("Poll room");
     if (cl.contains("show-media")) return t("Event media");
     if (cl.contains("show-stream")) return t("Live stream");
     if (cl.contains("show-modules")) return t("Modules");
@@ -343,22 +307,13 @@
   }
 
   let shareCurrentUrl = "";
-  function openShareDialog(kind, poll) {
+  function openShareDialog() {
     const dialog = $("share-dialog");
     const urlInput = $("share-url"), embedInput = $("share-embed");
     if (!dialog || !urlInput || !embedInput) return;
     const title = String(brandState.title || "").trim();
-    let url, heading;
-    if (kind === "poll" && poll) {
-      url = shareUrl({ module: "poll", id: poll.id, type: prefs.chartType, style: prefs.chartStyle, title: poll.question });
-      heading = t("Live results link");
-    } else if (kind === "polls") {
-      url = shareUrl({ module: "polls", type: prefs.chartType, style: prefs.chartStyle, title });
-      heading = t("Poll results link");
-    } else {
-      url = shareUrl({ module: "notes", title });
-      heading = t("Live wall link");
-    }
+    const url = shareUrl({ module: "notes", title });
+    const heading = t("Live wall link");
     shareCurrentUrl = url;
     const headingNode = $("share-title"), leadNode = $("share-lead");
     if (headingNode) headingNode.textContent = heading;
@@ -397,7 +352,6 @@
   }
 
   $("extras-share-wall")?.addEventListener("click", () => openShareDialog("wall"));
-  $("extras-share-polls")?.addEventListener("click", () => openShareDialog("polls"));
   $("share-copy")?.addEventListener("click", () => copyShareText($("share-url")?.value, $("share-copy")));
   $("share-copy-embed")?.addEventListener("click", () => copyShareText($("share-embed")?.value, $("share-copy-embed")));
   $("share-open")?.addEventListener("click", () => {
@@ -609,6 +563,61 @@
   const plural = n => n === 1 ? t("1 note") : t("{n} notes", { n });
   const dashboardOpen = () => document.body.classList.contains("show-dashboard");
 
+  /* ── dates: one day rail drives notes, media, and the dashboard ── */
+  let dashDay = "all";
+  const dayKeyOf = value => {
+    const d = new Date(value || "");
+    if (Number.isNaN(d.getTime())) return "";
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  };
+  const dayLocale = () => typeof window.I18N?.locale === "function" ? window.I18N.locale() : undefined;
+  const dayLabelFor = value => {
+    const d = new Date(value || "");
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(dayLocale(), { weekday: "short", day: "numeric", month: "short" });
+  };
+  const timeLabelFor = value => {
+    const d = new Date(value || "");
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString(dayLocale(), { hour: "2-digit", minute: "2-digit" });
+  };
+  const inDashDay = item => dashDay === "all" || dayKeyOf(item.created_at) === dashDay;
+  const dayStamp = item => dashDay === "all"
+    ? dayLabelFor(item.created_at) + " · " + timeLabelFor(item.created_at)
+    : timeLabelFor(item.created_at);
+
+  function dayBuckets(list) {
+    const map = new Map();
+    list.forEach(item => {
+      const key = dayKeyOf(item.created_at);
+      if (key && !map.has(key)) map.set(key, item.created_at);
+    });
+    return [...map.entries()].sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+  }
+
+  function renderDayRail(host, list) {
+    if (!host) return;
+    const buckets = dayBuckets(list);
+    if (dashDay !== "all" && !buckets.some(([key]) => key === dashDay)) dashDay = "all";
+    if (!buckets.length) { host.hidden = true; host.replaceChildren(); return; }
+    host.hidden = false;
+    const pick = (key, label) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "day-chip" + (dashDay === key ? " is-active" : "");
+      btn.textContent = label;
+      btn.setAttribute("aria-pressed", dashDay === key ? "true" : "false");
+      btn.addEventListener("click", () => {
+        dashDay = key;
+        if (dashboardOpen()) renderDashboard();
+        renderMediaWall();
+      });
+      return btn;
+    };
+    host.replaceChildren(pick("all", t("All days")),
+      ...buckets.map(([key, at]) => pick(key, dayLabelFor(at))));
+  }
+
   function syncHiddenChrome() {
     const hiddenCount = notes.filter(n => hidden.has(n.id)).length;
     const badge = $("extras-hidden-count");
@@ -632,33 +641,45 @@
         ? (hiddenCount ? plural(shown) + " · " + t("{n} hidden", { n: hiddenCount }) : plural(total))
         : t("{shown} of {alive}", { shown, alive });
     status.classList.toggle("is-demo", Store.mode === "demo");
-    syncPollBadge();
     document.body.classList.toggle("has-notes", total > 0);
     if (dashboardOpen()) renderDashboard();
     renderModuleCounts();
+  }
+
+  /* Transient status line: shows a message, then returns to the live count. */
+  let statusFlashTimer = 0;
+  function flashStatus(message) {
+    if (!statusText) return;
+    statusText.textContent = t(message);
+    clearTimeout(statusFlashTimer);
+    statusFlashTimer = setTimeout(updateStatus, 3200);
   }
 
   /* ── dashboard: the entry card and received-notes control ──── */
   const welcomeCard = $("welcome-card"), dashCard = $("dash-card");
   const dashTitle = $("dash-title"), dashCats = $("dash-cats");
   const dashCount = $("dash-count"), dashNotes = $("dash-notes"), dashRestore = $("dash-restore");
+  const dashDays = $("dash-days");
 
   function renderDashboard() {
     if (!welcomeCard || !dashCard || !dashNotes) return;
     const total = notes.length;
     welcomeCard.hidden = total > 0;
     dashCard.hidden = total === 0;
-    if (!total) { dashNotes.replaceChildren(); return; }
+    if (!total) { dashNotes.replaceChildren(); renderDayRail(dashDays, []); return; }
+
+    renderDayRail(dashDays, notes);
+    const dayNotes = notes.filter(inDashDay);
 
     const hiddenCount = notes.filter(n => hidden.has(n.id)).length;
-    const alive = total - hiddenCount;
+    const alive = notes.filter(n => !hidden.has(n.id) && inDashDay(n)).length;
     dashTitle.textContent = total === 0
       ? t("You received 0 notes.")
       : total === 1 ? t("You received 1 note.") : t("You received {n} notes.", { n: total });
 
     dashCats.replaceChildren();
     categoryList().forEach(cat => {
-      const all = notes.filter(n => n.category === cat.key);
+      const all = dayNotes.filter(n => n.category === cat.key);
       if (!all.length) return;
       const shown = all.filter(n => !hidden.has(n.id)).length;
       const chip = document.createElement("span");
@@ -673,7 +694,7 @@
     dashCount.textContent = t("{n} on the wall", { n: alive }) +
       (hiddenCount ? t(" · {n} hidden", { n: hiddenCount }) : "");
 
-    dashNotes.replaceChildren(...notes.map(n => {
+    dashNotes.replaceChildren(...dayNotes.map(n => {
       const isHidden = hidden.has(n.id);
       const li = document.createElement("li");
       li.className = "dash-note" + (isHidden ? " is-hidden" : "");
@@ -688,10 +709,14 @@
       const head = document.createElement("b");
       head.textContent = (String(n.author || "").trim() || t("Anonymous")) +
         " · " + t(CATS[n.category]?.short || "Note");
+      const when = document.createElement("time");
+      when.className = "dash-note-time";
+      when.dateTime = n.created_at || "";
+      when.textContent = dayStamp(n);
       const text = document.createElement("p");
       if (typeof renderNoteText === "function") renderNoteText(text, n.text);
       else text.textContent = n.text;
-      copy.append(head, text);
+      copy.append(head, when, text);
 
       const btn = document.createElement("button");
       btn.type = "button";
@@ -709,7 +734,6 @@
         ? t("Restore {n} hidden", { n: hiddenCount })
         : t("Restore hidden");
     }
-    renderDashPolls();
   }
 
   function setDashboard(open) {
@@ -728,319 +752,7 @@
   const closeDashboard = () => setDashboard(false);
   const toggleDashboard = () => setDashboard(!dashboardOpen());
 
-  /* ── polls: presenter room, editor and live statistics ────── */
-  const POLL_FILTERS = [
-    { key: "all", label: "All" },
-    { key: "open", label: "Open" },
-    { key: "draft", label: "Draft" },
-    { key: "closed", label: "Closed" }
-  ];
-  let pollSyncWarned = false;
-
-  const pollNode = (tag, cls, text) => {
-    const node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text != null) node.textContent = text;
-    return node;
-  };
-  const pollRoomOpenNow = () => document.body.classList.contains("show-polls");
-  const pollSorted = () => polls.slice().sort((a, b) =>
-    (a.position - b.position) || String(a.created_at).localeCompare(String(b.created_at)));
-  const pollPositionNext = () => polls.reduce((max, p) => Math.max(max, Number(p.position) || 0), 0) + 1;
-  const pollOpenCount = () => polls.filter(p => p.status === "open").length;
-
-  function pollWhen(value) {
-    if (!value) return "";
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return "";
-    const diff = Date.now() - date.getTime();
-    if (diff < 60000) return t("just now");
-    if (diff < 3600000) return t("{n}m ago", { n: Math.max(1, Math.floor(diff / 60000)) });
-    if (diff < 86400000) return t("{n}h ago", { n: Math.floor(diff / 3600000) });
-    return date.toLocaleDateString(window.I18N?.locale?.() || undefined, { day: "numeric", month: "short" });
-  }
-
-  function flashPollStatus(message) {
-    if (!statusText) return;
-    statusText.textContent = t(message);
-    clearTimeout(pollStatusTimer);
-    pollStatusTimer = setTimeout(updateStatus, 3200);
-  }
-
-  function syncPollBadge() {
-    const badge = $("status-poll-count");
-    if (badge) badge.textContent = polls.length === 1 ? t("1 poll") : t("{n} polls", { n: polls.length });
-    const button = $("status-polls");
-    if (button) {
-      button.classList.toggle("has-open", pollOpenCount() > 0);
-      button.setAttribute("aria-label", t("Open the poll room. {n} polls, {m} open.", {
-        n: polls.length,
-        m: pollOpenCount()
-      }));
-    }
-  }
-
-  function upsertPollLocal(raw) {
-    const poll = normalisePoll(raw);
-    const i = polls.findIndex(p => p.id === poll.id);
-    if (i >= 0) polls[i] = poll;
-    else polls.push(poll);
-  }
-
-  function removePollLocal(id) {
-    const i = polls.findIndex(p => p.id === id);
-    if (i >= 0) polls.splice(i, 1);
-    for (let j = votes.length - 1; j >= 0; j--) if (votes[j].poll_id === id) votes.splice(j, 1);
-  }
-
-  function upsertVoteLocal(raw) {
-    const vote = normalisePollVote(raw);
-    if (!vote.poll_id || !vote.voter_key) return;
-    const i = votes.findIndex(v => v.id === vote.id || (v.poll_id === vote.poll_id && v.voter_key === vote.voter_key));
-    if (i >= 0) votes[i] = vote;
-    else votes.push(vote);
-  }
-
-  function removeVoteLocal(raw) {
-    const vote = normalisePollVote(raw);
-    for (let i = votes.length - 1; i >= 0; i--) {
-      if (votes[i].id === vote.id || (votes[i].poll_id === vote.poll_id && votes[i].voter_key === vote.voter_key)) {
-        votes.splice(i, 1);
-      }
-    }
-  }
-
-  function resetVotesLocal(pollId) {
-    for (let i = votes.length - 1; i >= 0; i--) if (votes[i].poll_id === pollId) votes.splice(i, 1);
-  }
-
-  function renderPollChrome() {
-    syncPollBadge();
-    renderDashPolls();
-    renderModuleCounts();
-    if (pollRoomOpenNow()) renderPollRoom();
-    if (raceOpenNow()) refreshRaceLive();
-  }
-
-  function pollStatsNode(poll, stats) {
-    const box = pollNode("div", "poll-stats");
-    if (!stats.total) {
-      box.append(pollNode("p", "poll-none", t("No answers yet.")));
-      return box;
-    }
-
-    if (poll.type === "text") {
-      if (prefs.chartType === "cloud" && typeof pollChart === "function") {
-        const cloud = pollChart(poll, stats, { type: "cloud", style: prefs.chartStyle });
-        if (cloud) {
-          box.append(cloud);
-          return box;
-        }
-      }
-      const list = pollNode("div", "poll-texts");
-      stats.texts.slice(0, 6).forEach(vote => {
-        const item = pollNode("div", "poll-text");
-        item.append(pollNode("p", null, vote.text));
-        item.append(pollNode("small", null,
-          (vote.author || t("Anonymous")) + (vote.updated_at ? " · " + pollWhen(vote.updated_at) : "")));
-        list.append(item);
-      });
-      if (stats.texts.length > 6) {
-        list.append(pollNode("p", "poll-more", t("+ {n} more answers", { n: stats.texts.length - 6 })));
-      }
-      box.append(list);
-      return box;
-    }
-
-    const chart = typeof pollChart === "function"
-      ? pollChart(poll, stats, { type: prefs.chartType, style: prefs.chartStyle })
-      : (typeof pollHandChart === "function" ? pollHandChart(poll, stats) : null);
-    if (chart) {
-      box.append(chart);
-      return box;
-    }
-
-    if (poll.type === "rating") {
-      const wrap = pollNode("div", "poll-rating");
-      const average = pollNode("div", "poll-rating__avg");
-      average.append(pollNode("b", null, stats.rating.avg.toFixed(1)), pollNode("span", null, t(" / 5")));
-      const full = Math.max(0, Math.min(5, Math.round(stats.rating.avg)));
-      const stars = pollNode("div", "poll-rating__stars", "★".repeat(full) + "☆".repeat(5 - full));
-      stars.setAttribute("aria-label", t("{n} out of 5", { n: stats.rating.avg.toFixed(1) }));
-      const dist = pollNode("div", "poll-rating__dist");
-      [5, 4, 3, 2, 1].forEach(score => {
-        const count = stats.rating.counts[score - 1] || 0;
-        const pct = pollPct(count, stats.rating.total);
-        const row = pollNode("div", "poll-dist-row");
-        row.append(pollNode("span", "poll-dist-label", score + "★"));
-        const track = pollNode("div", "poll-bar__track");
-        const fill = pollNode("span", "poll-bar__fill");
-        fill.style.width = pct + "%";
-        track.append(fill);
-        row.append(track, pollNode("span", "poll-dist-num", String(count)));
-        dist.append(row);
-      });
-      wrap.append(average, stars, dist);
-      box.append(wrap);
-      return box;
-    }
-
-    stats.options.forEach(option => {
-      const row = pollNode("div", "poll-bar");
-      const top = pollNode("div", "poll-bar__top");
-      top.append(
-        pollNode("span", "poll-bar__label", option.label),
-        pollNode("span", "poll-bar__num", option.count + " · " + option.pct + "%")
-      );
-      const track = pollNode("div", "poll-bar__track");
-      const fill = pollNode("span", "poll-bar__fill");
-      fill.style.width = option.pct + "%";
-      track.append(fill);
-      row.append(top, track);
-      box.append(row);
-    });
-    return box;
-  }
-
-  function pollCard(poll) {
-    const stats = pollStats(poll, votes);
-    const type = pollType(poll.type);
-    const status = pollStatus(poll);
-    const card = pollNode("article", "poll-card");
-    card.dataset.poll = poll.id;
-    card.style.setProperty("--pc", pollCategoryColor(poll.category));
-
-    const head = pollNode("header", "poll-card__head");
-    head.append(
-      pollNode("span", "poll-chip", t(poll.category)),
-      pollNode("span", "poll-type", type.emoji + " " + type.label),
-      pollNode("span", "poll-status poll-status--" + status.key, status.label)
-    );
-
-    const question = pollNode("h3", "poll-card__q", poll.question);
-    const description = poll.description ? pollNode("p", "poll-card__desc", poll.description) : null;
-
-    const meta = pollNode("div", "poll-card__meta");
-    meta.append(pollNode("span", null, stats.total === 1 ? t("1 response") : t("{n} responses", { n: stats.total })));
-    if (stats.lastAt) {
-      meta.append(pollNode("span", null, "·"), pollNode("span", null, t("updated {when}", { when: pollWhen(stats.lastAt) })));
-    }
-    meta.append(pollNode("span", null, "·"), pollNode("span", null, type.short));
-
-    const actions = pollNode("footer", "poll-card__actions");
-    const action = (act, label, cls) => {
-      const button = pollNode("button", "poll-act" + (cls ? " " + cls : ""), label);
-      button.type = "button";
-      button.dataset.pollAct = act;
-      actions.append(button);
-      return button;
-    };
-    action("edit", t("Edit"));
-    action("race", t("Chart race"));
-    action("share", t("Live link"));
-    action("duplicate", t("Duplicate"));
-    action("toggle", poll.status === "open" ? t("Close poll") : t("Open poll"));
-    action("reset", t("Reset votes"));
-    action("delete", t("Delete"), "poll-act--danger");
-
-    card.append(head, question);
-    if (description) card.append(description);
-    card.append(meta, pollStatsNode(poll, stats), actions);
-    return card;
-  }
-
-  function renderPollRoom() {
-    if (!pollRoom) return;
-
-    if (pollFilters) {
-      pollFilters.replaceChildren(...POLL_FILTERS.map(filter => {
-        const count = filter.key === "all" ? polls.length : polls.filter(p => p.status === filter.key).length;
-        const button = pollNode("button", "poll-filter" + (pollFilter === filter.key ? " act" : ""), t(filter.label));
-        button.type = "button";
-        button.dataset.pollFilter = filter.key;
-        button.append(pollNode("span", "poll-filter__count", String(count)));
-        return button;
-      }));
-    }
-
-    const list = pollSorted().filter(p => pollFilter === "all" || p.status === pollFilter);
-    if (pollEmpty) pollEmpty.hidden = list.length > 0;
-    if (pollGrid) {
-      pollGrid.hidden = list.length === 0;
-      pollGrid.replaceChildren(...list.map(pollCard));
-      if (pollStageMode) renderPollStage();
-    }
-    renderModuleCounts();
-  }
-
-  function renderDashPolls() {
-    const host = $("dash-polls"), list = $("dash-poll-list");
-    if (!host || !list) return;
-    host.hidden = polls.length === 0;
-    if (!polls.length) { list.replaceChildren(); return; }
-
-    const visible = pollSorted().slice(0, 4);
-    list.replaceChildren(...visible.map(poll => {
-      const stats = pollStats(poll, votes);
-      const button = pollNode("button", "dash-poll");
-      button.type = "button";
-      button.dataset.poll = poll.id;
-      button.style.setProperty("--chip", pollCategoryColor(poll.category));
-      const top = pollNode("span", "dash-poll__top");
-      top.append(
-        pollNode("span", "dash-poll__chip", t(poll.category)),
-        pollNode("span", "poll-status poll-status--" + poll.status, pollStatus(poll).label)
-      );
-      button.append(
-        top,
-        pollNode("b", "dash-poll__q", poll.question),
-        pollNode("small", "dash-poll__meta",
-          (stats.total === 1 ? t("1 response") : t("{n} responses", { n: stats.total })) + " · " + pollType(poll.type).short)
-      );
-      button.addEventListener("click", openPollRoom);
-      return button;
-    }));
-
-    if (polls.length > visible.length) {
-      const more = pollNode("button", "dash-poll dash-poll--more", t("+ {n} more polls", { n: polls.length - visible.length }));
-      more.type = "button";
-      more.addEventListener("click", openPollRoom);
-      list.append(more);
-    }
-  }
-
-  /* ── presentation autoplay & one-by-one poll slides ────────── */
-  const pollStageList = () => pollSorted().filter(p => pollFilter === "all" || p.status === pollFilter);
-
-  function renderPollStage() {
-    if (!pollStageMode) return;
-    const list = pollStageList();
-    if (!list.length) return;
-    if (pollStageIndex >= list.length) pollStageIndex = 0;
-    if (pollStageIndex < 0) pollStageIndex = list.length - 1;
-    const id = list[pollStageIndex].id;
-    pollGrid?.querySelectorAll(".poll-card").forEach(card => {
-      card.classList.toggle("is-stage", card.dataset.poll === id);
-    });
-    const current = pollGrid?.querySelector(".poll-card.is-stage");
-    if (current) current.scrollTop = 0;
-  }
-
-  function setPollStageMode(on) {
-    pollStageMode = !!on && pollsPresent;
-    document.body.classList.toggle("present-polls-one", pollStageMode);
-    $("poll-present-one")?.setAttribute("aria-pressed", pollStageMode ? "true" : "false");
-    if (pollStageMode) renderPollStage();
-    else pollGrid?.querySelectorAll(".poll-card.is-stage").forEach(card => card.classList.remove("is-stage"));
-  }
-
-  function stepPollStage(d) {
-    const list = pollStageList();
-    if (!list.length) return;
-    pollStageIndex = (pollStageIndex + d + list.length) % list.length;
-    renderPollStage();
-  }
-
+  /* ── presentation autoplay & one-by-one slides ─────────────── */
   const autoplaySeconds = (value, fallback) => {
     const n = Number(value);
     return Number.isFinite(n) ? Math.max(0, n) : fallback;
@@ -1059,13 +771,13 @@
   /* Wait `autoplayDelay` seconds of quiet, then advance every `autoplayDuration`. */
   function armAutoplay() {
     clearAutoplay();
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent && !mediaPresent)) return;
+    if (presentationManual || !prefs.autoplay || (!notesPresent && !mediaPresent)) return;
     autoplayIdle = setTimeout(startAutoplay, autoplaySeconds(prefs.autoplayDelay, 10) * 1000);
   }
 
   function startAutoplay() {
     autoplayIdle = 0;
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !pollsPresent && !mediaPresent)) return;
+    if (presentationManual || !prefs.autoplay || (!notesPresent && !mediaPresent)) return;
     const every = Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6)) * 1000;
     autoplayLive = true;
     if (mediaPresent) {
@@ -1075,20 +787,12 @@
     if (notesPresent) {
       step(1);
       autoplayStep = setInterval(() => step(1), every);
-      return;
     }
-    if (!pollsPresent) return;
-    if (!pollStageMode) {
-      pollStageIndex = 0;
-      setPollStageMode(true);
-    }
-    renderPollStage();
-    autoplayStep = setInterval(() => stepPollStage(1), every);
   }
 
   /* Any real interaction pauses the slideshow and re-arms the idle countdown. */
   function touchAutoplay() {
-    if (!notesPresent && !pollsPresent && !mediaPresent) return;
+    if (!notesPresent && !mediaPresent) return;
     if (!autoplayIdle && !autoplayLive) return;
     armAutoplay();
   }
@@ -1096,7 +800,7 @@
   ["pointerdown", "wheel", "touchstart"].forEach(evt =>
     window.addEventListener(evt, () => touchAutoplay(), { passive: true, capture: true }));
   window.addEventListener("pointermove", () => {
-    if (!notesPresent && !pollsPresent && !mediaPresent) return;
+    if (!notesPresent && !mediaPresent) return;
     if (!autoplayIdle && !autoplayLive) return;
     const now = Date.now();
     if (now - autoplayTouched < 400) return;
@@ -1157,576 +861,8 @@
     syncFullscreenButtons();
     if (document.fullscreenElement) return;
     if (notesPresent) setNotesPresentation(false);
-    if (pollsPresent) setPollsPresentation(false);
     if (mediaPresent) setMediaPresentation(false);
   });
-
-  /* Full-screen results view: all poll cards, or one slide at a time.
-     `manual` keeps the slides still (or switches a running show to manual). */
-  function setPollsPresentation(on, mode, manual) {
-    const was = pollsPresent;
-    pollsPresent = !!on && pollRoomOpenNow();
-    if (pollsPresent) presentationManual = !!manual;
-    document.body.classList.toggle("present-polls", pollsPresent);
-    $("poll-present")?.setAttribute("aria-pressed", pollsPresent ? "true" : "false");
-    $("poll-present-manual")?.setAttribute("aria-pressed", pollsPresent && presentationManual ? "true" : "false");
-    if (pollsPresent) {
-      if (!was) pollStageIndex = 0;
-      setExtrasOpen(false);
-      document.activeElement?.blur?.();
-      goFullscreen();
-      setPollStageMode(mode === "one");
-      pollGrid?.scrollTo({ top: 0, behavior: "auto" });
-      armAutoplay();
-    } else {
-      presentationManual = false;
-      clearAutoplay();
-      setPollStageMode(false);
-      if (was) leaveFullscreen();
-    }
-  }
-
-  function openPollRoom() {
-    if (!pollRoom) return;
-    closeModulesExcept("poll");
-    activeModule = "poll";
-    document.body.dataset.module = "poll";
-    closeFocus();
-    setExtrasOpen(false);
-    document.body.classList.add("show-polls");
-    pollRoom.setAttribute("aria-hidden", "false");
-    pollFilter = "all";
-    setPollsPresentation(false);
-    renderPollRoom();
-    $("poll-close")?.focus({ preventScroll: true });
-  }
-
-  function closePollRoom() {
-    if (!pollRoom) return;
-    if (pollRoom.contains(document.activeElement)) document.activeElement.blur();
-    setPollsPresentation(false);
-    document.body.classList.remove("show-polls");
-    pollRoom.setAttribute("aria-hidden", "true");
-  }
-
-  function togglePollRoom() {
-    if (pollRoomOpenNow()) closePollRoom();
-    else openPollRoom();
-  }
-
-  async function persistPoll(raw) {
-    try {
-      const saved = await Store.savePoll(normalisePoll(raw));
-      upsertPollLocal(saved);
-      renderPollChrome();
-      return saved;
-    } catch (err) {
-      console.error("Poll could not be saved", err);
-      flashPollStatus("Poll could not be saved");
-      return null;
-    }
-  }
-
-  async function togglePollStatus(poll) {
-    const next = poll.status === "open" ? "closed" : "open";
-    const saved = await persistPoll({ ...poll, status: next, updated_at: new Date().toISOString() });
-    if (saved) flashPollStatus(next === "open" ? "Poll is live on phones" : "Poll closed");
-  }
-
-  async function duplicatePoll(poll) {
-    const copy = normalisePoll({
-      ...poll,
-      id: pollUid("poll"),
-      question: poll.question + " " + t("(copy)"),
-      status: "draft",
-      position: pollPositionNext(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    });
-    const saved = await persistPoll(copy);
-    if (saved) flashPollStatus("Poll duplicated as a draft");
-  }
-
-  async function resetPollVotes(poll) {
-    try {
-      await Store.resetVotes(poll.id);
-      resetVotesLocal(poll.id);
-      renderPollChrome();
-      flashPollStatus("Votes cleared");
-    } catch (err) {
-      console.error("Votes could not be reset", err);
-      flashPollStatus("Could not clear votes");
-    }
-  }
-
-  async function deletePoll(poll) {
-    try {
-      await Store.deletePoll(poll.id);
-      removePollLocal(poll.id);
-      renderPollChrome();
-      flashPollStatus("Poll deleted");
-    } catch (err) {
-      console.error("Poll could not be deleted", err);
-      flashPollStatus("Could not delete poll");
-    }
-  }
-
-  function initPollEditor() {
-    if (pollTypeSelect && !pollTypeSelect.options.length) {
-      POLL_TYPE_KEYS.forEach(key => pollTypeSelect.add(new Option(t(POLL_TYPES[key].label), key)));
-    }
-    if (pollStatusSelect && !pollStatusSelect.options.length) {
-      Object.keys(POLL_STATUSES).forEach(key => pollStatusSelect.add(new Option(t(POLL_STATUSES[key].label), key)));
-    }
-    if (pollResultsSelect && !pollResultsSelect.options.length) {
-      Object.keys(POLL_RESULTS).forEach(key => pollResultsSelect.add(new Option(t(POLL_RESULTS[key].label), key)));
-    }
-  }
-
-  function fillPollCategories() {
-    if (!pollCategoryList) return;
-    const names = [...new Set([...DEFAULT_POLL_CATEGORIES, ...polls.map(p => p.category)])]
-      .map(name => String(name || "").trim()).filter(Boolean);
-    pollCategoryList.replaceChildren(...names.map(name => {
-      const option = document.createElement("option");
-      option.value = name;
-      return option;
-    }));
-  }
-
-  function pollOptionRow(option) {
-    const raw = typeof option === "string" ? { label: option } : (option || {});
-    const row = pollNode("div", "poll-option-row");
-
-    const mediaButton = pollNode("button", "poll-option-media");
-    mediaButton.type = "button";
-    mediaButton.title = t("Add icon or image");
-    mediaButton.setAttribute("aria-label", t("Add icon or image"));
-    const preview = pollNode("span", "poll-option-media__preview");
-    mediaButton.append(preview);
-
-    const label = document.createElement("input");
-    label.type = "text";
-    label.className = "poll-option-label";
-    label.maxLength = MAX_POLL_OPTION;
-    label.value = raw.label || "";
-    label.placeholder = t("Option");
-    label.setAttribute("aria-label", t("Poll option"));
-
-    const media = document.createElement("input");
-    media.type = "text";
-    media.className = "poll-option-media-input";
-    media.value = raw.media || "";
-    media.placeholder = t("Emoji or image URL");
-    media.setAttribute("aria-label", t("Option icon or image"));
-    media.autocomplete = "off";
-
-    const upload = document.createElement("input");
-    upload.type = "file";
-    upload.accept = "image/*";
-    upload.hidden = true;
-
-    function paintPreview() {
-      const value = media.value.trim();
-      preview.replaceChildren();
-      preview.classList.toggle("has-media", !!value);
-      const kind = typeof pollMediaKind === "function" ? pollMediaKind(value) : "";
-      if (kind === "image") {
-        const img = document.createElement("img");
-        img.src = value;
-        img.alt = "";
-        img.addEventListener("error", () => {
-          preview.replaceChildren(document.createTextNode("🖼"));
-          preview.classList.remove("has-media");
-        });
-        preview.append(img);
-      } else if (value) {
-        preview.textContent = value.slice(0, 4);
-      } else {
-        preview.textContent = "🖼";
-      }
-    }
-
-    mediaButton.addEventListener("click", () => upload.click());
-    upload.addEventListener("change", async event => {
-      const file = event.target.files?.[0];
-      event.target.value = "";
-      if (!file) return;
-      try {
-        const data = await readImageFile(file, 128, "image/png", .92);
-        media.value = data;
-        paintPreview();
-      } catch (err) {
-        console.error("Could not read option icon", err);
-        flashPollStatus("Could not read that image");
-      }
-    });
-    media.addEventListener("input", paintPreview);
-    paintPreview();
-
-    const remove = pollNode("button", "poll-option-remove", "×");
-    remove.type = "button";
-    remove.title = t("Remove option");
-    remove.setAttribute("aria-label", t("Remove this option"));
-    remove.addEventListener("click", () => {
-      if (pollOptions.querySelectorAll(".poll-option-row").length <= 2) return;
-      row.remove();
-      syncPollEditorFields();
-    });
-    row.append(mediaButton, label, media, remove, upload);
-    return row;
-  }
-
-  function syncPollEditorFields() {
-    if (!pollOptions) return;
-    const meta = pollType(pollTypeSelect?.value);
-    const rows = [...pollOptions.querySelectorAll(".poll-option-row")];
-    const count = rows.length;
-    if (pollOptionsWrap) pollOptionsWrap.hidden = !meta.hasOptions;
-    if (pollAddOption) {
-      pollAddOption.disabled = count >= MAX_POLL_OPTIONS;
-      pollAddOption.textContent = count >= MAX_POLL_OPTIONS
-        ? t("Maximum {n} options", { n: MAX_POLL_OPTIONS })
-        : t("+ Add option");
-    }
-    rows.forEach(row => {
-      const button = row.querySelector(".poll-option-remove");
-      if (button) button.disabled = count <= 2;
-    });
-    if (pollMaxWrap) pollMaxWrap.hidden = !meta.multiple;
-    if (pollMax) {
-      const max = Math.max(2, Math.min(MAX_POLL_OPTIONS, count || 2));
-      pollMax.max = String(max);
-      const value = Math.max(2, Math.min(max, Number(pollMax.value) || max));
-      pollMax.value = String(value);
-      if (pollMaxOut) pollMaxOut.textContent = String(value);
-    }
-  }
-
-  function setPollOptions(options) {
-    if (!pollOptions) return;
-    const fallback = [
-      { label: t("Option {n}", { n: 1 }), media: "" },
-      { label: t("Option {n}", { n: 2 }), media: "" }
-    ];
-    const list = Array.isArray(options) && options.length ? options : fallback;
-    pollOptions.replaceChildren(...list.map(pollOptionRow));
-    syncPollEditorFields();
-  }
-
-  function openPollEditor(poll) {
-    initPollEditor();
-    pollEditing = poll ? normalisePoll(poll) : null;
-    fillPollCategories();
-    if (pollDialogTitle) pollDialogTitle.textContent = pollEditing ? t("Edit poll") : t("New poll");
-    if (pollSave) pollSave.textContent = pollEditing ? t("Save changes") : t("Create poll");
-    if (pollQuestion) pollQuestion.value = pollEditing?.question || "";
-    if (pollDescription) pollDescription.value = pollEditing?.description || "";
-    if (pollTypeSelect) pollTypeSelect.value = pollEditing?.type || "single";
-    if (pollCategory) pollCategory.value = pollEditing?.category || "Feedback";
-    if (pollStatusSelect) pollStatusSelect.value = pollEditing?.status || "open";
-    if (pollResultsSelect) pollResultsSelect.value = pollEditing?.results || "after";
-    if (pollMax) pollMax.value = String(pollEditing?.maxChoices || 2);
-    setPollOptions(pollEditing?.options?.length
-      ? pollEditing.options.map(option => ({ label: option.label, media: option.media || "" }))
-      : [
-        { label: t("Option {n}", { n: 1 }), media: "" },
-        { label: t("Option {n}", { n: 2 }), media: "" }
-      ]);
-    syncPollEditorFields();
-
-    if (typeof pollDialog.showModal === "function") {
-      if (!pollDialog.open) pollDialog.showModal();
-    } else pollDialog.setAttribute("open", "");
-    requestAnimationFrame(() => {
-      pollQuestion?.focus();
-      pollQuestion?.select();
-    });
-  }
-
-  async function savePollEditor(event) {
-    event.preventDefault();
-    const question = String(pollQuestion?.value || "").trim();
-    if (!question) { pollQuestion?.focus(); return; }
-    const type = pollTypeSelect?.value || "single";
-    const meta = pollType(type);
-    const options = meta.hasOptions
-      ? [...(pollOptions?.querySelectorAll(".poll-option-row") || [])].map(row => ({
-        label: String(row.querySelector(".poll-option-label")?.value || "").trim(),
-        media: String(row.querySelector(".poll-option-media-input")?.value || "").trim()
-      })).filter(option => option.label)
-      : [];
-    if (meta.hasOptions && options.length < 2) {
-      flashPollStatus("Add at least two options");
-      return;
-    }
-
-    const base = pollEditing || {};
-    const raw = {
-      ...base,
-      id: base.id || pollUid("poll"),
-      created_at: base.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      question,
-      description: String(pollDescription?.value || "").trim(),
-      type,
-      category: String(pollCategory?.value || "").trim() || "Feedback",
-      options: meta.hasOptions ? options : [],
-      maxChoices: meta.multiple ? Number(pollMax?.value) || options.length : 1,
-      status: pollStatusSelect?.value || "open",
-      results: pollResultsSelect?.value || "after",
-      position: Number.isFinite(Number(base.position)) ? Number(base.position) : pollPositionNext()
-    };
-
-    if (pollSave) pollSave.disabled = true;
-    const saved = await persistPoll(raw);
-    if (pollSave) pollSave.disabled = false;
-    if (saved) {
-      pollEditing = null;
-      pollDialog.close();
-    }
-  }
-
-  async function syncPolls() {
-    try {
-      const [freshPolls, freshVotes] = await Promise.all([Store.listPolls(), Store.listVotes()]);
-      const allPolls = normalisePolls(freshPolls);
-      const shownPolls = allPolls.filter(poll => !isSamplePoll(poll));
-      polls.splice(0, polls.length, ...shownPolls);
-      const shownIds = new Set(shownPolls.map(poll => poll.id));
-      votes.splice(0, votes.length, ...normalisePollVotes(freshVotes)
-        .filter(vote => shownIds.has(vote.poll_id)));
-      pollSyncWarned = false;
-    } catch (err) {
-      if (!pollSyncWarned) {
-        console.warn("Could not load polls. In live mode run supabase/migration-polls.sql.", err);
-        pollSyncWarned = true;
-      }
-    }
-    renderPollChrome();
-  }
-
-  /* ── live bar-chart race (presenter) ───────────────────────── */
-  const raceOpenNow = () => document.body.classList.contains("show-race");
-  const racePoll = () => polls.find(p => p.id === racePollId) || null;
-  const raceFrames = () => raceData?.frames || [];
-
-  function raceElapsed(at) {
-    const first = raceFrames().find(frame => frame.at)?.at;
-    if (!at || !first) return "0:00";
-    const ms = new Date(at).getTime() - new Date(first).getTime();
-    if (!Number.isFinite(ms) || ms < 0) return "0:00";
-    const seconds = Math.round(ms / 1000);
-    return Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
-  }
-
-  function buildRaceStage() {
-    if (!raceStage) return;
-    raceStage.replaceChildren();
-    raceRows.clear();
-
-    if (!raceData || raceData.kind === "text") {
-      const empty = pollNode("div", "race-empty");
-      empty.append(
-        pollNode("span", "race-empty__icon", "✍"),
-        pollNode("h3", null, t("Written answers, not a race")),
-        pollNode("p", null, t("This poll collects open answers. The results are shown as a handwritten list."))
-      );
-      raceStage.append(empty);
-      return;
-    }
-
-    if (!raceData.entries.length) {
-      const empty = pollNode("div", "race-empty");
-      empty.append(
-        pollNode("span", "race-empty__icon", "⏳"),
-        pollNode("h3", null, t("Waiting for the first answer")),
-        pollNode("p", null, t("As phones answer, the bars will start moving."))
-      );
-      raceStage.append(empty);
-      return;
-    }
-
-    raceStage.style.setProperty("--n", String(raceData.entries.length));
-    raceData.entries.forEach((entry, index) => {
-      const row = pollNode("div", "race-row");
-      row.dataset.option = entry.id;
-      row.style.setProperty("--c", typeof handChartColor === "function"
-        ? handChartColor(entry.id || entry.label)
-        : pollCategoryColor(entry.label));
-      row.style.setProperty("--rank", String(index));
-      row.style.setProperty("--pct", "0");
-
-      const rank = pollNode("span", "race-rank", String(index + 1));
-      const media = (typeof pollMediaNode === "function" ? pollMediaNode(entry.media) : null)
-        || pollNode("span", "hc-media race-media race-media--empty", "");
-      media.classList.add("race-media");
-      const label = pollNode("span", "race-label", entry.label);
-      const track = pollNode("span", "race-track");
-      const fill = pollNode("span", "race-fill");
-      fill.append(pollNode("span", "race-hatch"));
-      track.append(fill);
-      const count = pollNode("span", "race-count", "0");
-
-      row.append(rank, media, label, track, count);
-      raceStage.append(row);
-      raceRows.set(entry.id, { row, rank, count });
-    });
-  }
-
-  function raceRenderFrame() {
-    if (!raceData) return;
-    const frames = raceFrames();
-    if (!frames.length) return;
-    const index = Math.max(0, Math.min(frames.length - 1, Math.round(raceIndex)));
-    const frame = frames[index];
-    const counts = frame.counts || [];
-    const max = Math.max(1, ...counts);
-
-    const order = raceData.entries
-      .map((entry, i) => ({ entry, i, count: Number(counts[i]) || 0 }))
-      .sort((a, b) => (b.count - a.count) || (a.i - b.i));
-    const rankOf = new Map(order.map((item, rank) => [item.entry.id, rank]));
-
-    raceData.entries.forEach((entry, i) => {
-      const ref = raceRows.get(entry.id);
-      if (!ref) return;
-      const count = Number(counts[i]) || 0;
-      const rank = rankOf.get(entry.id) || 0;
-      ref.row.style.setProperty("--rank", String(rank));
-      ref.row.style.setProperty("--pct", String(Math.round((count / max) * 100)));
-      ref.rank.textContent = String(rank + 1);
-      ref.count.textContent = String(count);
-    });
-
-    if (raceClock) raceClock.textContent = raceElapsed(frame.at);
-    if (raceProgress) {
-      raceProgress.value = String(frames.length > 1 ? Math.round((index / (frames.length - 1)) * 100) : 100);
-    }
-    if (raceLive) raceLive.classList.toggle("is-live", index >= frames.length - 1);
-
-    const poll = racePoll();
-    if (raceSub && poll) {
-      const answers = frame.total === 1 ? t("1 answer") : t("{n} answers", { n: frame.total });
-      raceSub.textContent = t(poll.category) + " · " + pollType(poll.type).label + " · " + answers;
-    }
-  }
-
-  function updateRaceControls() {
-    if (racePlay) {
-      racePlay.textContent = racePlaying ? t("Pause") : t("Play");
-      racePlay.dataset.playing = racePlaying ? "1" : "0";
-    }
-    raceBox?.querySelectorAll("[data-race-speed]").forEach(button => {
-      button.classList.toggle("act", Number(button.dataset.raceSpeed) === raceSpeed);
-    });
-  }
-
-  function raceTick(now) {
-    if (!raceOpenNow() || !racePlaying) return;
-    const frames = raceFrames().length || 1;
-    const dt = Math.max(0, now - raceLastTick);
-    raceLastTick = now;
-    const perFrame = Math.max(70, 8200 / Math.max(1, frames - 1)) / raceSpeed;
-    raceClockValue += dt / perFrame;
-    if (raceClockValue >= frames - 1) {
-      raceClockValue = frames - 1;
-      racePlaying = false;
-    }
-    const next = Math.round(raceClockValue);
-    if (next !== raceIndex) {
-      raceIndex = next;
-      raceRenderFrame();
-    } else if (raceProgress) {
-      raceProgress.value = String(frames > 1 ? Math.round((raceClockValue / (frames - 1)) * 100) : 100);
-    }
-    if (racePlaying) raceRaf = requestAnimationFrame(raceTick);
-    else { raceRenderFrame(); updateRaceControls(); }
-  }
-
-  function startRace(play) {
-    cancelAnimationFrame(raceRaf);
-    racePlaying = !!play && raceFrames().length > 1;
-    raceClockValue = raceIndex;
-    raceLastTick = performance.now();
-    updateRaceControls();
-    if (racePlaying) raceRaf = requestAnimationFrame(raceTick);
-  }
-
-  function openPollRace(poll) {
-    if (!raceBox) return;
-    if (!poll) {
-      flashPollStatus("Create a poll first");
-      return;
-    }
-    if (raceOpenNow()) closePollRace();
-    closeModulesExcept("poll", "race");
-    setPollsPresentation(false);
-    racePollId = poll.id;
-    raceSpeed = 1;
-    raceIndex = 0;
-    raceClockValue = 0;
-    raceData = pollRaceSeries(poll, votes);
-    document.body.classList.add("show-race");
-    raceBox.setAttribute("aria-hidden", "false");
-    if (raceTitle) raceTitle.textContent = poll.question;
-    buildRaceStage();
-    raceRenderFrame();
-    renderModuleCounts();
-    startRace(true);
-    racePlay?.focus({ preventScroll: true });
-  }
-
-  function closePollRace() {
-    if (!raceBox) return;
-    cancelAnimationFrame(raceRaf);
-    racePlaying = false;
-    racePollId = null;
-    raceData = null;
-    raceRows.clear();
-    document.body.classList.remove("show-race");
-    raceBox.setAttribute("aria-hidden", "true");
-  }
-
-  function refreshRaceLive() {
-    if (!raceOpenNow()) return;
-    const poll = racePoll();
-    if (!poll) { closePollRace(); return; }
-    const atEnd = !raceData || raceIndex >= raceFrames().length - 1;
-    raceData = pollRaceSeries(poll, votes);
-    buildRaceStage();
-    raceIndex = atEnd
-      ? Math.max(0, raceFrames().length - 1)
-      : Math.min(raceIndex, Math.max(0, raceFrames().length - 1));
-    raceClockValue = raceIndex;
-    if (raceTitle) raceTitle.textContent = poll.question;
-    raceRenderFrame();
-    if (racePlaying) startRace(true);
-  }
-
-  function toggleRacePlay() {
-    if (!raceData || raceFrames().length < 2) return;
-    if (racePlaying) {
-      racePlaying = false;
-      cancelAnimationFrame(raceRaf);
-      updateRaceControls();
-      return;
-    }
-    if (raceIndex >= raceFrames().length - 1) {
-      raceIndex = 0;
-      raceClockValue = 0;
-      raceRenderFrame();
-    }
-    startRace(true);
-  }
-
-  function replayRace() {
-    if (!raceData) return;
-    raceIndex = 0;
-    raceClockValue = 0;
-    raceRenderFrame();
-    startRace(true);
-  }
 
   /* ── event media wall (phones upload, board shows) ─────────── */
   const mediaOpenNow = () => document.body.classList.contains("show-media");
@@ -1794,6 +930,11 @@
     author.textContent = item.author || t("Guest");
     author.title = item.author || t("Guest");
 
+    const date = document.createElement("time");
+    date.className = "media-card__date";
+    date.dateTime = item.created_at || "";
+    date.textContent = dayStamp(item);
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "media-card__remove";
@@ -1818,7 +959,7 @@
       removeMediaItem(item, remove);
     });
 
-    frame.append(kind, author, remove);
+    frame.append(kind, author, date, remove);
     card.append(frame);
     return card;
   }
@@ -1827,7 +968,8 @@
     if (!mediaGrid) return;
     renderModuleCounts();
     if (mediaPresent) { renderMediaStage(); return; }
-    const list = mediaVisible();
+    renderDayRail(mediaDays, mediaSorted());
+    const list = mediaVisible().filter(inDashDay);
     mediaGrid.replaceChildren(...list.map(mediaCard));
     updateMediaSummary(list.length);
     if (!list.length) {
@@ -2103,13 +1245,13 @@
 
       const approve = document.createElement("button");
       approve.type = "button";
-      approve.className = "poll-btn poll-btn--primary live-request-row__allow";
+      approve.className = "live-request-btn live-request-btn--primary live-request-row__allow";
       approve.textContent = t("Allow");
       approve.addEventListener("click", () => approveLiveRequest(req.requestId, pick.value));
 
       const deny = document.createElement("button");
       deny.type = "button";
-      deny.className = "poll-btn live-request-row__deny";
+      deny.className = "live-request-btn live-request-row__deny";
       deny.textContent = t("Deny");
       deny.addEventListener("click", () => denyLiveRequest(req.requestId));
 
@@ -2133,7 +1275,7 @@
       });
       liveAlertDismissed = false;
       playRequestChime();
-      flashPollStatus(t("{n} go-live requests", { n: liveRequests.size }));
+      flashStatus(t("{n} go-live requests", { n: liveRequests.size }));
     }
     renderLiveRequests();
   }
@@ -2158,7 +1300,7 @@
     try { liveHost?.approve?.(requestId, where); } catch (err) { console.warn("Could not approve live request", err); }
     liveRequests.delete(requestId);
     renderLiveRequests();
-    flashPollStatus(t("Live approved · {where}", { where: livePlacementLabel(where) }));
+    flashStatus(t("Live approved · {where}", { where: livePlacementLabel(where) }));
     if (where === "split") enterSplit(["stream", "media"]);
     else if (where === "media") { if (!splitActive()) openMediaWall(); }
     else if (where === "float") { if (liveFloat) liveFloat.hidden = false; }
@@ -2171,14 +1313,14 @@
     try { liveHost?.deny?.(requestId); } catch (err) { console.warn("Could not deny live request", err); }
     liveRequests.delete(requestId);
     renderLiveRequests();
-    flashPollStatus(t("Live request denied"));
+    flashStatus(t("Live request denied"));
   }
 
   /* Full-screen album: one photo or video at a time, advanced by the same
      autoplay timing the notes use (start after / seconds per slide). */
   function mediaStageList() {
     /* arrival order, like the notes slideshow (the grid stays newest-first) */
-    return mediaSorted().slice(-prefs.mediaMax);
+    return mediaSorted().filter(inDashDay).slice(-prefs.mediaMax);
   }
 
   function renderMediaStage() {
@@ -2230,7 +1372,9 @@
     author.textContent = item.author || t("Guest");
     const kind = document.createElement("span");
     kind.textContent = item.kind === "video" ? t("Video") : t("Photo");
-    meta.append(author, kind);
+    const when = document.createElement("time");
+    when.textContent = dayStamp(item);
+    meta.append(author, kind, when);
     mediaStageBody.append(frame, meta);
 
     if (mediaStageCount) {
@@ -2400,10 +1544,9 @@
   const MODULE_META = {
     notes: { label: "Notes", icon: "📝", root: () => board },
     media: { label: "Media", icon: "🖼️", root: () => mediaWall },
-    poll: { label: "Poll", icon: "▣", root: () => pollRoom },
     stream: { label: "Stream", icon: "📹", root: () => streamWall }
   };
-  const MODULE_KEYS = ["notes", "media", "poll", "stream"];
+  const MODULE_KEYS = ["notes", "media", "stream"];
   const moduleLabel = key => t(MODULE_META[key]?.label || "Notes");
   const streamWallOpenNow = () => document.body.classList.contains("show-stream");
   const splitActive = () => splitModules.length > 1 && !!splitStage && !splitStage.hidden;
@@ -2415,7 +1558,6 @@
   function moduleCount(key) {
     if (key === "notes") return notes.length - notes.filter(n => hidden.has(n.id)).length;
     if (key === "media") return mediaVisible().length;
-    if (key === "poll") return polls.length;
     if (key === "stream") return liveStreams.size;
     return 0;
   }
@@ -2424,17 +1566,17 @@
     if (!countHosts.length) return;
     countHosts.forEach(host => {
       const skip = new Set((host.dataset.countsSkip || "").split(/\s+/).filter(Boolean));
-      if (!skip.size) {
-        skip.add(host.closest(".poll-room") ? "poll"
-          : host.closest(".stream-wall") ? "stream"
-          : "media");
-      }
+      if (!skip.size) skip.add(host.closest(".stream-wall") ? "stream" : "media");
       const keys = MODULE_KEYS.filter(key => !skip.has(key));
       if (!keys.length) { host.replaceChildren(); return; }
       host.replaceChildren(...keys.map(key => {
         const n = moduleCount(key);
-        const chip = document.createElement("span");
+        const chip = document.createElement("button");
+        chip.type = "button";
         chip.className = "module-count" + (n ? "" : " is-zero");
+        chip.dataset.module = key;
+        chip.title = t("Open {module}", { module: moduleLabel(key) });
+        chip.setAttribute("aria-label", t("Open {module}", { module: moduleLabel(key) }));
         const label = document.createElement("span");
         label.className = "module-count__label";
         label.textContent = moduleLabel(key);
@@ -2453,8 +1595,6 @@
     const kept = new Set(keep);
     if (splitActive() && !kept.has("split")) exitSplit(false);
     if (notesPresent && !kept.has("notes")) setNotesPresentation(false);
-    if (pollRoomOpenNow() && !kept.has("poll")) closePollRoom();
-    if (raceOpenNow() && !kept.has("race")) closePollRace();
     if (mediaOpenNow() && !kept.has("media")) closeMediaWall();
     if (streamWallOpenNow() && !kept.has("stream")) closeStreamWall();
     if (dashboardOpen() && !kept.has("dashboard")) closeDashboard();
@@ -2496,7 +1636,6 @@
     closeAllModules();
     activeModule = name;
     if (name === "media") openMediaWall();
-    else if (name === "poll") openPollRoom();
     else if (name === "stream") openStreamWall();
     else { layout(); updateStatus(); }
     document.body.dataset.module = name;
@@ -2674,7 +1813,7 @@
     }
   }
 
-  /* ── exports: PDF summary + notes-only JPEG ───────────────── */
+  /* ── exports: notes-only JPEG + highlights report ─────────── */
   function exportCategories() {
     return categoryList().map(cat => ({ key: cat.key, label: cat.label, color: cat.color }));
   }
@@ -2709,25 +1848,19 @@
     await window.StickyExport.downloadJPEG(exportPayload(vis()));
   }
 
-  async function downloadWallPDF() {
-    if (typeof window.StickyExport?.downloadPDF !== "function") return;
-    await window.StickyExport.downloadPDF(exportPayload(exportableNotes()));
+  function openWallHighlights() {
+    if (typeof window.StickyHighlights?.open !== "function") return;
+    setExtrasOpen(false);
+    window.StickyHighlights.open({
+      ...exportPayload(exportableNotes()),
+      stats: { media: mediaVisible().length, stream: liveStreams.size }
+    });
   }
 
   $("extras-download-jpeg")?.addEventListener("click", downloadWallJPEG);
   $("dash-download-jpeg")?.addEventListener("click", downloadWallJPEG);
-  $("extras-download-pdf")?.addEventListener("click", downloadWallPDF);
-  $("dash-download-pdf")?.addEventListener("click", downloadWallPDF);
-
-  /* ── race controls ─────────────────────────────────────────── */
-  $("poll-race-open")?.addEventListener("click", () => {
-    const poll = pollSorted().find(p => p.status === "open") || pollSorted()[0];
-    if (!poll) { flashPollStatus("Create a poll first"); return; }
-    openPollRace(poll);
-  });
-  raceClose?.addEventListener("click", closePollRace);
-  racePlay?.addEventListener("click", toggleRacePlay);
-  raceReplay?.addEventListener("click", replayRace);
+  $("extras-highlights")?.addEventListener("click", openWallHighlights);
+  $("dash-highlights")?.addEventListener("click", openWallHighlights);
 
   /* ── media wall controls ───────────────────────────────────── */
   $("extras-media-open")?.addEventListener("click", () => { setExtrasOpen(false); openMediaWall(); });
@@ -2758,13 +1891,18 @@
   moduleHome?.querySelectorAll(".module-card[data-module]").forEach(button => {
     button.addEventListener("click", () => activateModule(button.dataset.module));
   });
-  $("status-modules")?.addEventListener("click", openModuleHome);
+  /* Every other-module count is a shortcut into that module. */
+  document.addEventListener("click", event => {
+    const chip = event.target.closest?.(".module-count[data-module]");
+    if (!chip) return;
+    event.preventDefault();
+    activateModule(chip.dataset.module);
+  });
   $("extras-home")?.addEventListener("click", () => { setExtrasOpen(false); openModuleHome(); });
   $("extras-split")?.addEventListener("click", openSplitDialog);
   $("extras-stream-wall")?.addEventListener("click", () => { setExtrasOpen(false); activateModule("stream"); });
   $("split-cancel")?.addEventListener("click", closeSplitDialog);
   $("split-exit")?.addEventListener("click", () => exitSplit(true));
-  $("split-home")?.addEventListener("click", () => openModuleHome());
   $("split-form")?.addEventListener("submit", event => {
     event.preventDefault();
     const picked = [...(splitOptions?.querySelectorAll('input[type="checkbox"]:checked') || [])].map(input => input.value);
@@ -2796,100 +1934,6 @@
   });
   $("live-request-close")?.addEventListener("click", closeLiveRequestDialog);
   $("live-float-close")?.addEventListener("click", () => { if (liveFloat) liveFloat.hidden = true; });
-
-  raceProgress?.addEventListener("input", () => {
-    if (!raceData) return;
-    const frames = raceFrames().length;
-    if (!frames) return;
-    racePlaying = false;
-    cancelAnimationFrame(raceRaf);
-    raceIndex = Math.round((Number(raceProgress.value) / 100) * Math.max(0, frames - 1));
-    raceClockValue = raceIndex;
-    raceRenderFrame();
-    updateRaceControls();
-  });
-  raceBox?.querySelectorAll("[data-race-speed]").forEach(button => {
-    button.addEventListener("click", () => {
-      raceSpeed = Number(button.dataset.raceSpeed) || 1;
-      updateRaceControls();
-      if (racePlaying) startRace(true);
-    });
-  });
-  raceBox?.addEventListener("click", event => {
-    if (event.target === raceBox) closePollRace();
-  });
-
-  $("poll-close")?.addEventListener("click", closePollRoom);
-  $("poll-new")?.addEventListener("click", () => openPollEditor(null));
-  $("poll-present")?.addEventListener("click", () => setPollsPresentation(!pollsPresent, "all"));
-  $("poll-present-one")?.addEventListener("click", () => {
-    if (pollsPresent && pollStageMode) setPollsPresentation(false);
-    else setPollsPresentation(true, "one");
-  });
-  $("poll-present-manual")?.addEventListener("click", () => {
-    if (pollsPresent && presentationManual) setPollsPresentation(false);
-    else setPollsPresentation(true, "one", true);
-  });
-  $("poll-empty-new")?.addEventListener("click", () => openPollEditor(null));
-  $("extras-poll-room")?.addEventListener("click", openPollRoom);
-  $("extras-poll-new")?.addEventListener("click", () => { setExtrasOpen(false); openPollEditor(null); });
-  $("extras-poll-present")?.addEventListener("click", () => {
-    setExtrasOpen(false);
-    if (!pollRoomOpenNow()) openPollRoom();
-    setPollsPresentation(true, "all");
-  });
-  $("extras-poll-present-one")?.addEventListener("click", () => {
-    setExtrasOpen(false);
-    if (!pollRoomOpenNow()) openPollRoom();
-    setPollsPresentation(true, "one");
-  });
-  $("extras-poll-present-manual")?.addEventListener("click", () => {
-    setExtrasOpen(false);
-    if (!pollRoomOpenNow()) openPollRoom();
-    setPollsPresentation(true, "one", true);
-  });
-  $("dash-poll-new")?.addEventListener("click", event => { event.stopPropagation(); openPollEditor(null); });
-  $("status-polls")?.addEventListener("click", event => { event.stopPropagation(); openPollRoom(); });
-
-  pollFilters?.addEventListener("click", event => {
-    const button = event.target.closest("button[data-poll-filter]");
-    if (!button) return;
-    pollFilter = button.dataset.pollFilter || "all";
-    renderPollRoom();
-  });
-
-  pollGrid?.addEventListener("click", event => {
-    const button = event.target.closest("button[data-poll-act]");
-    if (!button) return;
-    const card = button.closest("[data-poll]");
-    const poll = polls.find(p => p.id === card?.dataset.poll);
-    if (!poll) return;
-    const act = button.dataset.pollAct;
-    if (act === "edit") openPollEditor(poll);
-    else if (act === "race") openPollRace(poll);
-    else if (act === "share") openShareDialog("poll", poll);
-    else if (act === "duplicate") duplicatePoll(poll);
-    else if (act === "toggle") togglePollStatus(poll);
-    else if (act === "reset") armButton(button, t("Confirm reset"), () => resetPollVotes(poll));
-    else if (act === "delete") armButton(button, t("Confirm delete"), () => deletePoll(poll));
-  });
-
-  pollTypeSelect?.addEventListener("change", syncPollEditorFields);
-  pollOptions?.addEventListener("input", syncPollEditorFields);
-  pollAddOption?.addEventListener("click", () => {
-    if (!pollOptions) return;
-    const count = pollOptions.querySelectorAll(".poll-option-row").length;
-    if (count >= MAX_POLL_OPTIONS) return;
-    pollOptions.append(pollOptionRow(t("Option {n}", { n: count + 1 })));
-    syncPollEditorFields();
-    pollOptions.lastElementChild?.querySelector("input")?.focus();
-  });
-  pollMax?.addEventListener("input", () => {
-    if (pollMaxOut) pollMaxOut.textContent = pollMax.value;
-  });
-  pollCancel?.addEventListener("click", () => pollDialog.close());
-  pollDialog?.addEventListener("click", event => { if (event.target === pollDialog) pollDialog.close(); });
-  pollForm?.addEventListener("submit", savePollEditor);
 
   function hideNote(id) {
     const nt = notes.find(n => n.id === id);
@@ -2998,18 +2042,16 @@
     try {
       await Store.clearSubmissions(passphrase);
       if (mediaPresent) setMediaPresentation(false);
-      if (pollsPresent) setPollsPresentation(false);
-      if (raceOpenNow()) closePollRace();
       closeFocus();
       hidden.clear();
       saveHidden();
-      await Promise.allSettled([syncNotes(), syncPolls(), syncMedia()]);
+      await Promise.allSettled([syncNotes(), syncMedia()]);
       setDashboard(false);
       showNotesWall();
       renderDashboard();
       updateStatus();
       resetDialog.close();
-      flashPollStatus("All submissions cleared");
+      flashStatus("All submissions cleared");
     } catch (err) {
       console.error("Could not clear submissions", err);
       const message = String(err?.message || "");
@@ -3471,7 +2513,8 @@
     const nt = notes.find(n => n.id === focusId);
     if (!nt) return;
     const list = vis(), i = list.findIndex(n => n.id === focusId);
-    focusCat.textContent = t(CATS[nt.category]?.label || "Note");
+    focusCat.textContent = t(CATS[nt.category]?.label || "Note") +
+      (typeof noteDateLabel === "function" && noteDateLabel(nt.created_at) ? " · " + noteDateLabel(nt.created_at) : "");
     focusCount.textContent = t("{i} of {n}", { i: i < 0 ? 1 : i + 1, n: Math.max(1, list.length) });
     focusMeta.style.setProperty("--focus-dot", CATS[nt.category]?.color || "#fff4e6");
   }
@@ -3542,7 +2585,7 @@
   });
 
   /* ── presenter extras dock ─────────────────────────────────── */
-  const EXTRAS_TOGGLES = ["extras-toggle", "poll-controls", "media-controls", "stream-controls", "split-controls"];
+  const EXTRAS_TOGGLES = ["extras-toggle", "media-controls", "stream-controls", "split-controls"];
   function setExtrasOpen(open) {
     if (!extras) return;
     extras.classList.toggle("open", !!open);
@@ -3573,7 +2616,6 @@
      leaving the rest of the wall untouched. */
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap", "dashColor"],
-    polls: ["chartType", "chartStyle"],
     look: ["brand", "qr", "qrX", "qrY", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
     presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
     media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
@@ -3586,7 +2628,6 @@
     savePrefs();
     applyPrefs(true);
     if (module === "look" || module === "notes") applyLook();
-    if (module === "polls") renderPollChrome();
     if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
     if (button) {
@@ -3602,7 +2643,6 @@
   }
 
   [["notes", "extras-defaults-notes"],
-   ["polls", "extras-defaults-polls"],
    ["look", "extras-defaults-look"],
    ["presentation", "extras-defaults-presentation"],
    ["media", "extras-defaults-media"]].forEach(([module, id]) => {
@@ -3700,7 +2740,7 @@
 
   /* Notes controls can be used from any module: show the notes wall first. */
   const showNotesWall = () => {
-    if (moduleHomeOpen || activeModule !== "notes" || splitActive() || mediaOpenNow() || pollRoomOpenNow() || streamWallOpenNow()) {
+    if (moduleHomeOpen || activeModule !== "notes" || splitActive() || mediaOpenNow() || streamWallOpenNow()) {
       activateModule("notes");
     }
   };
@@ -3769,15 +2809,6 @@
     applyLook();
   });
 
-  extrasPanel?.addEventListener("click", e => {
-    const typeBtn = e.target.closest("[data-chart-type]");
-    if (typeBtn) {
-      setChartType(typeBtn.dataset.chartType);
-      return;
-    }
-    const styleBtn = e.target.closest("[data-chart-style]");
-    if (styleBtn) setChartStyle(styleBtn.dataset.chartStyle);
-  });
   $("extras-bg-color-reset")?.addEventListener("click", () => {
     prefs.bgColor = "";
     savePrefs();
@@ -3898,7 +2929,7 @@
 
   /* ── keyboard (moderator at the laptop) ────────────────────── */
   document.addEventListener("keydown", e => {
-    if (eventDialog?.open || categoryDialog?.open || pollDialog?.open || splitDialog?.open || liveRequestDialog?.open || /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
+    if (eventDialog?.open || categoryDialog?.open || splitDialog?.open || liveRequestDialog?.open || /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
     /* let Space/Enter activate a focused button or note natively */
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
@@ -3912,9 +2943,8 @@
     }
 
     if (moduleHomeOpen) {
-      if (/^[1-4]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }
+      if (/^[1-3]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }
       else if (k === "v") { e.preventDefault(); activateModule("media"); }
-      else if (k === "p") { e.preventDefault(); activateModule("poll"); }
       return;
     }
 
@@ -3929,10 +2959,8 @@
     if (k === "h") {
       e.preventDefault();
       if (notesPresent) setNotesPresentation(false);
-      if (pollsPresent) setPollsPresentation(false);
       if (mediaPresent) setMediaPresentation(false);
       if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
-      if (raceOpenNow()) closePollRace();
       if (dashboardOpen()) closeDashboard();
       if (focusId) closeFocus();
       setExtrasOpen(!extras?.classList.contains("open"));
@@ -3948,38 +2976,15 @@
     }
     if (k === "e") { e.preventDefault(); setExtrasOpen(false); openEventEditor(); return; }
     if (k === "c") { e.preventDefault(); setExtrasOpen(false); openCategoryEditor(); return; }
-    if (k === "n") { e.preventDefault(); setExtrasOpen(false); openPollEditor(null); return; }
-    if (k === "p") {
-      e.preventDefault();
-      if (pollRoomOpenNow()) closePollRoom();
-      else openPollRoom();
-      return;
-    }
     if (k === "v") {
       e.preventDefault();
       if (mediaOpenNow()) closeMediaWall();
       else openMediaWall();
       return;
     }
-    if (k === "0") { e.preventDefault(); openModuleHome(); return; }
-    if (k === "g") {
-      e.preventDefault();
-      if (!pollRoomOpenNow()) openPollRoom();
-      if (e.shiftKey) cycleChartStyle();
-      else cycleChartType(e.altKey ? -1 : 1);
-      return;
-    }
-    if (k === "o") {
-      e.preventDefault();
-      if (!pollRoomOpenNow()) openPollRoom();
-      if (pollsPresent && pollStageMode) setPollsPresentation(false);
-      else setPollsPresentation(true, "one");
-      return;
-    }
 
     if (splitActive()) {
       if (k === "escape") { e.preventDefault(); exitSplit(true); }
-      else if (k === "0") { e.preventDefault(); openModuleHome(); }
       else if (k === "f" && splitModules.includes("media")) {
         e.preventDefault();
         if (mediaPresent && !presentationManual) setMediaPresentation(false);
@@ -3999,7 +3004,6 @@
         else closeStreamWall();
       }
       else if (k === "f") { e.preventDefault(); setStreamPresentation(!document.body.classList.contains("present-stream")); }
-      else if (k === "0") { e.preventDefault(); openModuleHome(); }
       else if (k === "v") { e.preventDefault(); openMediaWall(); }
       return;
     }
@@ -4022,44 +3026,6 @@
       return;
     }
     if (k === "v") { e.preventDefault(); openMediaWall(); return; }
-    if (raceOpenNow()) {
-      if (k === "escape") { e.preventDefault(); closePollRace(); }
-      else if (k === "r") { e.preventDefault(); replayRace(); }
-      return;
-    }
-    if (pollRoomOpenNow()) {
-      if (k === "escape") {
-        if (pollsPresent) setPollsPresentation(false);
-        else if (extras?.classList.contains("open")) setExtrasOpen(false);
-        else closePollRoom();
-      }
-      else if (k === "p") closePollRoom();
-      else if (k === "f") setPollsPresentation(!pollsPresent, "all");
-      else if (k === "o") {
-        if (pollsPresent && pollStageMode) setPollsPresentation(false);
-        else setPollsPresentation(true, "one");
-      }
-      else if (k === "m") {
-        if (pollsPresent && presentationManual) setPollsPresentation(false);
-        else setPollsPresentation(true, "one", true);
-      }
-      else if (pollsPresent && (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown")) { e.preventDefault(); stepPollStage(1); }
-      else if (pollsPresent && (k === "arrowleft" || k === "arrowup" || k === "pageup")) { e.preventDefault(); stepPollStage(-1); }
-      else if (k === "n") openPollEditor(null);
-      else if (k === "g") { e.preventDefault(); if (e.shiftKey) cycleChartStyle(); else cycleChartType(e.altKey ? -1 : 1); }
-      else if (k === "h") {
-        if (pollsPresent) { setPollsPresentation(false); setExtrasOpen(true); }
-        else setExtrasOpen(!extras?.classList.contains("open"));
-      }
-      else if (k === "e") openEventEditor();
-      else if (k === "c") openCategoryEditor();
-      else if (k === "d") openDashboard();
-      else if (k === "r") {
-        const poll = pollSorted().find(p => p.status === "open") || pollSorted()[0];
-        if (poll) openPollRace(poll);
-      }
-      return;
-    }
     if (dashboardOpen()) {
       if (k === "escape" || k === "d") closeDashboard();
       else if (k === "h") setExtrasOpen(!extras?.classList.contains("open"));
@@ -4068,7 +3034,7 @@
     if (k === "escape") {
       if (notesPresent) setNotesPresentation(false);
       else if (focusId) closeFocus();
-      else { closeFocus(); setExtrasOpen(false); closePollRoom(); }
+      else { closeFocus(); setExtrasOpen(false); }
     }
     else if (k === "d") toggleDashboard();
     else if (k === "x" && focusId) hideNote(focusId);
@@ -4076,8 +3042,6 @@
     else if (k === "arrowleft" || k === "arrowup") { e.preventDefault(); step(-1); }
     else if (k === "e" && !focusId) openEventEditor();
     else if (k === "c" && !focusId) openCategoryEditor();
-    else if (k === "p" && !focusId) openPollRoom();
-    else if (k === "n" && !focusId) openPollEditor(null);
     else if (k === "h" && !focusId) {
       if (notesPresent) { setNotesPresentation(false); setExtrasOpen(true); }
       else setExtrasOpen(!extras?.classList.contains("open"));
@@ -4094,12 +3058,9 @@
         fbar.classList.add("on");
       } else fbar.classList.toggle("on");
     }
-    else if (/^[0-9]$/.test(k)) {
-      if (k === "0") openModuleHome();
-      else {
-        const cat = categoryList()[Number(k) - 1];
-        if (cat) setFilter(cat.key);
-      }
+    else if (/^[1-9]$/.test(k)) {
+      const cat = categoryList()[Number(k) - 1];
+      if (cat) setFilter(cat.key);
     }
   });
 
@@ -4140,31 +3101,6 @@
       frag.appendChild(d);
     }
     ambient.replaceChildren(frag);
-  }
-
-  /* chart type/style: presenter choice is remembered locally, so the board
-     opens with the same look on the next session. */
-  function setChartType(type) {
-    if (!CHART_TYPE_KEYS.includes(type)) return;
-    prefs.chartType = type;
-    savePrefs();
-    syncPrefInputs();
-    renderPollChrome();
-  }
-  function setChartStyle(style) {
-    if (!CHART_STYLE_KEYS.includes(style)) return;
-    prefs.chartStyle = style;
-    savePrefs();
-    syncPrefInputs();
-    renderPollChrome();
-  }
-  function cycleChartType(step) {
-    const i = CHART_TYPE_KEYS.indexOf(prefs.chartType);
-    const next = CHART_TYPE_KEYS[(i + (step || 1) + CHART_TYPE_KEYS.length) % CHART_TYPE_KEYS.length];
-    setChartType(next);
-  }
-  function cycleChartStyle() {
-    setChartStyle(prefs.chartStyle === "hand" ? "clean" : "hand");
   }
 
   /* phone QR */
@@ -4305,7 +3241,7 @@
   buildPiles(true);
   updateStatus();
 
-  /* The wall comes first with its controls visible. ?module=notes|media|poll|stream
+  /* The wall comes first with its controls visible. ?module=notes|media|stream
      opens a module straight away. */
   const bootModuleParam = new URLSearchParams(location.search).get("module");
   const bootModuleTarget = MODULE_KEYS.includes(bootModuleParam) ? bootModuleParam : "notes";
@@ -4350,24 +3286,6 @@
     });
 
     Store.subscribeCategories(list => applyCategoryUpdate(list));
-
-    await syncPolls();
-    Store.subscribePolls({
-      onPoll: poll => {
-        if (isSamplePoll(poll)) return;
-        upsertPollLocal(poll);
-        renderPollChrome();
-      },
-      onDelete: id => { removePollLocal(id); renderPollChrome(); },
-      onVote: vote => {
-        if (!polls.some(poll => poll.id === vote.poll_id)) return;
-        upsertVoteLocal(vote);
-        renderPollChrome();
-      },
-      onVoteDelete: vote => { removeVoteLocal(vote); renderPollChrome(); },
-      onResetVotes: id => { resetVotesLocal(id); renderPollChrome(); },
-      resync: syncPolls
-    });
 
     await syncMedia();
     Store.subscribeMedia({
