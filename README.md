@@ -2,11 +2,15 @@
 
 Three static pages + Supabase realtime. Hosted free on GitHub Pages.
 
+Live at **https://mapnkawa.chat** (GitHub Pages, custom domain).
+
 | Page | Who | URL |
 |---|---|---|
-| `index.html` | Main monitor (presenter board) — includes the draggable scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://<you>.github.io/<repo>/` |
-| `phone.html` | Audience (phones) — the board's QR code points here | `https://<you>.github.io/<repo>/phone.html` |
-| `embed.html` | Optional read-only live notes embed | `https://<you>.github.io/<repo>/embed.html?module=notes` |
+| `index.html` | Main monitor (presenter board) — includes the draggable scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://mapnkawa.chat/` |
+| `phone.html` | Audience (phones) — the board's QR code points here | `https://mapnkawa.chat/phone.html` |
+| `embed.html` | Optional read-only live notes embed | `https://mapnkawa.chat/embed.html?module=notes` |
+
+The apex domain is set in `CNAME`; `www.mapnkawa.chat` redirects to it. The old `https://<you>.github.io/<repo>/` addresses redirect to the custom domain.
 
 ## Try it now (local mode)
 
@@ -21,6 +25,8 @@ Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your l
 4. Project Settings → API: copy *Project URL* and the publishable/anon key into `js/config.js`.
 5. **GitHub** → push this folder to a repo → Settings → Pages → Deploy from branch `main` / root.
 6. Open the board and phone URLs above. Done.
+
+Custom domain (`CNAME` = `mapnkawa.chat`): at the DNS host point the apex `A` records to GitHub Pages — `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` — and add `www` as a `CNAME` to `<you>.github.io`. Then set the domain in repo **Settings → Pages → Custom domain** and tick **Enforce HTTPS** once the certificate is issued. If you rename or move the repo, update `CNAME` in the same commit.
 
 Upgrading an existing install? Run `supabase/migration-author-names.sql` once if the board still hides sender names, `supabase/migration-categories.sql` to allow the five dynamic categories, `supabase/migration-media.sql` for the media wall, and `supabase/migration-presenter-reset.sql` for the passphrase reset. All keep existing notes.
 
