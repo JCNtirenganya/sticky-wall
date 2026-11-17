@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b120d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sticky Wall">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<title data-i18n="Sticky note">Sticky note</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css?v=20261117d"><link rel="stylesheet" href="css/mobile.css?v=20261117d">
+<script>
+/* Apply the saved phone theme before the first paint. */
+try {
+  var savedTheme = localStorage.getItem("sticky_theme");
+  if (/^(classic|ocean|mint|blush|grape)$/.test(savedTheme || "")) {
+    document.documentElement.dataset.theme = savedTheme;
+  }
+} catch (e) {}
+</script>
+</head>
+<body>
+<main class="app">
+
+  <!-- 1 · sender name -->
+  <section id="s-name" class="screen">
+    <div class="bg-notes" aria-hidden="true">
+      <span class="bg-note n1"></span><span class="bg-note n2"></span><span class="bg-note n3"></span>
+    </div>
+    <button id="theme-open-name" class="theme-toggle theme-toggle--float" type="button" aria-label="Colour theme" aria-expanded="false" aria-controls="theme-tray">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.6a2.4 2.4 0 0 0 1.9-3.9 2.4 2.4 0 0 1 1.9-3.9H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="10.5" cy="7" r=".9"/><circle cx="15" cy="7.5" r=".9"/><circle cx="17" cy="11.5" r=".9"/></svg>
+    </button>
+    <div class="name-wrap">
+      <div class="brandmark">
+        <span class="brandmark__bean" aria-hidden="true">
+          <svg viewBox="0 0 24 26"><path d="M12 2c5.4 0 8.6 4.1 8.6 9.4 0 6.2-3.5 12.6-8.6 12.6S3.4 17.6 3.4 11.4C3.4 6.1 6.6 2 12 2Z" fill="#b06a3a" stroke="#2a160b" stroke-width="1.7"/><path d="M12 3.2c-3.2 3.8 3.1 5.7 0 9.5s3.1 5.7 0 9.6" fill="none" stroke="#2a160b" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+        <span>Sticky Wall</span>
+      </div>
+
+      <form id="f-name" class="paper-card">
+        <span class="paper-card__strip" aria-hidden="true"></span>
+        <p class="eyebrow" data-i18n="Before we start">Before we start</p>
+        <label for="name" data-i18n="What should we call you?">What should we call you?</label>
+        <input id="name" maxlength="40" autocomplete="nickname" autocapitalize="words" placeholder="A name or nickname" data-i18n-placeholder="A name or nickname" required>
+        <button type="submit"><span data-i18n="Continue">Continue</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="fine" data-i18n="Your name appears with your note on the wall.">Your name appears with your note on the wall.</p>
+      </form>
+      <div class="lang-switch lang-switch--center" data-lang-switch></div>
+    </div>
+  </section>
+
+  <!-- 2 · module home · choose what to start -->
+  <section id="s-home" class="screen hidden">
+    <div class="home-wrap">
+      <header class="home-head">
+        <div class="home-head__top">
+          <div class="brandmark brandmark--home">
+            <span class="brandmark__bean" aria-hidden="true">
+              <svg viewBox="0 0 24 26"><path d="M12 2c5.4 0 8.6 4.1 8.6 9.4 0 6.2-3.5 12.6-8.6 12.6S3.4 17.6 3.4 11.4C3.4 6.1 6.6 2 12 2Z" fill="#b06a3a" stroke="#2a160b" stroke-width="1.7"/><path d="M12 3.2c-3.2 3.8 3.1 5.7 0 9.5s3.1 5.7 0 9.6" fill="none" stroke="#2a160b" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </span>
+            <span>Sticky Wall</span>
+          </div>
+          <div class="head-tools">
+            <button id="theme-open-home" class="theme-toggle" type="button" aria-label="Colour theme" aria-expanded="false" aria-controls="theme-tray">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.6a2.4 2.4 0 0 0 1.9-3.9 2.4 2.4 0 0 1 1.9-3.9H19a2 2 0 0 0 2-2A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10.5" r=".9"/><circle cx="10.5" cy="7" r=".9"/><circle cx="15" cy="7.5" r=".9"/><circle cx="17" cy="11.5" r=".9"/></svg>
+            </button>
+            <div class="lang-switch" data-lang-switch></div>
+          </div>
+        </div>
+        <p class="eyebrow" data-i18n="Choose a module">Choose a module</p>
+        <h1 data-i18n="What do you want to do?">What do you want to do?</h1>
+        <p class="cat-sub" data-i18n="Pick one to start. You can switch anytime.">Pick one to start. You can switch anytime.</p>
+      </header>
+
+      <div class="home-grid" aria-label="Modules" data-i18n-aria="Modules">
+        <button id="home-notes" class="home-card home-card--notes" type="button">
+          <span class="home-card__icon" aria-hidden="true">📝</span>
+          <span class="home-card__go" aria-hidden="true">→</span>
+          <span class="home-card__copy">
+            <b data-i18n="Notes">Notes</b>
+            <small data-i18n="Write a note for the wall.">Write a note for the wall.</small>
+          </span>
+        </button>
+        <button id="home-media" class="home-card home-card--media" type="button">
+          <span class="home-card__icon" aria-hidden="true">🖼️</span>
+          <span class="home-card__go" aria-hidden="true">→</span>
+          <span class="home-card__copy">
+            <b data-i18n="Media">Media</b>
+            <small data-i18n="Share a photo or short video.">Share a photo or short video.</small>
+          </span>
+        </button>
+        <button id="home-stream" class="home-card home-card--stream" type="button">
+          <span class="home-card__icon" aria-hidden="true">📹</span>
+          <span class="home-card__go" aria-hidden="true">→</span>
+          <span class="home-card__copy">
+            <b data-i18n="Stream">Stream</b>
+            <small data-i18n="Go live from your camera.">Go live from your camera.</small>
+          </span>
+        </button>
+      </div>
+
+      <button id="home-who" class="home-who" type="button"></button>
+    </div>
+  </section>
+
+  <!-- 3 · category (notes module) -->
+  <section id="s-cat" class="screen hidden">
+    <header class="cat-head">
+      <div class="cat-head__top">
+        <div class="cat-head__lead">
+          <button id="cat-back" class="back back--small" aria-label="Back to modules" data-i18n-aria="Back to modules">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          </button>
+          <p class="eyebrow" data-i18n="New note">New note</p>
+        </div>
+        <div class="lang-switch" data-lang-switch></div>
+      </div>
+      <h1 data-i18n="What’s on your mind?">What’s on your mind?</h1>
+      <p class="cat-sub" data-i18n="Pick a colour, then write.">Pick a colour, then write.</p>
+    </header>
+
+    <div id="cats" class="cats" aria-label="Note categories" data-i18n-aria="Note categories"></div>
+
+    <p id="demo-note" class="demo-note" hidden data-i18n="Demo mode · notes stay in this browser">Demo mode · notes stay in this browser</p>
+    <button id="who" class="who"></button>
+  </section>
+
+  <!-- 4 · write -->
+  <section id="s-write" class="screen hidden">
+    <header class="write-head">
+      <button id="back" class="back" aria-label="Back" data-i18n-aria="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <span class="cat-pill"><span class="dot"></span><span id="cat-pill-label">Idea</span></span>
+    </header>
+
+    <div class="note-stage">
+      <div id="sheet" class="sheet">
+        <textarea id="text" placeholder="" rows="1" autocomplete="off" spellcheck="true" aria-label="Your note" data-i18n-aria="Your note"></textarea>
+        <div class="sheet__foot">
+          <span id="hint">Keep it short and sweet.</span>
+          <span id="count">0 / 200</span>
+        </div>
+      </div>
+      <p id="link-hint" class="link-hint" hidden data-i18n="Select a word, then paste a link to embed it.">Select a word, then paste a link to embed it.</p>
+    </div>
+
+    <div class="write-foot">
+      <button id="send"><span data-i18n="Stick it on the wall">Stick it on the wall</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- 5 · share a photo or short video -->
+  <section id="s-media" class="screen media-screen hidden">
+    <header class="phone-head">
+      <button id="media-back" class="back" aria-label="Back to modules" data-i18n-aria="Back to modules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="phone-head__copy">
+        <p class="eyebrow" data-i18n="Event media">Event media</p>
+        <h1 data-i18n="Share a moment">Share a moment</h1>
+      </div>
+    </header>
+    <div class="media-scroll">
+      <article class="media-paper">
+        <p class="media-lead" data-i18n="Your photo or short video appears on the big screen. Phones never show the wall.">Your photo or short video appears on the big screen. Phones never show the wall.</p>
+        <input id="media-photo-file" type="file" accept="image/*" capture="environment" hidden>
+        <input id="media-video-file" type="file" accept="video/*" capture="environment" hidden>
+        <input id="media-file" type="file" accept="image/*,video/*" hidden>
+        <div id="media-source" class="media-source">
+          <div class="media-cap">
+            <button id="media-photo" class="media-cap__btn media-cap__btn--photo" type="button">
+              <span class="media-cap__icon" aria-hidden="true">📷</span>
+              <span class="media-cap__copy">
+                <b data-i18n="Take a photo">Take a photo</b>
+                <small data-i18n="Opens your camera app">Opens your camera app</small>
+              </span>
+            </button>
+            <button id="media-video" class="media-cap__btn media-cap__btn--video" type="button">
+              <span class="media-cap__icon" aria-hidden="true">🎥</span>
+              <span class="media-cap__copy">
+                <b data-i18n="Record a video">Record a video</b>
+                <small data-i18n="Up to 15 seconds">Up to 15 seconds</small>
+              </span>
+            </button>
+          </div>
+          <p class="media-or" data-i18n="or">or</p>
+          <button id="media-pick" class="media-pick media-pick--browse" type="button">
+            <span class="media-pick__icon" aria-hidden="true">🖼️</span>
+            <span class="media-pick__copy">
+              <b data-i18n="Browse photos and videos">Browse photos and videos</b>
+              <small data-i18n="Pick a file from this device">Pick a file from this device</small>
+            </span>
+          </button>
+          <p class="media-effects" data-i18n="Use your camera app's filters, effects or AI editing, then capture or pick the result here.">Use your camera app's filters, effects or AI editing, then capture or pick the result here.</p>
+        </div>
+        <div id="media-preview" class="media-preview" hidden></div>
+        <button id="media-send" class="phone-submit media-send" type="button" disabled data-i18n="Send to the big screen">Send to the big screen</button>
+        <p id="media-note" class="media-note" hidden></p>
+      </article>
+    </div>
+  </section>
+
+  <!-- 6 · go live from the phone camera -->
+  <section id="s-live" class="screen media-screen live-screen hidden">
+    <header class="phone-head">
+      <button id="live-back" class="back" aria-label="Back to modules" data-i18n-aria="Back to modules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="phone-head__copy">
+        <p class="eyebrow" data-i18n="Live from your phone">Live from your phone</p>
+        <h1 data-i18n="Go live">Go live</h1>
+      </div>
+    </header>
+    <div class="media-scroll">
+      <article class="media-paper">
+        <p class="media-lead" data-i18n="Only the event board sees your camera. Nothing is recorded.">Only the event board sees your camera. Nothing is recorded.</p>
+        <div id="live-stage" class="live-stage">
+          <video id="live-preview" class="live-preview" playsinline autoplay muted hidden></video>
+          <div id="live-placeholder" class="live-placeholder">
+            <span aria-hidden="true">📹</span>
+            <b data-i18n="Your camera is off">Your camera is off</b>
+            <small data-i18n="Start when you are ready.">Start when you are ready.</small>
+          </div>
+          <span id="live-badge" class="live-badge" hidden><span class="live-badge__dot" aria-hidden="true"></span><span data-i18n="Live">Live</span></span>
+        </div>
+        <p id="live-status" class="live-status" role="status" data-i18n="Camera off">Camera off</p>
+        <p class="live-request-note" data-i18n="The presenter must allow your camera before it opens.">The presenter must allow your camera before it opens.</p>
+        <div class="live-actions">
+          <button id="live-start" class="phone-submit live-start" type="button" data-i18n="Start live">Start live</button>
+          <button id="live-stop" class="live-stop" type="button" hidden data-i18n="Stop live">Stop live</button>
+        </div>
+        <div id="live-tools" class="live-tools" hidden>
+          <button id="live-flip" class="live-tool" type="button" data-i18n="Flip camera">Flip camera</button>
+          <button id="live-mic" class="live-tool" type="button" aria-pressed="true"><span data-i18n="Mute mic">Mute mic</span></button>
+        </div>
+        <button id="live-fallback" class="media-pick media-pick--browse live-fallback" type="button" hidden>
+          <span class="media-pick__icon" aria-hidden="true">🎬</span>
+          <span class="media-pick__copy">
+            <b data-i18n="Record a short video instead">Record a short video instead</b>
+            <small data-i18n="Works when a network blocks live video">Works when a network blocks live video</small>
+          </span>
+        </button>
+      </article>
+    </div>
+  </section>
+
+  <div id="theme-tray" class="theme-tray" role="radiogroup" aria-label="Colour theme" hidden>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="classic" title="Classic" aria-label="Classic"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="ocean" title="Ocean" aria-label="Ocean"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="mint" title="Mint" aria-label="Mint"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="blush" title="Blush" aria-label="Blush"></button>
+    <button class="theme-swatch" type="button" role="radio" aria-checked="false" data-theme="grape" title="Grape" aria-label="Grape"></button>
+  </div>
+
+  <!-- reactions: always available, whatever the board is showing -->
+  <div id="phone-reactions" class="phone-reactions" aria-hidden="true"></div>
+  <div id="react-fab" class="react-fab">
+    <div id="react-tray" class="react-tray" role="toolbar" aria-label="Reactions" data-i18n-aria="Reactions" hidden></div>
+    <button id="react-open" class="react-fab__button" type="button" aria-label="React" data-i18n-aria="React" aria-expanded="false" aria-controls="react-tray">
+      <span aria-hidden="true">😊</span>
+    </button>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=20261117d"></script><script src="js/i18n.js?v=20261117d"></script><script src="js/store.js?v=20261117d"></script><script src="js/shared.js?v=20261117d"></script>
+<script src="js/live.js?v=20261117d"></script>
+<script src="js/mobile.js?v=20261117d"></script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body></html>

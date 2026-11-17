@@ -1,17 +1,18 @@
 # Sticky Note Wall — live-event interaction system
 
-Two static pages + Supabase realtime. Hosted free on GitHub Pages.
+Three static pages + Supabase realtime. Hosted free on GitHub Pages.
 
 | Page | Who | URL |
 |---|---|---|
-| `index.html` | Audience (phones) — the board's QR code points here | `https://<you>.github.io/<repo>/` |
-| `board.html` | Main monitor — includes the draggable scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://<you>.github.io/<repo>/board.html` |
+| `index.html` | Main monitor (presenter board) — includes the draggable scannable QR card; press **Full screen** (**Shift+F**) when ready | `https://<you>.github.io/<repo>/` |
+| `phone.html` | Audience (phones) — the board's QR code points here | `https://<you>.github.io/<repo>/phone.html` |
+| `embed.html` | Optional read-only live notes embed | `https://<you>.github.io/<repo>/embed.html?module=notes` |
 
 ## Try it now (local mode)
 
-Leave `js/config.js` empty. Open `board.html` and `index.html` in two tabs of the same browser (serve with `python3 -m http.server`). Everything stays in that browser: submit from the phone page and watch the note land on the wall. To run a real event, fill in the Supabase keys as described below.
+Leave `js/config.js` empty. Open `index.html` and `phone.html` in two tabs of the same browser (serve with `python3 -m http.server`). Everything stays in that browser: submit from the phone page and watch the note land on the wall. To run a real event, fill in the Supabase keys as described below.
 
-Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your laptop's LAN address in `MOBILE_URL` (e.g. `http://192.168.1.20:8137/index.html`) so the QR code is scannable from a phone.
+Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your laptop's LAN address in `MOBILE_URL` (e.g. `http://192.168.1.20:8137/phone.html`) so the QR code is scannable from a phone.
 
 ## Go live
 1. **Supabase** → new project → SQL Editor → paste `supabase/schema.sql` → Run.
@@ -19,7 +20,7 @@ Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your l
 3. Paste `supabase/migration-presenter-reset.sql` → Run, then set your own passphrase with the update statement in step 2 of that file.
 4. Project Settings → API: copy *Project URL* and the publishable/anon key into `js/config.js`.
 5. **GitHub** → push this folder to a repo → Settings → Pages → Deploy from branch `main` / root.
-6. Open the two URLs above. Done.
+6. Open the board and phone URLs above. Done.
 
 Upgrading an existing install? Run `supabase/migration-author-names.sql` once if the board still hides sender names, `supabase/migration-categories.sql` to allow the five dynamic categories, `supabase/migration-media.sql` for the media wall, and `supabase/migration-presenter-reset.sql` for the passphrase reset. All keep existing notes.
 
@@ -49,7 +50,7 @@ Deliberately **zero-build**: plain HTML, CSS and modern JavaScript, served as st
 | `EVENT_SUBTITLE` | `"Notes from the room"` | Default second line under the title. |
 | `EVENT_LOGO` | `"assets/sanokip-cbc-light.png"` | Logo shown beside the title. Empty hides it. |
 | `EVENT_LOGO_ALT` | `"Sanokip CBC"` | Accessible description for the logo. |
-| `MOBILE_URL` | `""` | Address encoded in the board's QR code. Empty = the `index.html` beside `board.html`. |
+| `MOBILE_URL` | `""` | Address encoded in the board's QR code. Empty = the `phone.html` beside `index.html`. |
 | `HIGHLIGHTS_URL` | `""` | Supabase Edge Function that writes the highlights report with a model. Empty = local extractor. |
 | `MAX_CHARS` | `200` | Phone textarea limit and board fit target. |
 | `MIN_SECONDS_BETWEEN_NOTES` | `6` | Per-phone cooldown between submissions. |
@@ -60,7 +61,7 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **Click** a note → reading mode (note grows and centres, the rest greys out). **Esc** closes.
 - **← → / Space** previous / next note.
 - **E** or the pencil beside the logo → name the wall (event title + subtitle).
-- **One header**: the event name stays top-left everywhere, and its second line names the module on screen (Notes, Dashboard, Event media, Live stream, Split screen, Settings). Module walls have no repeated titles.
+- **One header**: the event name stays top-left everywhere, and its second line names the module on screen (Notes, Dashboard, Media, Stream, Split screen, Settings). Module walls have no repeated titles.
 - **C** or the slider button beside the logo → edit categories and colours. Up to nine categories.
 - **Filters** are hidden: hover the top edge or press **F**. Keys **1–9** pick categories; **0** = all.
 - **Settings** (**H**, or the button on every module wall and the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). It is the only route to the **Module home**.
@@ -130,8 +131,8 @@ Then set `HIGHLIGHTS_URL` in `js/config.js` to
 - `js/qrcode.js` — vendored MIT QR generator
 - `js/mobile.js` — name → category → write → send flow, media (15 s cap) and live camera
 - `js/store.js` — Supabase adapter or demo adapter (localStorage + BroadcastChannel)
-- `board.html` — main monitor markup
-- `index.html` — audience phone markup
+- `index.html` — main monitor markup
+- `phone.html` — audience phone markup
 - `supabase/functions/highlights/index.ts` — optional AI highlights Edge Function
 - `supabase/schema.sql` — tables, RLS, dynamic categories and the RPCs
 - `supabase/migration-media.sql` — media bucket, `event_media` table, storage policies and realtime

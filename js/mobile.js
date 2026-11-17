@@ -11,16 +11,6 @@
   let liveSession = null, liveStarting = false, livePendingCancel = null, liveFacing = "environment", liveMicOn = true;
   const IDS = ["s-name", "s-home", "s-cat", "s-write", "s-media", "s-live"];
 
-  const voterKey = (() => {
-    let key = safe.get("sticky_voter_key");
-    if (!key) {
-      key = window.crypto?.randomUUID ? "v-" + crypto.randomUUID()
-        : "v-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
-      safe.set("sticky_voter_key", key);
-    }
-    return key;
-  })();
-
   const whoText = () => t("Posting as {name} · change", {
     name: name.length > 22 ? name.slice(0, 21) + "…" : name
   });

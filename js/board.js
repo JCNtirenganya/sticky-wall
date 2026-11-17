@@ -230,8 +230,8 @@
     const cl = document.body.classList;
     if (cl.contains("split-mode")) return t("Split screen");
     if (cl.contains("show-dashboard")) return t("Dashboard");
-    if (cl.contains("show-media")) return t("Event media");
-    if (cl.contains("show-stream")) return t("Live stream");
+    if (cl.contains("show-media")) return t("Media");
+    if (cl.contains("show-stream")) return t("Stream");
     if (cl.contains("show-modules")) return t("Modules");
     return t("Notes");
   }
@@ -317,7 +317,7 @@
     shareCurrentUrl = url;
     const headingNode = $("share-title"), leadNode = $("share-lead");
     if (headingNode) headingNode.textContent = heading;
-    if (leadNode) leadNode.textContent = t("Anyone with this link or embed sees the results update live.");
+    if (leadNode) leadNode.textContent = t("Anyone with this link or embed sees the notes update live.");
     urlInput.value = url;
     embedInput.value = '<iframe src="' + url + '" width="100%" height="640" style="border:0;max-width:100%" loading="lazy" allowfullscreen title="' +
       (title || "Sticky Wall").replace(/"/g, "&quot;") + '"></iframe>';
@@ -991,8 +991,6 @@
   }
 
   /* ── live streams from phones (WebRTC) ─────────────────────── */
-  const liveCount = () => liveStreams.size;
-
   function liveHostFor(placement) {
     if (placement === "media") return mediaLiveGrid;
     if (placement === "float") return liveFloatGrid;
@@ -1407,7 +1405,7 @@
   function setMediaPresentation(on, manual) {
     /* Full-screen means the whole screen: step out of a split first. */
     if (on && splitActive() && splitModules.includes("media")) {
-      exitSplit(false);
+      exitSplit();
       openMediaWall();
     }
     const shown = mediaOpenNow();
@@ -1524,11 +1522,6 @@
     mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
   }
 
-  function toggleMediaWall() {
-    if (mediaOpenNow()) closeMediaWall();
-    else openMediaWall();
-  }
-
   async function syncMedia() {
     try {
       const list = await Store.listMedia();
@@ -1593,7 +1586,7 @@
      others first, so switching modules never leaves the old one underneath. */
   function closeModulesExcept(...keep) {
     const kept = new Set(keep);
-    if (splitActive() && !kept.has("split")) exitSplit(false);
+    if (splitActive() && !kept.has("split")) exitSplit();
     if (notesPresent && !kept.has("notes")) setNotesPresentation(false);
     if (mediaOpenNow() && !kept.has("media")) closeMediaWall();
     if (streamWallOpenNow() && !kept.has("stream")) closeStreamWall();
@@ -1607,7 +1600,7 @@
   }
 
   function openModuleHome() {
-    if (splitActive()) exitSplit(false);
+    if (splitActive()) exitSplit();
     closeAllModules();
     moduleHomeOpen = true;
     activeModule = null;
@@ -1631,7 +1624,7 @@
 
   function activateModule(name) {
     if (!MODULE_META[name]) return;
-    if (splitActive()) exitSplit(false);
+    if (splitActive()) exitSplit();
     closeModuleHome();
     closeAllModules();
     activeModule = name;
@@ -1665,7 +1658,7 @@
   function setStreamPresentation(on) {
     /* Full-screen stream leaves a split so it can cover the whole screen. */
     if (on && splitActive() && splitModules.includes("stream")) {
-      exitSplit(false);
+      exitSplit();
       openStreamWall();
     }
     document.body.classList.toggle("present-stream", !!on);
@@ -1686,7 +1679,7 @@
     if (!splitStage || !splitPanes) return;
     const picked = [...new Set(list || [])].filter(key => MODULE_META[key]);
     if (picked.length < 2) return;
-    if (splitActive()) exitSplit(false);
+    if (splitActive()) exitSplit();
     closeModuleHome();
     closeAllModules();
     splitOrigins.clear();
@@ -1721,7 +1714,7 @@
     goFullscreen();
   }
 
-  function exitSplit(showHome = true) {
+  function exitSplit() {
     if (!splitActive()) return;
     const wasFullscreen = !!document.fullscreenElement;
     splitModules.forEach(key => {
@@ -1746,8 +1739,8 @@
     activeModule = null;
     delete document.body.dataset.module;
     if (wasFullscreen) leaveFullscreen();
-    if (showHome) openModuleHome();
-    else { closeAllModules(); layout(); }
+    closeAllModules();
+    layout();
   }
 
   function openSplitDialog() {
@@ -1902,7 +1895,7 @@
   $("extras-split")?.addEventListener("click", openSplitDialog);
   $("extras-stream-wall")?.addEventListener("click", () => { setExtrasOpen(false); activateModule("stream"); });
   $("split-cancel")?.addEventListener("click", closeSplitDialog);
-  $("split-exit")?.addEventListener("click", () => exitSplit(true));
+  $("split-exit")?.addEventListener("click", () => { exitSplit(); activateModule("notes"); });
   $("split-form")?.addEventListener("submit", event => {
     event.preventDefault();
     const picked = [...(splitOptions?.querySelectorAll('input[type="checkbox"]:checked') || [])].map(input => input.value);
@@ -2984,7 +2977,7 @@
     }
 
     if (splitActive()) {
-      if (k === "escape") { e.preventDefault(); exitSplit(true); }
+      if (k === "escape") { e.preventDefault(); exitSplit(); activateModule("notes"); }
       else if (k === "f" && splitModules.includes("media")) {
         e.preventDefault();
         if (mediaPresent && !presentationManual) setMediaPresentation(false);
@@ -3215,9 +3208,9 @@
 
     let url = String(C.MOBILE_URL || "").trim();
     try {
-      url = url ? new URL(url, location.href).href : new URL("index.html", location.href).href;
+      url = url ? new URL(url, location.href).href : new URL("phone.html", location.href).href;
     } catch {
-      url = url || "index.html";
+      url = url || "phone.html";
     }
 
     try {

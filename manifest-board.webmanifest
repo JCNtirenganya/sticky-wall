@@ -1,8 +1,8 @@
 {
   "name": "Sticky Wall Board",
   "short_name": "Wall Board",
-  "description": "Presenter board for notes, media and polls.",
-  "start_url": "./board.html",
+  "description": "Presenter board for notes, media and live video.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

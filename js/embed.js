@@ -51,6 +51,11 @@
     return cat ? (cat.color || "#E6E600") : "#E6E600";
   }
 
+  function noteCategory(note) {
+    const cat = cats.find(c => c.key === note.category);
+    return t(cat?.label || "Note");
+  }
+
   function notePaper(note) {
     let h = 0;
     for (const ch of String(note.id || note.text || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
@@ -75,7 +80,7 @@
       const foot = el("footer", "embed-note__foot");
       foot.append(
         el("span", "embed-note__author", note.author || note.author_name || t("Anonymous")),
-        el("span", "embed-note__cat", t(note.category || "Note"))
+        el("span", "embed-note__cat", noteCategory(note))
       );
       card.append(foot);
       grid.append(card);
@@ -118,7 +123,7 @@
 
   start().catch(err => {
     console.error("Embed could not start", err);
-    empty(t("Could not load live results."));
+    empty(t("Could not load the notes."));
     setStatus(t("Offline"), true);
   });
 })();

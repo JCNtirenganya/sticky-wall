@@ -1,8 +1,8 @@
 {
   "name": "Sticky Wall",
   "short_name": "Sticky Wall",
-  "description": "Notes, photos, polls and live video for the room.",
-  "start_url": "./index.html",
+  "description": "Notes, photos and live video for the room.",
+  "start_url": "./phone.html",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

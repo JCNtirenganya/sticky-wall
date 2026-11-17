@@ -15,7 +15,7 @@ window.STICKY_CONFIG = {
   EVENT_LOGO_ALT: "Sanokip CBC",
 
   // Optional: address encoded in the board's QR code. Leave empty to use
-  // the mobile page sitting next to the board (index.html).
+  // the mobile page sitting next to the board (phone.html).
   MOBILE_URL: "",
 
   // Optional: Supabase Edge Function that writes the highlights report with an

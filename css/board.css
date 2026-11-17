@@ -1485,7 +1485,6 @@ body.reading #extras{display:none!important}
 .extra-input-row input:focus{border-color:rgba(240,196,107,.6);background:rgba(0,0,0,.28)}
 .extra-input-row .extra-mini{height:28px}
 .extra-input-row + .extra-range{margin-top:1px}
-.extras-sep{height:1px;margin:8px 4px;background:rgba(255,242,224,.10)}
 .extras-actions{display:flex;gap:6px;margin-top:8px}
 .extras-actions button{
   flex:1;
@@ -1671,8 +1670,6 @@ body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
   transition:transform .16s var(--ease-out),background .18s,color .18s;
 }
 .wall-btn:hover{transform:translateY(-1px);background:rgba(255,244,230,.14);color:#fff4e6}
-.wall-btn--primary{background:#fff4e0;border-color:#fff4e0;color:#2a1a10;box-shadow:0 7px 18px rgba(0,0,0,.28)}
-.wall-btn--primary:hover{background:#fff;color:#2a1a10}
 .wall-btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .wall-btn kbd{
   margin-left:5px;
@@ -1681,7 +1678,6 @@ body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
   background:rgba(42,26,16,.12);
   font:600 8px/1 var(--font-ui);
 }
-.wall-btn--primary kbd{background:rgba(42,26,16,.1)}
 
 /* ── presentation mode: notes only ──────────────────────────── */
 /* every element follows, so pointer/grab/button cursors cannot reappear */
@@ -3309,8 +3305,6 @@ body.present-stream .stream-wall{padding:0}
   box-shadow:none;
 }
 .wall-btn:hover{transform:none;background:rgba(255,244,230,.1)}
-.wall-btn--primary{background:#fff4e0;border-color:#fff4e0;color:#22180f;box-shadow:none}
-.wall-btn--primary:hover{background:#fff;color:#22180f}
 .dash-btn,
 .event-btn{
   box-shadow:none;
