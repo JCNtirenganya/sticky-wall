@@ -1517,6 +1517,7 @@
   function closeMediaWall() {
     if (!mediaWall) return;
     if (mediaPresent) setMediaPresentation(false);
+    dropFocus(mediaWall);
     mediaWall.setAttribute("aria-hidden", "true");
     document.body.classList.remove("show-media");
     mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
@@ -1584,6 +1585,13 @@
 
   /* Only one module is visible at a time: every open* entry point closes the
      others first, so switching modules never leaves the old one underneath. */
+  /* A click leaves focus on the control that was just hidden. Release it
+     before the container turns aria-hidden, or the browser blocks the move. */
+  function dropFocus(container) {
+    const active = document.activeElement;
+    if (container && active && active !== document.body && container.contains(active)) active.blur();
+  }
+
   function closeModulesExcept(...keep) {
     const kept = new Set(keep);
     if (splitActive() && !kept.has("split")) exitSplit();
@@ -1616,6 +1624,7 @@
   function closeModuleHome() {
     moduleHomeOpen = false;
     if (moduleHome) {
+      dropFocus(moduleHome);
       moduleHome.hidden = true;
       moduleHome.setAttribute("aria-hidden", "true");
     }
@@ -1651,6 +1660,7 @@
   function closeStreamWall() {
     if (!streamWall) return;
     setStreamPresentation(false);
+    dropFocus(streamWall);
     streamWall.setAttribute("aria-hidden", "true");
     document.body.classList.remove("show-stream");
   }
