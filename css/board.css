@@ -2666,7 +2666,7 @@ body.present-notes #status .module-counts{display:none!important}
 }
 .module-home__grid{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:clamp(10px,1.4vw,18px);
 }
 .module-card{
@@ -3196,7 +3196,6 @@ body.present-stream .stream-grid{gap:8px}
   .module-card:hover,.module-card:focus-visible{transform:none}
 }
 @media (max-width:1100px){
-  .module-home__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .split-panes[data-count="3"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:720px){

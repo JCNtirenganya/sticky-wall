@@ -3234,11 +3234,9 @@
   buildPiles(true);
   updateStatus();
 
-  /* The wall comes first with its controls visible. ?module=notes|media|stream
-     opens a module straight away. */
-  const bootModuleParam = new URLSearchParams(location.search).get("module");
-  const bootModuleTarget = MODULE_KEYS.includes(bootModuleParam) ? bootModuleParam : "notes";
-  activateModule(bootModuleTarget);
+  /* The board always starts on the module picker. The presenter chooses the
+     wall that fills the screen; nothing opens on its own. */
+  openModuleHome();
 
   (async () => {
     try {
@@ -3268,7 +3266,7 @@
     layout();
     updateStatus();
     renderDashboard();
-    if (notes.length && !notes.some(n => !hidden.has(n.id))) openDashboard();
+    if (!moduleHomeOpen && notes.length && !notes.some(n => !hidden.has(n.id))) openDashboard();
 
     Store.subscribe({
       onAdd: n => addNote(n, true),
@@ -3304,7 +3302,6 @@
     });
 
     liveHost = startLiveHost();
-    if (bootModuleTarget) activateModule(bootModuleTarget);
     window.addEventListener("pagehide", () => liveHost?.stop());
   })();
 

@@ -10,7 +10,7 @@ Three static pages + Supabase realtime. Hosted free on GitHub Pages.
 
 ## Try it now (local mode)
 
-Leave `js/config.js` empty. Open `index.html` and `phone.html` in two tabs of the same browser (serve with `python3 -m http.server`). Everything stays in that browser: submit from the phone page and watch the note land on the wall. To run a real event, fill in the Supabase keys as described below.
+Leave `js/config.js` empty. Open `index.html` and `phone.html` in two tabs of the same browser (serve with `python3 -m http.server`). The board opens on its module picker; choose a wall. Everything stays in that browser: submit from the phone page and watch the note land on the wall. To run a real event, fill in the Supabase keys as described below.
 
 Serving to phones on the same Wi-Fi? Bind the server to `0.0.0.0` and put your laptop's LAN address in `MOBILE_URL` (e.g. `http://192.168.1.20:8137/phone.html`) so the QR code is scannable from a phone.
 
@@ -64,8 +64,8 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **One header**: the event name stays top-left everywhere, and its second line names the module on screen (Notes, Dashboard, Media, Stream, Split screen, Settings). Module walls have no repeated titles.
 - **C** or the slider button beside the logo → edit categories and colours. Up to nine categories.
 - **Filters** are hidden: hover the top edge or press **F**. Keys **1–9** pick categories; **0** = all.
-- **Settings** (**H**, or the button on every module wall and the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). It is the only route to the **Module home**.
-- **Module home**: notes, media and stream cards with number shortcuts **1–3**; **V** opens media from anywhere.
+- **Settings** (**H**, or the button on every module wall and the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). **Module home** there returns to the picker.
+- **Module home**: the board opens here on every load. Pick notes, media or stream with the cards or number shortcuts **1–3**; **V** opens media from anywhere.
 - **Module counts** under each module's buttons are buttons too: click one to open that module. Zeros stay dimmed. The open module never counts itself.
 - **Dates**: every note, media card, dashboard row and media slide carries its arrival date/time. A day rail filters the wall by day; **All days** restores everything.
 - **Move the QR card**: drag it anywhere; the board remembers the spot. Double-click returns it to the top-right, or use **Settings → Advanced**.
@@ -145,7 +145,8 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 - Modules: opening media or stream hides the notes layer completely. Only one module is open at a time, and **Esc** returns to notes.
 - Counts: the other-module counts appear under the open module's buttons and in the status strip; clicking one opens that module. Zero counts are dimmed.
 - Dates: switch a day in the rail and confirm notes, dashboard rows and media follow; **All days** restores everything.
-- Settings: **H** opens Settings; **Module home** is reachable only from there. Toggling header, QR and filters should reclaim space and survive a refresh.
+- Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh.
+- Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.
 - Presentation: **Notes only** hides all chrome and enters fullscreen; **Esc** restores exactly what was visible.
 - QR: scan the top-right code; drag it, refresh, and confirm it stays. Double-click returns it to the corner.
 - Media: press **V**; photos and videos sit directly on the cork. Try a clip longer than 15 seconds and confirm the phone refuses it. **Present** switches to the black stage.
