@@ -149,7 +149,7 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 ## Quick checks
 - Board: notes fit inside their sheets, with the sender's name and arrival date at the bottom; the fixed grid resizes without stretching a short list.
 - Modules: opening media or stream hides the notes layer completely. Only one module is open at a time, and **Esc** returns to notes.
-- Counts: the other-module counts appear under the open module's buttons and in the status strip; clicking one opens that module. Zero counts are dimmed.
+- Counts: the other-module counts appear under the open module's buttons and in the status strip; each one is a button that opens that module, with a pointer cursor and a focus ring. Zero counts are dimmed.
 - Dates: switch a day in the rail and confirm notes, dashboard rows and media follow; **All days** restores everything.
 - Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh.
 - Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.

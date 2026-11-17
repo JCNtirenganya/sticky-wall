@@ -816,6 +816,10 @@ body.idle .brand-edit{opacity:0;pointer-events:none}
   pointer-events:none;
   transition:opacity .5s var(--ease-soft);
 }
+/* The strip itself stays click-through so notes behind it keep working, but
+   its module counts and the live-request button are real shortcuts. */
+#status .module-counts,
+#status-live-requests{pointer-events:auto}
 #status .dot{
   width:6px;
   height:6px;
@@ -2586,6 +2590,28 @@ body.present-media .media-stage__item video{
   font-variant-numeric:tabular-nums;
 }
 .module-count.is-zero{opacity:.45}
+/* Counts are shortcuts: the whole chip is a button into that module. */
+.module-count{
+  cursor:pointer;
+  transition:background .18s var(--ease-soft),border-color .18s var(--ease-soft),color .18s var(--ease-soft);
+}
+.module-count:hover{
+  border-color:rgba(255,242,224,.38);
+  background:rgba(31,17,8,.66);
+  color:#fff4e6;
+}
+.module-count:active{transform:translateY(1px)}
+.module-count:focus-visible{outline:2px solid rgba(255,224,183,.6);outline-offset:2px}
+#status .module-count:hover{
+  background:rgba(255,244,230,.18);
+  border-color:rgba(255,242,224,.34);
+  color:#fff7ec;
+}
+body.show-dashboard .dash-counts .module-count:hover{
+  border-color:rgba(56,38,23,.42);
+  background:rgba(56,38,23,.13);
+  color:#2b1b0e;
+}
 /* On the notes wall the status strip reports the note count itself and adds
    the media and live counts, so all of them stay in fixed places. */
 #status .module-counts{flex:0 0 auto;justify-content:flex-start;gap:6px}
