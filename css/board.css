@@ -980,9 +980,8 @@ body.reading #focus-ui{opacity:1}
 
 /* ── presentation slides: pointer next/previous ───────────────
    The reading-mode arrows are hidden in a show, so these two quiet
-   buttons give a mouse or touch screen the same command as ← / →.
-   They stay in manual mode too, where nothing advances on its own. */
-.autoplay-nav{
+   buttons give a mouse or touch screen the same command as ← / →. */
+.slide-nav{
   position:fixed;
   left:50%;
   bottom:clamp(18px,3.5vh,34px);
@@ -994,11 +993,11 @@ body.reading #focus-ui{opacity:1}
   opacity:.42;
   transition:opacity .35s var(--ease-soft);
 }
-body.autoplay-nav .autoplay-nav{display:flex}
-body.autoplay-nav.idle .autoplay-nav{opacity:0;pointer-events:none}
-body.autoplay-nav .autoplay-nav:hover,
-body.autoplay-nav .autoplay-nav:focus-within{opacity:1}
-.autoplay-nav__btn{
+body.slide-nav .slide-nav{display:flex}
+body.slide-nav.idle .slide-nav{opacity:0;pointer-events:none}
+body.slide-nav .slide-nav:hover,
+body.slide-nav .slide-nav:focus-within{opacity:1}
+.slide-nav__btn{
   pointer-events:auto;
   display:inline-flex;
   align-items:center;
@@ -1015,17 +1014,17 @@ body.autoplay-nav .autoplay-nav:focus-within{opacity:1}
   cursor:pointer;
   transition:background .2s,color .2s,transform .2s;
 }
-.autoplay-nav__btn svg{width:17px;height:17px;display:block}
-.autoplay-nav__btn:hover,
-.autoplay-nav__btn:focus-visible{
+.slide-nav__btn svg{width:17px;height:17px;display:block}
+.slide-nav__btn:hover,
+.slide-nav__btn:focus-visible{
   background:rgba(255,244,230,.94);
   color:#2a1a10;
   transform:translateY(-1px);
   outline:none;
 }
 /* Shows hide the cursor everywhere; bring it back over these controls. */
-body.present-notes .autoplay-nav__btn,
-body.present-media .autoplay-nav__btn{cursor:pointer!important}
+body.present-notes .slide-nav__btn,
+body.present-media .slide-nav__btn{cursor:pointer!important}
 
 /* ── hidden filter controls ─────────────────────────────────── */
 #hot{position:fixed;left:0;right:0;top:0;height:66px;z-index:10}
@@ -2606,17 +2605,6 @@ body.present-media .media-live-strip{display:none}
   text-transform:uppercase;
   color:rgba(255,239,218,.62);
 }
-.media-stage__auto{
-  padding:4px 8px;
-  border-radius:999px;
-  border:1px solid rgba(120,220,150,.35);
-  background:rgba(46,160,88,.16);
-  font:700 8px/1 var(--font-ui);
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:rgba(190,255,208,.86);
-}
-.media-stage__auto[hidden]{display:none}
 .media-stage__exit{margin-left:4px}
 
 /* presentation: hide the album chrome and let the stage fill the screen */
@@ -2643,7 +2631,6 @@ body.present-media .media-live-strip,
 body.present-media .media-stage__bar,
 body.present-media .media-stage__meta,
 body.present-media .media-stage__count,
-body.present-media .media-stage__auto,
 body.present-media .media-stage__exit,
 body.present-media .media-stage__nav{display:none!important}
 body.present-media .media-stage,

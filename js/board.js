@@ -14,7 +14,7 @@
   const extrasNotesOnly = $("extras-notes-only"), extrasShowAll = $("extras-show-all");
   const mediaWall = $("media-wall"), mediaGrid = $("media-grid"), mediaEmpty = $("media-empty");
   const mediaHideAll = $("media-hide-all"), mediaClose = $("media-close");
-  const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count"), mediaStageAuto = $("media-stage-auto");
+  const mediaStage = $("media-stage"), mediaStageBody = $("media-stage-body"), mediaStageCount = $("media-stage-count");
   const mediaLiveStrip = $("media-live-strip"), mediaLiveGrid = $("media-live-grid"), mediaLiveCount = $("media-live-count");
   const mediaDays = $("media-days");
   const moduleHome = $("module-home"), splitStage = $("split-stage"), splitPanes = $("split-panes"), splitLabel = $("split-label");
@@ -40,10 +40,8 @@
   let activeFilter = "all", pileView = false, pileSignature = "";
   let notesPresent = false, notesPresentSnapshot = null;
   let mediaPresent = false, mediaStageIndex = 0;
-  /* manual presentation: full screen, but the slides only move on command */
-  let presentationManual = false;
-  let autoplayIdle = 0, autoplayStep = 0, autoplayLive = false, autoplayTouched = 0;
-  let mediaAdvanceTimer = 0;
+  /* Presentation is always manual: slides move only on command. */
+
 
   /* ── presenter preferences (what the wall shows) ───────────── */
   const PREFS_KEY = "sticky_board_prefs";
@@ -63,17 +61,13 @@
     bgDim: 35,
     logo: "",
     logoSize: 100,
-    autoplay: true,
-    autoplayDelay: 10,
-    autoplayDuration: 6,
-    mediaAutoplay: true,
     mediaMute: true,
     mediaLoop: true,
     mediaMax: 12,
     mediaPhotoSeconds: 6,
     mediaVideoRate: 1
   };
-  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "autoplayDelay", "autoplayDuration", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate", "qrX", "qrY"]);
+  const PREF_NUMBERS = new Set(["gap", "bgDim", "logoSize", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate", "qrX", "qrY"]);
   const PREF_STRINGS = new Set(["bgColor", "dashColor", "bgImage", "logo"]);
   function loadPrefs() {
     try {
@@ -92,8 +86,6 @@
   prefs.gap = Math.max(0, Math.min(40, prefs.gap));
   prefs.bgDim = Math.max(0, Math.min(85, prefs.bgDim));
   prefs.logoSize = Math.max(50, Math.min(180, prefs.logoSize));
-  prefs.autoplayDelay = Math.max(0, Math.min(120, prefs.autoplayDelay));
-  prefs.autoplayDuration = Math.max(2, Math.min(120, prefs.autoplayDuration));
   prefs.mediaMax = Math.max(1, Math.min(24, prefs.mediaMax));
   prefs.mediaPhotoSeconds = Math.max(2, Math.min(60, prefs.mediaPhotoSeconds || 6));
   prefs.mediaVideoRate = Math.max(0.5, Math.min(2, prefs.mediaVideoRate || 1));
@@ -752,62 +744,6 @@
   const closeDashboard = () => setDashboard(false);
   const toggleDashboard = () => setDashboard(!dashboardOpen());
 
-  /* ── presentation autoplay & one-by-one slides ─────────────── */
-  const autoplaySeconds = (value, fallback) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? Math.max(0, n) : fallback;
-  };
-
-  function clearAutoplay() {
-    clearTimeout(autoplayIdle);
-    clearInterval(autoplayStep);
-    clearTimeout(mediaAdvanceTimer);
-    autoplayIdle = 0;
-    autoplayStep = 0;
-    mediaAdvanceTimer = 0;
-    autoplayLive = false;
-  }
-
-  /* Wait `autoplayDelay` seconds of quiet, then advance every `autoplayDuration`. */
-  function armAutoplay() {
-    clearAutoplay();
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !mediaPresent)) return;
-    autoplayIdle = setTimeout(startAutoplay, autoplaySeconds(prefs.autoplayDelay, 10) * 1000);
-  }
-
-  function startAutoplay() {
-    autoplayIdle = 0;
-    if (presentationManual || !prefs.autoplay || (!notesPresent && !mediaPresent)) return;
-    const every = Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6)) * 1000;
-    autoplayLive = true;
-    if (mediaPresent) {
-      scheduleMediaAdvance();
-      return;
-    }
-    if (notesPresent) {
-      step(1);
-      autoplayStep = setInterval(() => step(1), every);
-    }
-  }
-
-  /* Any real interaction pauses the slideshow and re-arms the idle countdown. */
-  function touchAutoplay() {
-    if (!notesPresent && !mediaPresent) return;
-    if (!autoplayIdle && !autoplayLive) return;
-    armAutoplay();
-  }
-
-  ["pointerdown", "wheel", "touchstart"].forEach(evt =>
-    window.addEventListener(evt, () => touchAutoplay(), { passive: true, capture: true }));
-  window.addEventListener("pointermove", () => {
-    if (!notesPresent && !mediaPresent) return;
-    if (!autoplayIdle && !autoplayLive) return;
-    const now = Date.now();
-    if (now - autoplayTouched < 400) return;
-    autoplayTouched = now;
-    touchAutoplay();
-  }, { passive: true, capture: true });
-
   /* True fullscreen: the browser chrome and the OS taskbar go away too.
      Falls back gracefully to the CSS viewport-filling mode when the
      browser refuses (or when the page is not focused). */
@@ -839,24 +775,9 @@
     else goFullscreen();
   }
 
-  function syncAutoplayButton() {
-    const button = $("extras-autoplay");
-    if (!button) return;
-    button.setAttribute("aria-pressed", prefs.autoplay ? "true" : "false");
-    const label = button.querySelector("[data-i18n]");
-    if (label) {
-      const key = prefs.autoplay ? "Autoplay on" : "Autoplay off";
-      label.dataset.i18n = key;
-      label.textContent = t(key);
-    }
-  }
-
-  /* Every presentation gets quiet pointer arrows beside the arrow keys —
-     autoplay or manual, notes or media. In manual mode they are the only
-     way to step, so they stay available with autoplay switched off. */
-  function syncAutoplayNav() {
-    const active = notesPresent || mediaPresent;
-    document.body.classList.toggle("autoplay-nav", active);
+  /* A show gets quiet pointer arrows beside the arrow keys. */
+  function syncSlideNav() {
+    document.body.classList.toggle("slide-nav", notesPresent || mediaPresent);
   }
 
   function syncFullscreenButtons() {
@@ -905,27 +826,21 @@
     const frame = document.createElement("div");
     frame.className = "media-card__frame";
 
-    const previews = !!prefs.mediaAutoplay && mediaOpenNow();
     if (item.kind === "video") {
       const video = document.createElement("video");
       video.src = item.url;
       video.muted = !!prefs.mediaMute;
       video.loop = !!prefs.mediaLoop;
       video.playsInline = true;
-      video.preload = previews ? "auto" : "metadata";
+      video.preload = "metadata";
       video.setAttribute("playsinline", "");
       video.setAttribute("muted", "");
-      if (previews) {
-        video.autoplay = true;
-        const started = video.play();
-        if (started?.catch) started.catch(() => {});
-      }
       const play = document.createElement("span");
       play.className = "media-card__play";
       play.textContent = "▶";
       video.addEventListener("play", () => play.classList.add("is-hidden"));
       video.addEventListener("pause", () => play.classList.remove("is-hidden"));
-      if (!previews) play.classList.remove("is-hidden");
+      play.classList.remove("is-hidden");
       video.addEventListener("click", () => {
         if (video.paused) video.play().catch(() => {});
         else video.pause();
@@ -1334,8 +1249,7 @@
     flashStatus(t("Live request denied"));
   }
 
-  /* Full-screen album: one photo or video at a time, advanced by the same
-     autoplay timing the notes use (start after / seconds per slide). */
+  /* Full-screen album: one photo or video at a time, stepped by the presenter. */
   function mediaStageList() {
     /* arrival order, like the notes slideshow (the grid stays newest-first) */
     return mediaSorted().filter(inDashDay).slice(-prefs.mediaMax);
@@ -1368,13 +1282,6 @@
         if (video.paused) video.play().catch(() => {});
         else video.pause();
       });
-      video.addEventListener("playing", () => {
-        clearTimeout(mediaAdvanceTimer);
-        mediaAdvanceTimer = 0;
-      });
-      video.addEventListener("ended", () => {
-        if (mediaPresent && !presentationManual && prefs.autoplay) stepMediaStage(1);
-      });
       frame.append(video);
     } else {
       const img = document.createElement("img");
@@ -1398,21 +1305,6 @@
     if (mediaStageCount) {
       mediaStageCount.textContent = t("{i} of {n}", { i: mediaStageIndex + 1, n: list.length });
     }
-    if (mediaStageAuto) mediaStageAuto.hidden = presentationManual || !prefs.autoplay;
-    scheduleMediaAdvance();
-  }
-
-  function scheduleMediaAdvance() {
-    clearTimeout(mediaAdvanceTimer);
-    mediaAdvanceTimer = 0;
-    if (!mediaPresent || presentationManual || !prefs.autoplay) return;
-    const video = mediaStageBody?.querySelector("video");
-    /* A playing video advances when it ends; a photo uses its own timer. */
-    if (video && !video.paused) return;
-    const secs = video
-      ? Math.max(2, autoplaySeconds(prefs.autoplayDuration, 6))
-      : Math.max(2, Number(prefs.mediaPhotoSeconds) || 6);
-    mediaAdvanceTimer = setTimeout(() => stepMediaStage(1), secs * 1000);
   }
 
   function stepMediaStage(d) {
@@ -1422,23 +1314,20 @@
     if (mediaPresent) renderMediaStage();
   }
 
-  function setMediaPresentation(on, manual) {
+  function setMediaPresentation(on) {
     /* Full-screen means the whole screen: step out of a split first. */
     if (on && splitActive() && splitModules.includes("media")) {
       exitSplit();
       openMediaWall();
     }
-    const shown = mediaOpenNow();
-    on = !!on && shown;
+    on = !!on && mediaOpenNow();
     if (on && !mediaStageList().length) return;
-    if (!on && !mediaPresent) { presentationManual = false; return; }
+    if (!on && !mediaPresent) return;
     const entering = on && !mediaPresent;
     mediaPresent = on;
-    presentationManual = on ? !!manual : false;
     document.body.classList.toggle("present-media", mediaPresent);
-    syncAutoplayNav();
-    $("media-present")?.setAttribute("aria-pressed", mediaPresent && !presentationManual ? "true" : "false");
-    $("media-present-manual")?.setAttribute("aria-pressed", mediaPresent && presentationManual ? "true" : "false");
+    syncSlideNav();
+    $("media-present")?.setAttribute("aria-pressed", mediaPresent ? "true" : "false");
     if (mediaStage) mediaStage.hidden = !mediaPresent;
     if (mediaPresent) {
       if (entering) mediaStageIndex = 0;
@@ -1446,9 +1335,7 @@
       document.activeElement?.blur?.();
       goFullscreen();
       renderMediaStage();
-      armAutoplay();
     } else {
-      clearAutoplay();
       mediaStageBody?.replaceChildren();
       renderMediaWall();
       applyMediaPrefs();
@@ -1502,18 +1389,12 @@
 
   function applyMediaPrefs() {
     if (!mediaGrid) return;
-    const previews = !!prefs.mediaAutoplay && mediaOpenNow();
     const rate = Math.max(0.5, Math.min(2, Number(prefs.mediaVideoRate) || 1));
     mediaGrid.querySelectorAll("video").forEach(video => {
       video.muted = !!prefs.mediaMute;
       video.loop = !!prefs.mediaLoop;
       video.playbackRate = rate;
-      if (previews) {
-        const started = video.play();
-        if (started?.catch) started.catch(() => {});
-      } else {
-        video.pause();
-      }
+      video.pause();
     });
     mediaStageBody?.querySelectorAll("video").forEach(video => { video.playbackRate = rate; });
   }
@@ -1526,7 +1407,6 @@
     document.body.dataset.module = "media";
     setExtrasOpen(false);
     mediaPresent = false;
-    presentationManual = false;
     document.body.classList.remove("present-media");
     if (mediaStage) mediaStage.hidden = true;
     mediaWall.setAttribute("aria-hidden", "false");
@@ -1693,7 +1573,7 @@
       openStreamWall();
     }
     document.body.classList.toggle("present-stream", !!on);
-    syncAutoplayNav();
+    syncSlideNav();
     $("stream-present")?.setAttribute("aria-pressed", on ? "true" : "false");
     if (on) { goFullscreen(); updateStreamGrid(); }
     else if (document.fullscreenElement) leaveFullscreen();
@@ -1896,14 +1776,7 @@
     setMediaPresentation(true);
   });
   mediaClose?.addEventListener("click", closeMediaWall);
-  $("media-present")?.addEventListener("click", () => {
-    if (mediaPresent && !presentationManual) setMediaPresentation(false);
-    else setMediaPresentation(true);
-  });
-  $("media-present-manual")?.addEventListener("click", () => {
-    if (mediaPresent && presentationManual) setMediaPresentation(false);
-    else setMediaPresentation(true, true);
-  });
+  $("media-present")?.addEventListener("click", () => setMediaPresentation(!mediaPresent));
   $("media-stage-prev")?.addEventListener("click", () => stepMediaStage(-1));
   $("media-stage-next")?.addEventListener("click", () => stepMediaStage(1));
   $("media-stage-exit")?.addEventListener("click", () => setMediaPresentation(false));
@@ -2546,7 +2419,7 @@
 
   document.addEventListener("click", e => {
     if (focusId && !e.target.closest(".note") && !e.target.closest("#filters") &&
-        !e.target.closest(".focus-btn") && !e.target.closest("#autoplay-nav")) closeFocus();
+        !e.target.closest(".focus-btn") && !e.target.closest("#slide-nav")) closeFocus();
   });
   $("prev").addEventListener("click", e => { e.stopPropagation(); step(-1); });
   $("next").addEventListener("click", e => { e.stopPropagation(); step(1); });
@@ -2633,8 +2506,7 @@
   });
 
   syncFullscreenButtons();
-  syncAutoplayButton();
-  syncAutoplayNav();
+  syncSlideNav();
 
   $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
 
@@ -2643,8 +2515,7 @@
   const EXTRAS_DEFAULTS = {
     notes: ["columns", "gap", "dashColor"],
     look: ["brand", "qr", "qrX", "qrY", "filters", "bgColor", "bgImage", "bgDim", "logo", "logoSize"],
-    presentation: ["autoplay", "autoplayDelay", "autoplayDuration"],
-    media: ["mediaAutoplay", "mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
+    media: ["mediaMute", "mediaLoop", "mediaMax", "mediaPhotoSeconds", "mediaVideoRate"]
   };
 
   function resetExtrasDefaults(module, button) {
@@ -2653,7 +2524,6 @@
     keys.forEach(key => { prefs[key] = PREF_DEFAULTS[key]; });
     savePrefs();
     applyPrefs(true);
-    if (keys.includes("autoplay")) { syncAutoplayButton(); syncAutoplayNav(); }
     if (module === "look" || module === "notes") applyLook();
     if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
@@ -2671,7 +2541,6 @@
 
   [["notes", "extras-defaults-notes"],
    ["look", "extras-defaults-look"],
-   ["presentation", "extras-defaults-presentation"],
    ["media", "extras-defaults-media"]].forEach(([module, id]) => {
     $(id)?.addEventListener("click", e => resetExtrasDefaults(module, e.currentTarget));
   });
@@ -2691,14 +2560,6 @@
     if (key === "gap") { syncPrefInputs(); layout(); }
     else if (key === "bgDim" || key === "bgColor" || key === "dashColor") applyLook();
     else if (key === "logoSize") { applyLook(); layout(); }
-    else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") {
-      syncPrefInputs();
-      if (key === "autoplay") {
-        syncAutoplayButton();
-        syncAutoplayNav();
-        if (!prefs.autoplay) clearAutoplay(); else armAutoplay();
-      }
-    }
     else if (String(key).startsWith("media")) {
       applyMediaPrefs();
       if (mediaPresent) renderMediaStage();
@@ -2906,13 +2767,12 @@
 
   /* Notes-only presentation: the wall fills the screen, with no chrome at all.
      Escape (or H) restores whichever extras were visible before. */
-  function setNotesPresentation(on, manual) {
+  function setNotesPresentation(on) {
     on = !!on;
-    if (!on && !notesPresent) { presentationManual = false; return; }
+    if (!on && !notesPresent) return;
     const entering = on && !notesPresent;
     if (entering) closeModulesExcept("notes");
     notesPresent = on;
-    presentationManual = on ? !!manual : false;
     if (entering) {
       notesPresentSnapshot = {
         brand: prefs.brand,
@@ -2925,8 +2785,8 @@
       notesPresentSnapshot = null;
     }
     document.body.classList.toggle("present-notes", notesPresent);
-    syncAutoplayNav();
-    $("extras-notes-manual")?.setAttribute("aria-pressed", notesPresent && presentationManual ? "true" : "false");
+    syncSlideNav();
+    $("extras-notes-only")?.setAttribute("aria-pressed", notesPresent ? "true" : "false");
     savePrefs();
     applyPrefs(true);
     if (notesPresent) {
@@ -2934,9 +2794,9 @@
       document.activeElement?.blur?.();
       goFullscreen();
       setExtrasOpen(false);
-      armAutoplay();
+      /* No autoplay: open the first note so the show starts on a slide. */
+      if (entering) step(1);
     } else {
-      clearAutoplay();
       closeFocus();
       leaveFullscreen();
     }
@@ -2947,20 +2807,12 @@
      Settings behind their confirmation and deliberately have no shortcut. */
   function togglePresentation() {
     showNotesWall();
-    if (notesPresent && !presentationManual) setNotesPresentation(false);
-    else setNotesPresentation(true);
+    setNotesPresentation(!notesPresent);
   }
 
-  function toggleManualPresentation() {
-    showNotesWall();
-    if (notesPresent && presentationManual) setNotesPresentation(false);
-    else setNotesPresentation(true, true);
-  }
-
-  function toggleMediaPresentation(manual = false) {
+  function toggleMediaPresentation() {
     if (!mediaOpenNow()) openMediaWall();
-    if (mediaPresent && (manual ? presentationManual : !presentationManual)) setMediaPresentation(false);
-    else setMediaPresentation(true, manual);
+    setMediaPresentation(!mediaPresent);
   }
 
   function toggleStreamPresentation() {
@@ -3021,17 +2873,6 @@
     flashStatus(prefs.qr ? "QR card on" : "QR card off");
   }
 
-  function toggleAutoplay() {
-    prefs.autoplay = !prefs.autoplay;
-    savePrefs();
-    syncPrefInputs();
-    syncAutoplayButton();
-    syncAutoplayNav();
-    if (prefs.autoplay) armAutoplay();
-    else clearAutoplay();
-    flashStatus(prefs.autoplay ? "Autoplay on" : "Autoplay off");
-  }
-
   function showAllChrome() {
     showNotesWall();
     setNotesPresentation(false);
@@ -3080,9 +2921,7 @@
     ] },
     { label: "Present", rows: [
       { id: "fullscreen", label: "Full screen", keys: ["Shift", "F"] },
-      { id: "present", label: "Present notes", keys: ["P"] },
-      { id: "manual", label: "Notes without autoplay", keys: ["M"] },
-      { id: "autoplay", label: "Autoplay", keys: ["A"] },
+      { id: "present", label: "Present notes", keys: ["P", "M"] },
       { id: "present-media", label: "Present media", keys: ["F"] },
       { id: "present-stream", label: "Present stream", keys: ["F"] },
       { id: "next", label: "Next", keys: ["→", "Space"] },
@@ -3181,9 +3020,7 @@
       case "settings": toggleSettings(); break;
       case "fullscreen": toggleBoardFullscreen(); break;
       case "present": togglePresentation(); break;
-      case "manual": toggleManualPresentation(); break;
-      case "autoplay": toggleAutoplay(); break;
-      case "present-media": toggleMediaPresentation(false); break;
+      case "present-media": toggleMediaPresentation(); break;
       case "present-stream": toggleStreamPresentation(); break;
       case "next": nextSlide(1); break;
       case "previous": nextSlide(-1); break;
@@ -3208,13 +3045,12 @@
 
   /* Pointer controls use exactly the same commands as the keyboard. */
   $("extras-fullscreen")?.addEventListener("click", e => { e.stopPropagation(); runCommand("fullscreen"); });
-  $("extras-autoplay")?.addEventListener("click", e => { e.stopPropagation(); runCommand("autoplay"); });
   $("shortcuts-toggle")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
   $("shortcuts-close")?.addEventListener("click", closeShortcutsDialog);
   $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
   $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
-  $("autoplay-prev")?.addEventListener("click", e => { e.stopPropagation(); runCommand("previous"); });
-  $("autoplay-next")?.addEventListener("click", e => { e.stopPropagation(); runCommand("next"); });
+  $("slide-prev")?.addEventListener("click", e => { e.stopPropagation(); runCommand("previous"); });
+  $("slide-next")?.addEventListener("click", e => { e.stopPropagation(); runCommand("next"); });
   shortcutsDialog?.addEventListener("click", e => {
     if (e.target === shortcutsDialog) closeShortcutsDialog();
   });
@@ -3230,7 +3066,6 @@
     });
   });
   extrasNotesOnly?.addEventListener("click", e => { e.stopPropagation(); runCommand("present"); });
-  $("extras-notes-manual")?.addEventListener("click", e => { e.stopPropagation(); runCommand("manual"); });
   extrasShowAll?.addEventListener("click", e => { e.stopPropagation(); runCommand("show-all"); });
 
   document.addEventListener("click", e => {
@@ -3256,7 +3091,6 @@
         /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
-    touchAutoplay();
 
     if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
       if (k === "f") { e.preventDefault(); runCommand("fullscreen"); return; }
@@ -3267,7 +3101,6 @@
     if (k === "?") { e.preventDefault(); runCommand("help"); return; }
     if (k === "g") { e.preventDefault(); runCommand("home"); return; }
     if (k === "s") { e.preventDefault(); runCommand("stream"); return; }
-    if (k === "a") { e.preventDefault(); runCommand("autoplay"); return; }
     if (k === "l") { e.preventDefault(); runCommand("share"); return; }
     if (k === "r") { e.preventDefault(); runCommand("highlights"); return; }
     if (k === "j") { e.preventDefault(); runCommand("jpeg"); return; }
@@ -3291,14 +3124,14 @@
     if (k === "c") { e.preventDefault(); runCommand("categories"); return; }
     if (k === "v") { e.preventDefault(); runCommand("media"); return; }
     if (k === "p") { e.preventDefault(); runCommand("present"); return; }
-    if (k === "m") { e.preventDefault(); runCommand("manual"); return; }
+    if (k === "m") { e.preventDefault(); runCommand("present"); return; }
     if (k === "x" && focusId) { e.preventDefault(); runCommand("hide"); return; }
     if (k === "0") { e.preventDefault(); runCommand("all"); return; }
     if (/^[1-9]$/.test(k)) { e.preventDefault(); runCommand("category", Number(k)); return; }
 
     /* F is contextual: present the open module, otherwise the filter bar. */
     if (splitActive()) {
-      if (k === "f" && splitModules.includes("media")) { e.preventDefault(); toggleMediaPresentation(false); }
+      if (k === "f" && splitModules.includes("media")) { e.preventDefault(); toggleMediaPresentation(); }
       else if (k === "f" && splitModules.includes("stream")) { e.preventDefault(); toggleStreamPresentation(); }
       else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); nextSlide(1); }
       else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); nextSlide(-1); }
@@ -3309,7 +3142,7 @@
       return;
     }
     if (mediaOpenNow()) {
-      if (k === "f") { e.preventDefault(); toggleMediaPresentation(false); }
+      if (k === "f") { e.preventDefault(); toggleMediaPresentation(); }
       else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); nextSlide(1); }
       else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); nextSlide(-1); }
       return;
@@ -3548,7 +3381,7 @@
         if (!media.some(m => m.id === item.id)) {
           media.push(item);
           /* live album: a new upload takes over the full-screen show */
-          if (mediaPresent && !presentationManual) mediaStageIndex = Math.max(0, mediaStageList().length - 1);
+          if (mediaPresent) mediaStageIndex = Math.max(0, mediaStageList().length - 1);
         }
         renderMediaWall();
       },

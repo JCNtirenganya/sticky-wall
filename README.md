@@ -73,14 +73,14 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **Settings** (**H**, the **Settings** button on the module picker and every wall, or the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). **Module home** there returns to the picker. **Esc** and the **×** button close it, even from a focused field.
 - **Module home**: the board opens here on every load. Pick notes, media or stream with the cards, **1–3**, **S** or **V**.
 - **Module counts** under each module's buttons are buttons too: click one to open that module. Zeros stay dimmed. The open module never counts itself.
-- **Presentation** can be driven entirely with a pointer: **Settings → Presentation** has **Full screen** and **Autoplay** buttons next to **Notes only**, **Manual** and **Show all**. All of them use the same commands as the keyboard.
+- **Presentation** can be driven entirely with a pointer: **Settings → Presentation** has **Full screen**, **Notes only** and **Show all**. All of them use the same commands as the keyboard.
 - **Shortcuts (?)**: the `?` button in the dock or on the module picker opens a panel listing every key. Each row is clickable, so any function can also be run with a pointer. Destructive actions are intentionally absent — they stay in Settings behind a confirmation.
 - **Dates**: every note, media card, dashboard row and media slide carries its arrival date/time. A day rail filters the wall by day; **All days** restores everything.
 - **Move the QR card**: drag it anywhere; the board remembers the spot. Double-click returns it to the top-right, or use **Q**, **Settings → Advanced**.
 - **Dashboard colour**, category colours and dashboard settings live in **Settings → Notes**.
 - Cursor hides after 2.5 s; controls fade back in on pointer movement. Choices persist in this browser.
-- **Presentation modes** — **Notes only**, **Present**, **One by one**, **Manual** — are chrome-free: header, status, QR, filters and the Settings dock disappear, the browser goes fullscreen, and only the content remains.
-- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) can command **previous / next** exactly like the arrow keys. They appear in every show — notes or media, autoplay or **Manual** — fade when the pointer is idle, and never close the focused note. In **Manual** they are the way to step, with autoplay switched off.
+- **Presentation is always manual**: nothing advances on its own. **Notes only** and the media **Present** button are chrome-free — header, status, QR, filters and the Settings dock disappear, the browser goes fullscreen, and only the content remains.
+- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) commands **previous / next** exactly like the arrow keys. They fade when the pointer is idle and never close the focused note.
 
 ### Keyboard shortcuts
 | Keys | Action |
@@ -93,9 +93,8 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 | `W` / `V` / `S` | Notes / Media / Stream wall |
 | `Shift+S` | Split screen |
 | `D` | Dashboard |
-| `P` / `M` | Present notes / Notes without autoplay |
+| `P` / `M` | Present notes |
 | `F` | Present open media or stream, otherwise the filter bar |
-| `A` | Autoplay on / off |
 | `→` `Space` / `←` | Next / previous note or slide |
 | `E` / `C` | Event name / categories |
 | `L` / `R` / `J` | Live wall link / Highlights report / Notes JPEG |
@@ -180,8 +179,8 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 - Dates: switch a day in the rail and confirm notes, dashboard rows and media follow; **All days** restores everything.
 - Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh. **Esc** and **×** close it even when a field has focus.
 - Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.
-- Presentation: **Notes only** hides all chrome and enters fullscreen; the wall stays dark (never white), and **Esc** restores exactly what was visible. **Full screen** and **Autoplay** buttons work by pointer, and `?` lists every shortcut with clickable rows.
-- Slides: start a show, move the pointer and confirm the ← → buttons appear; clicking them changes the slide and does not close the focused note. Switching to **Manual** keeps the buttons so the pointer can still step, with no automatic advance.
+- Presentation: **Notes only** hides all chrome and enters fullscreen; the wall stays dark (never white), and **Esc** restores exactly what was visible. **Full screen** works by pointer, and `?` lists every shortcut with clickable rows.
+- Slides: start a show, move the pointer and confirm the ← → buttons appear; clicking them changes the slide and does not close the focused note. Leave it running and confirm nothing advances on its own.
 - QR: scan the top-right code; drag it, refresh, and confirm it stays. Double-click returns it to the corner.
 - Media: press **V**; photos and videos sit directly on the cork. Try a clip longer than 15 seconds and confirm the phone refuses it. **Present** switches to the black stage.
 - Highlights: open the report, check themes/quotes/participation, then **Save as PDF** and confirm the A4 report. With `HIGHLIGHTS_URL` empty the badge should read **Local summary**.
