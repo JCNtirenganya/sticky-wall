@@ -1001,8 +1001,8 @@ body.show-slide-nav .slide-nav:focus-within{opacity:1}
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:46px;
-  height:46px;
+  width:60px;
+  height:60px;
   padding:0;
   border:1px solid rgba(255,242,224,.2);
   border-radius:999px;
@@ -1013,7 +1013,7 @@ body.show-slide-nav .slide-nav:focus-within{opacity:1}
   cursor:pointer;
   transition:background .2s,color .2s,transform .2s;
 }
-.slide-nav__btn svg{width:17px;height:17px;display:block}
+.slide-nav__btn svg{width:21px;height:21px;display:block}
 .slide-nav__btn:hover,
 .slide-nav__btn:focus-visible{
   background:rgba(255,244,230,.94);

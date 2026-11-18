@@ -3042,22 +3042,24 @@
   $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
   $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
   /* Slide arrows use the same step function as ← / →, for notes and media.
-     Pointer-down makes even a firm mouse or clicker press count; the click
-     handler is only a fallback for keyboard activation and never double-steps. */
+     Presenter remotes differ: some send pointer events, some only mouse
+     events, some only a click. Accept all of them, but step just once. */
   const bindSlideArrow = (id, delta) => {
     const el = $(id);
     if (!el) return;
-    let pointerHandled = 0;
-    el.addEventListener("pointerdown", e => {
-      pointerHandled = Date.now();
-      e.preventDefault();
-      e.stopPropagation();
+    let lastStep = 0;
+    const stepOnce = () => {
+      const now = Date.now();
+      if (now - lastStep < 150) return;
+      lastStep = now;
       nextSlide(delta);
-    });
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-      if (Date.now() - pointerHandled < 500) return;
-      nextSlide(delta);
+    };
+    ["pointerdown", "mousedown", "mouseup", "click"].forEach(type => {
+      el.addEventListener(type, e => {
+        e.stopPropagation();
+        if (type !== "click") e.preventDefault();
+        stepOnce();
+      });
     });
   };
   bindSlideArrow("slide-prev", -1);
