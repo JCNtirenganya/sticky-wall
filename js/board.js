@@ -777,7 +777,7 @@
 
   /* A show gets quiet pointer arrows beside the arrow keys. */
   function syncSlideNav() {
-    document.body.classList.toggle("slide-nav", notesPresent || mediaPresent);
+    document.body.classList.toggle("show-slide-nav", notesPresent || mediaPresent);
   }
 
   function syncFullscreenButtons() {
@@ -1315,7 +1315,7 @@
   }
 
   function setMediaPresentation(on) {
-    /* Full-screen means the whole screen: step out of a split first. */
+    /* Presentation fills the viewport via CSS, so step out of a split first. */
     if (on && splitActive() && splitModules.includes("media")) {
       exitSplit();
       openMediaWall();
@@ -1333,13 +1333,11 @@
       if (entering) mediaStageIndex = 0;
       mediaGrid?.querySelectorAll("video").forEach(video => video.pause());
       document.activeElement?.blur?.();
-      goFullscreen();
       renderMediaStage();
     } else {
       mediaStageBody?.replaceChildren();
       renderMediaWall();
       applyMediaPrefs();
-      if (document.fullscreenElement) leaveFullscreen();
     }
   }
 
@@ -1567,7 +1565,7 @@
   }
 
   function setStreamPresentation(on) {
-    /* Full-screen stream leaves a split so it can cover the whole screen. */
+    /* Presentation leaves a split so it can cover the whole viewport. */
     if (on && splitActive() && splitModules.includes("stream")) {
       exitSplit();
       openStreamWall();
@@ -1575,8 +1573,7 @@
     document.body.classList.toggle("present-stream", !!on);
     syncSlideNav();
     $("stream-present")?.setAttribute("aria-pressed", on ? "true" : "false");
-    if (on) { goFullscreen(); updateStreamGrid(); }
-    else if (document.fullscreenElement) leaveFullscreen();
+    if (on) updateStreamGrid();
   }
 
   function updateStreamGrid() {
@@ -1623,12 +1620,10 @@
     renderLiveStrip();
     layout();
     setExtrasOpen(false);
-    goFullscreen();
   }
 
   function exitSplit() {
     if (!splitActive()) return;
-    const wasFullscreen = !!document.fullscreenElement;
     splitModules.forEach(key => {
       const root = MODULE_META[key]?.root();
       const origin = splitOrigins.get(key);
@@ -1650,7 +1645,6 @@
     splitModules = [];
     activeModule = null;
     delete document.body.dataset.module;
-    if (wasFullscreen) leaveFullscreen();
     closeAllModules();
     layout();
   }
@@ -2792,13 +2786,11 @@
     if (notesPresent) {
       closeFocus();
       document.activeElement?.blur?.();
-      goFullscreen();
       setExtrasOpen(false);
       /* No autoplay: open the first note so the show starts on a slide. */
       if (entering) step(1);
     } else {
       closeFocus();
-      leaveFullscreen();
     }
   }
 

@@ -993,10 +993,10 @@ body.reading #focus-ui{opacity:1}
   opacity:.42;
   transition:opacity .35s var(--ease-soft);
 }
-body.slide-nav .slide-nav{display:flex}
-body.slide-nav.idle .slide-nav{opacity:0;pointer-events:none}
-body.slide-nav .slide-nav:hover,
-body.slide-nav .slide-nav:focus-within{opacity:1}
+body.show-slide-nav .slide-nav{display:flex}
+body.show-slide-nav.idle .slide-nav{opacity:0;pointer-events:none}
+body.show-slide-nav .slide-nav:hover,
+body.show-slide-nav .slide-nav:focus-within{opacity:1}
 .slide-nav__btn{
   pointer-events:auto;
   display:inline-flex;
