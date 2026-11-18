@@ -173,7 +173,6 @@
       "That link is too long for this note": "Ce lien est trop long pour cette note",
       "Present": "Présenter",
       "Manual": "Manuel",
-      "No auto": "Sans auto",
       "Present without autoplay (M)": "Présenter sans lecture automatique (M)",
       "Show the notes without autoplay (M)": "Afficher les notes sans lecture automatique (M)",
       "Presentation": "Présentation",

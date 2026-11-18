@@ -978,9 +978,10 @@ body.reading #focus-ui{opacity:1}
 }
 .focus-btn--hide:hover{background:#8e2f2f;border-color:#8e2f2f;color:#fff5e6}
 
-/* ── autoplay slides: pointer next/previous ───────────────────
+/* ── presentation slides: pointer next/previous ───────────────
    The reading-mode arrows are hidden in a show, so these two quiet
-   buttons give a mouse or touch screen the same command as ← / →. */
+   buttons give a mouse or touch screen the same command as ← / →.
+   They stay in manual mode too, where nothing advances on its own. */
 .autoplay-nav{
   position:fixed;
   left:50%;

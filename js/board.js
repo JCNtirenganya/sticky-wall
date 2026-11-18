@@ -851,9 +851,11 @@
     }
   }
 
-  /* A running show gets quiet pointer arrows beside the arrow keys. */
+  /* Every presentation gets quiet pointer arrows beside the arrow keys —
+     autoplay or manual, notes or media. In manual mode they are the only
+     way to step, so they stay available with autoplay switched off. */
   function syncAutoplayNav() {
-    const active = !!prefs.autoplay && !presentationManual && (notesPresent || mediaPresent);
+    const active = notesPresent || mediaPresent;
     document.body.classList.toggle("autoplay-nav", active);
   }
 
