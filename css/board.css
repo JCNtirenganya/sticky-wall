@@ -3,6 +3,12 @@
    ───────────────────────────────────────────────────────────── */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
+/* Fullscreen can drop the body's propagated background and paint the root
+   canvas white (notably in WebKit), which blanks every presentation mode. */
+html{background:#000}
+html:fullscreen,
+html:fullscreen::backdrop,
+body:fullscreen{background:#000}
 body{
   background:#000;
   color:#fff4e6;

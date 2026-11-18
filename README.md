@@ -180,7 +180,7 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 - Dates: switch a day in the rail and confirm notes, dashboard rows and media follow; **All days** restores everything.
 - Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh. **Esc** and **×** close it even when a field has focus.
 - Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.
-- Presentation: **Notes only** hides all chrome and enters fullscreen; **Esc** restores exactly what was visible. **Full screen** and **Autoplay** buttons work by pointer, and `?` lists every shortcut with clickable rows.
+- Presentation: **Notes only** hides all chrome and enters fullscreen; the wall stays dark (never white), and **Esc** restores exactly what was visible. **Full screen** and **Autoplay** buttons work by pointer, and `?` lists every shortcut with clickable rows.
 - Autoplay: start a show, move the pointer and confirm the ← → buttons appear; clicking them changes the slide and does not close the focused note. Switching to **No auto** hides both buttons.
 - QR: scan the top-right code; drag it, refresh, and confirm it stays. Double-click returns it to the corner.
 - Media: press **V**; photos and videos sit directly on the cork. Try a clip longer than 15 seconds and confirm the phone refuses it. **Present** switches to the black stage.
