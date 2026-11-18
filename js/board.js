@@ -2916,8 +2916,8 @@
       { id: "present", label: "Present notes", keys: ["P", "M"] },
       { id: "present-media", label: "Present media", keys: ["F"] },
       { id: "present-stream", label: "Present stream", keys: ["F"] },
-      { id: "next", label: "Next", keys: ["→", "Space"] },
-      { id: "previous", label: "Previous", keys: ["←"] }
+      { id: "next", label: "Next", keys: ["→", "Space", "PgDn"] },
+      { id: "previous", label: "Previous", keys: ["←", "PgUp"] }
     ] },
     { label: "Wall", rows: [
       { id: "event", label: "Edit event name", keys: ["E"] },
@@ -3161,8 +3161,9 @@
       return;
     }
     if (k === "f") { e.preventDefault(); toggleFilters(); return; }
-    if (k === "arrowright" || k === "arrowdown" || k === " ") { e.preventDefault(); nextSlide(1); }
-    else if (k === "arrowleft" || k === "arrowup") { e.preventDefault(); nextSlide(-1); }
+    /* Presentation clickers usually send Page Up / Page Down, not mouse clicks. */
+    if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); nextSlide(1); }
+    else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); nextSlide(-1); }
   });
 
   /* hide cursor when idle */

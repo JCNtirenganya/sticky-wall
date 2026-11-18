@@ -80,7 +80,7 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **Dashboard colour**, category colours and dashboard settings live in **Settings → Notes**.
 - Cursor hides after 2.5 s; controls fade back in on pointer movement. Choices persist in this browser.
 - **Presentation is always manual**: nothing advances on its own. **Notes only** and the media **Present** button are chrome-free — header, status, QR, filters and the Settings dock disappear, the wall fills the window, and only the content remains. Real browser fullscreen stays opt-in with **Full screen** / **Shift+F**.
-- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) commands **previous / next** exactly like the arrow keys. They stay visible during a show and never close the focused note.
+- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) commands **previous / next** exactly like the arrow keys. They stay visible during a show and never close the focused note. Presentation clickers that send **Page Up / Page Down** work too.
 
 ### Keyboard shortcuts
 | Keys | Action |
@@ -95,7 +95,7 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 | `D` | Dashboard |
 | `P` / `M` | Present notes |
 | `F` | Present open media or stream, otherwise the filter bar |
-| `→` `Space` / `←` | Next / previous note or slide |
+| `→` `Space` `PgDn` / `←` `PgUp` | Next / previous note or slide |
 | `E` / `C` | Event name / categories |
 | `L` / `R` / `J` | Live wall link / Highlights report / Notes JPEG |
 | `Q` | QR card on / off |
