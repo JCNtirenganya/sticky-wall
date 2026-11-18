@@ -1057,7 +1057,7 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   pointer-events:auto;
   transition:opacity .35s var(--ease-soft);
 }
-#extras-toggle,#fullscreen-toggle{
+#extras-toggle,#fullscreen-toggle,#shortcuts-toggle{
   pointer-events:auto;
   display:inline-flex;
   align-items:center;
@@ -1077,14 +1077,18 @@ body.hide-filters #hot,body.hide-filters #filters{display:none}
   opacity:.14;
   transition:opacity .35s var(--ease-soft),background .2s,color .2s,transform .2s;
 }
-#extras-toggle svg,#fullscreen-toggle svg{width:13px;height:13px;display:block}
+#extras-toggle svg,#fullscreen-toggle svg,#shortcuts-toggle svg{width:13px;height:13px;display:block}
 body:not(.idle) #extras-toggle,
-body:not(.idle) #fullscreen-toggle{opacity:.6}
+body:not(.idle) #fullscreen-toggle,
+body:not(.idle) #shortcuts-toggle{opacity:.6}
 body:not(.idle) #extras-toggle:hover,
 body:not(.idle) #fullscreen-toggle:hover,
+body:not(.idle) #shortcuts-toggle:hover,
 #extras-toggle:focus-visible,
 #fullscreen-toggle:focus-visible,
-#extras.open #extras-toggle{
+#shortcuts-toggle:focus-visible,
+#extras.open #extras-toggle,
+#extras.open #shortcuts-toggle{
   opacity:1;
   background:rgba(255,244,230,.94);
   color:#2a1a10;
@@ -1128,11 +1132,20 @@ body.is-fullscreen.idle .module-home__fullscreen{
   pointer-events:auto;
   transform:translateX(-50%) translateY(0) scale(1);
 }
+/* Close (button or Esc) must win over the hover reveal: otherwise the panel
+   stays put while the pointer is still over the dock. Pointerleave resets it. */
+#extras.force-closed #extras-panel,
+#extras.force-closed:hover #extras-panel{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateX(-50%) translateY(7px) scale(.97);
+}
 /* Hide the whole dock, panel included, on views that must stay clickable.
-   Without display:none the panel's own visibility rules win over the
-   parent's hidden state and it keeps covering the screen under the cursor. */
-body.show-modules #extras,
-body.show-dashboard #extras,
+   An explicitly open panel is the exception: the module picker and the
+   dashboard both have a Settings pointer control that must reveal it. */
+body.show-modules #extras:not(.open),
+body.show-dashboard #extras:not(.open),
 body.reading #extras{display:none!important}
 .extras-kicker{
   margin:0 0 4px;
@@ -1489,9 +1502,9 @@ body.reading #extras{display:none!important}
 .extra-input-row input:focus{border-color:rgba(240,196,107,.6);background:rgba(0,0,0,.28)}
 .extra-input-row .extra-mini{height:28px}
 .extra-input-row + .extra-range{margin-top:1px}
-.extras-actions{display:flex;gap:6px;margin-top:8px}
+.extras-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .extras-actions button{
-  flex:1;
+  flex:1 1 28%;
   height:30px;
   border:1px solid rgba(255,242,224,.14);
   border-radius:8px;
@@ -1504,6 +1517,8 @@ body.reading #extras{display:none!important}
   transition:background .18s,color .18s;
 }
 .extras-actions button:hover{background:rgba(255,244,230,.92);color:#2a1a10}
+.extras-actions button[aria-pressed="true"]{background:rgba(255,244,230,.9);color:#2a1a10;border-color:rgba(255,244,230,.9)}
+.extras-actions button kbd{margin-left:3px;opacity:.6;font:600 8.5px/1 var(--font-ui)}
 body.reading #extras{opacity:0;visibility:hidden;pointer-events:none}
 
 @media (max-width:800px){
@@ -1699,6 +1714,67 @@ body.present-notes .empty-hint{display:none!important}
 /* inside a slideshow the meta pill and the arrow buttons are chrome too */
 body.present-notes #focus-meta,
 body.present-notes #focus-ui{display:none!important}
+
+/* ── keyboard shortcuts: dialog ─────────────────────────────── */
+.shortcuts-dialog{
+  width:min(780px,calc(100vw - 32px));
+  max-width:780px;
+}
+.shortcuts-dialog form{
+  display:flex;
+  flex-direction:column;
+  max-height:min(88vh,900px);
+  transform:none;
+}
+.shortcuts-body{
+  flex:1 1 auto;
+  min-height:120px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  margin:0 -6px 6px;
+  padding:2px 6px 4px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(var(--dash-ink-rgb,56,38,23),.28) transparent;
+}
+.shortcuts-group{margin:0 0 18px}
+.shortcuts-group h3{
+  margin:0 0 8px;
+  font:700 9px/1 var(--font-ui);
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(var(--dash-ink-rgb,56,38,23),.5);
+}
+.shortcuts-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:34px;
+  padding:6px 8px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:rgb(var(--dash-ink-rgb,56,38,23));
+  font:500 12px/1.3 var(--font-ui);
+  text-align:left;
+  cursor:pointer;
+}
+.shortcuts-row:hover,
+.shortcuts-row:focus-visible{background:rgba(var(--dash-ink-rgb,56,38,23),.08);outline:none}
+.shortcuts-row .shortcuts-label{flex:1 1 auto}
+.shortcuts-keys{flex:none;display:flex;align-items:center;gap:4px}
+.shortcuts-row kbd{
+  min-width:22px;
+  padding:3px 5px;
+  border:1px solid rgba(var(--dash-ink-rgb,56,38,23),.22);
+  border-radius:4px;
+  background:rgba(255,255,255,.5);
+  box-shadow:0 1px 0 rgba(var(--dash-ink-rgb,56,38,23),.14);
+  color:rgba(var(--dash-ink-rgb,56,38,23),.8);
+  font:600 9px/1 var(--font-ui);
+  text-align:center;
+}
+.shortcuts-foot{margin-top:2px}
 
 /* ── highlights report: dialog ──────────────────────────────── */
 .highlights-dialog{
@@ -2790,7 +2866,6 @@ body.present-notes #status .module-counts{display:none!important}
 }
 body.show-modules #brand,
 body.show-modules #status,
-body.show-modules #extras,
 body.show-modules #qr-card,
 body.show-modules #filters,
 body.show-modules #hot,
@@ -2798,6 +2873,7 @@ body.show-modules #empty,
 body.show-modules #piles,
 body.show-modules #piles-back,
 body.show-modules #focus{opacity:0;visibility:hidden;pointer-events:none}
+body.show-modules #extras:not(.open){opacity:0;visibility:hidden;pointer-events:none}
 
 /* ── split screen ───────────────────────────────────────────── */
 .split-stage{

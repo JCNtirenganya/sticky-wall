@@ -465,6 +465,32 @@
       "Highlights written from the notes on this wall.": "Moments forts rédigés à partir des notes de ce mur.",
       "Local highlights extracted from the notes on this wall.": "Moments forts extraits localement des notes de ce mur.",
 
+      /* ── shortcuts panel and pointer presentation controls ───── */
+      "Shortcuts": "Raccourcis",
+      "Close or go back": "Fermer ou revenir",
+      "Notes wall": "Mur des notes",
+      "Stream wall": "Mur en direct",
+      "Present notes": "Présenter les notes",
+      "Notes without autoplay": "Notes sans lecture auto",
+      "Present media": "Présenter les médias",
+      "Present stream": "Présenter le direct",
+      "Edit categories": "Modifier les catégories",
+      "QR card": "Carte QR",
+      "Category filter bar": "Barre des catégories",
+      "All categories": "Toutes les catégories",
+      "Category 1–9": "Catégorie 1–9",
+      "Restore hidden notes": "Restaurer les notes masquées",
+      "Switch language": "Changer de langue",
+      "Navigation": "Navigation",
+      "Autoplay on": "Lecture auto activée",
+      "Autoplay off": "Lecture auto désactivée",
+      "QR card on": "Carte QR affichée",
+      "QR card off": "Carte QR masquée",
+      "Keyboard shortcuts": "Raccourcis clavier",
+      "Keyboard shortcuts (?)": "Raccourcis clavier (?)",
+      "Every function has a key. Click a label to run it with a pointer.": "Chaque fonction a sa touche. Cliquez sur un libellé pour la lancer à la souris.",
+      "Destructive actions stay in Settings, behind a confirmation.": "Les actions irréversibles restent dans Paramètres, derrière une confirmation.",
+
       "Mute": "Couper le son",
       "Unmute": "Activer le son"
     }

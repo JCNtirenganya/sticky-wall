@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261117h"><link rel="stylesheet" href="css/postit.css?v=20261117h"><link rel="stylesheet" href="css/board.css?v=20261117h"><link rel="stylesheet" href="css/piles.css?v=20261117h"><link rel="stylesheet" href="css/qr.css?v=20261117h">
+<link rel="stylesheet" href="css/paper.css?v=20261118d"><link rel="stylesheet" href="css/postit.css?v=20261118d"><link rel="stylesheet" href="css/board.css?v=20261118d"><link rel="stylesheet" href="css/piles.css?v=20261118d"><link rel="stylesheet" href="css/qr.css?v=20261118d">
 </head>
 <body>
 <main id="board">
@@ -106,6 +106,8 @@
     </div>
     <footer class="module-home__foot">
       <span><kbd>1</kbd>–<kbd>3</kbd> <span data-i18n="pick a module">pick a module</span></span>
+      <button id="module-settings" class="module-home__fullscreen" type="button" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)"><span data-i18n="Settings">Settings</span> <kbd>H</kbd></button>
+      <button id="module-shortcuts" class="module-home__fullscreen" type="button" title="Keyboard shortcuts (?)" data-i18n-title="Keyboard shortcuts (?)"><span data-i18n="Shortcuts">Shortcuts</span> <kbd>?</kbd></button>
       <button id="module-fullscreen" class="module-home__fullscreen" type="button" aria-pressed="false" title="Full screen (Shift+F)" data-i18n-title="Full screen (Shift+F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
         <span data-i18n="Full screen">Full screen</span>
@@ -329,8 +331,10 @@
           <input type="range" data-extra="autoplayDuration" min="2" max="60" step="1" value="6">
         </label>
         <div class="extras-actions">
-          <button id="extras-notes-only" type="button" data-i18n="Notes only">Notes only</button>
-          <button id="extras-notes-manual" type="button" aria-pressed="false" title="Show the notes without autoplay (M)" data-i18n-title="Show the notes without autoplay (M)" data-i18n="No auto">No auto</button>
+          <button id="extras-fullscreen" type="button"><span data-i18n="Full screen">Full screen</span> <kbd>Shift+F</kbd></button>
+          <button id="extras-autoplay" type="button" aria-pressed="true"><span data-i18n="Autoplay">Autoplay</span> <kbd>A</kbd></button>
+          <button id="extras-notes-only" type="button"><span data-i18n="Notes only">Notes only</span> <kbd>P</kbd></button>
+          <button id="extras-notes-manual" type="button" aria-pressed="false" title="Show the notes without autoplay (M)" data-i18n-title="Show the notes without autoplay (M)"><span data-i18n="No auto">No auto</span> <kbd>M</kbd></button>
           <button id="extras-show-all" type="button" data-i18n="Show all">Show all</button>
         </div>
       </section>
@@ -374,6 +378,10 @@
     <button id="extras-toggle" type="button" aria-expanded="false" aria-controls="extras-panel" title="Show or hide presenter controls (H)" data-i18n-title="Show or hide presenter controls (H)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h8M18 7h2M4 17h2M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
       <span data-i18n="Settings">Settings</span>
+    </button>
+    <button id="shortcuts-toggle" type="button" title="Keyboard shortcuts (?)" data-i18n-title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts" data-i18n-aria="Keyboard shortcuts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.3 1-1.3 2"/><path d="M12 17h.01"/></svg>
+      <span data-i18n="Shortcuts">Shortcuts</span>
     </button>
   </div>
 </div>
@@ -566,7 +574,7 @@
     <div class="event-actions">
       <button id="share-open" type="button" class="event-btn event-btn--quiet" data-i18n="Open preview">Open preview</button>
       <span class="event-spacer"></span>
-      <button type="button" class="event-btn" data-i18n="Done">Done</button>
+      <button id="share-done" type="button" class="event-btn" data-i18n="Done">Done</button>
     </div>
   </form>
 </dialog>
@@ -585,6 +593,20 @@
     <span class="focus-btn hint"><kbd>Esc</kbd> <span data-i18n="close">close</span></span>
   </div>
 </div>
+
+<!-- presenter: every shortcut in one place; each row is also a pointer control -->
+<dialog id="shortcuts-dialog" class="event-dialog shortcuts-dialog" aria-labelledby="shortcuts-title">
+  <form method="dialog">
+    <p class="event-kicker" data-i18n="Presenter">Presenter</p>
+    <h2 id="shortcuts-title" data-i18n="Keyboard shortcuts">Keyboard shortcuts</h2>
+    <p class="event-lead" data-i18n="Every function has a key. Click a label to run it with a pointer.">Every function has a key. Click a label to run it with a pointer.</p>
+    <div id="shortcuts-body" class="shortcuts-body"></div>
+    <p class="event-lead shortcuts-foot" data-i18n="Destructive actions stay in Settings, behind a confirmation.">Destructive actions stay in Settings, behind a confirmation.</p>
+    <div class="event-actions">
+      <button id="shortcuts-close" type="button" class="event-btn event-btn--quiet" data-i18n="Close">Close</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- presenter: highlights report, written from every note on the wall -->
 <dialog id="highlights-dialog" class="event-dialog highlights-dialog" aria-labelledby="highlights-title">
@@ -609,6 +631,6 @@
 <!-- print-only highlights report: filled by js/highlights.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261117h"></script><script src="js/i18n.js?v=20261117h"></script><script src="js/store.js?v=20261117h"></script><script src="js/shared.js?v=20261117h"></script><script src="js/qrcode.js?v=20261117h"></script><script src="js/export.js?v=20261117h"></script><script src="js/highlights.js?v=20261117h"></script><script src="js/live.js?v=20261117h"></script><script src="js/board.js?v=20261117h"></script>
+<script src="js/config.js?v=20261118d"></script><script src="js/i18n.js?v=20261118d"></script><script src="js/store.js?v=20261118d"></script><script src="js/shared.js?v=20261118d"></script><script src="js/qrcode.js?v=20261118d"></script><script src="js/export.js?v=20261118d"></script><script src="js/highlights.js?v=20261118d"></script><script src="js/live.js?v=20261118d"></script><script src="js/board.js?v=20261118d"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

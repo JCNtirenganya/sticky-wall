@@ -65,19 +65,45 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 
 ## Moderator controls (board)
 - **Click** a note → reading mode (note grows and centres, the rest greys out). **Esc** closes.
-- **← → / Space** previous / next note.
+- **← → / Space** previous / next note or media slide.
 - **E** or the pencil beside the logo → name the wall (event title + subtitle).
 - **One header**: the event name stays top-left everywhere, and its second line names the module on screen (Notes, Dashboard, Media, Stream, Split screen, Settings). Module walls have no repeated titles.
 - **C** or the slider button beside the logo → edit categories and colours. Up to nine categories.
 - **Filters** are hidden: hover the top edge or press **F**. Keys **1–9** pick categories; **0** = all.
-- **Settings** (**H**, or the button on every module wall and the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). **Module home** there returns to the picker.
-- **Module home**: the board opens here on every load. Pick notes, media or stream with the cards or number shortcuts **1–3**; **V** opens media from anywhere.
+- **Settings** (**H**, the **Settings** button on the module picker and every wall, or the split bar): event name, header/QR/filter-bar toggles, wall colour, and **Advanced** (background image, logo). **Module home** there returns to the picker. **Esc** and the **×** button close it, even from a focused field.
+- **Module home**: the board opens here on every load. Pick notes, media or stream with the cards, **1–3**, **S** or **V**.
 - **Module counts** under each module's buttons are buttons too: click one to open that module. Zeros stay dimmed. The open module never counts itself.
+- **Presentation** can be driven entirely with a pointer: **Settings → Presentation** has **Full screen** and **Autoplay** buttons next to **Notes only**, **No auto** and **Show all**. All of them use the same commands as the keyboard.
+- **Shortcuts (?)**: the `?` button in the dock or on the module picker opens a panel listing every key. Each row is clickable, so any function can also be run with a pointer. Destructive actions are intentionally absent — they stay in Settings behind a confirmation.
 - **Dates**: every note, media card, dashboard row and media slide carries its arrival date/time. A day rail filters the wall by day; **All days** restores everything.
-- **Move the QR card**: drag it anywhere; the board remembers the spot. Double-click returns it to the top-right, or use **Settings → Advanced**.
+- **Move the QR card**: drag it anywhere; the board remembers the spot. Double-click returns it to the top-right, or use **Q**, **Settings → Advanced**.
 - **Dashboard colour**, category colours and dashboard settings live in **Settings → Notes**.
 - Cursor hides after 2.5 s; controls fade back in on pointer movement. Choices persist in this browser.
 - **Presentation modes** — **Notes only**, **Present**, **One by one**, **Manual** — are chrome-free: header, status, QR, filters and the Settings dock disappear, the browser goes fullscreen, and only the content remains.
+
+### Keyboard shortcuts
+| Keys | Action |
+| --- | --- |
+| `?` | Shortcuts panel |
+| `Esc` | Close / go back |
+| `Shift+F` | Full screen on / off |
+| `H` | Settings |
+| `G` | Module home |
+| `W` / `V` / `S` | Notes / Media / Stream wall |
+| `Shift+S` | Split screen |
+| `D` | Dashboard |
+| `P` / `M` | Present notes / Notes without autoplay |
+| `F` | Present open media or stream, otherwise the filter bar |
+| `A` | Autoplay on / off |
+| `→` `Space` / `←` | Next / previous note or slide |
+| `E` / `C` | Event name / categories |
+| `L` / `R` / `J` | Live wall link / Highlights report / Notes JPEG |
+| `Q` | QR card on / off |
+| `0`, `1–9` | All categories, category 1–9 |
+| `X` | Hide the focused note |
+| `B` / `U` / `Z` | Go-live requests / Restore hidden / Reset view |
+| `Y` / `I` | Show all / Switch language |
+| `1–3` on module home | Notes / Media / Stream |
 
 ## Board layout
 The grid uses one fixed cell size derived from the full-screen capacity, so a short list stays on a regular grid instead of stretching across the wall. Notes fill column one top to bottom, then column two, in arrival order. The cell size does not change as notes arrive.
@@ -151,9 +177,9 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 - Modules: opening media or stream hides the notes layer completely. Only one module is open at a time, and **Esc** returns to notes.
 - Counts: the other-module counts appear under the open module's buttons and in the status strip; each one is a button that opens that module, with a pointer cursor and a focus ring. Zero counts are dimmed.
 - Dates: switch a day in the rail and confirm notes, dashboard rows and media follow; **All days** restores everything.
-- Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh.
+- Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh. **Esc** and **×** close it even when a field has focus.
 - Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.
-- Presentation: **Notes only** hides all chrome and enters fullscreen; **Esc** restores exactly what was visible.
+- Presentation: **Notes only** hides all chrome and enters fullscreen; **Esc** restores exactly what was visible. **Full screen** and **Autoplay** buttons work by pointer, and `?` lists every shortcut with clickable rows.
 - QR: scan the top-right code; drag it, refresh, and confirm it stays. Double-click returns it to the corner.
 - Media: press **V**; photos and videos sit directly on the cork. Try a clip longer than 15 seconds and confirm the phone refuses it. **Present** switches to the black stage.
 - Highlights: open the report, check themes/quotes/participation, then **Save as PDF** and confirm the A4 report. With `HIGHLIGHTS_URL` empty the badge should read **Local summary**.

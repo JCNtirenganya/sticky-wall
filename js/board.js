@@ -839,10 +839,22 @@
     else goFullscreen();
   }
 
+  function syncAutoplayButton() {
+    const button = $("extras-autoplay");
+    if (!button) return;
+    button.setAttribute("aria-pressed", prefs.autoplay ? "true" : "false");
+    const label = button.querySelector("[data-i18n]");
+    if (label) {
+      const key = prefs.autoplay ? "Autoplay on" : "Autoplay off";
+      label.dataset.i18n = key;
+      label.textContent = t(key);
+    }
+  }
+
   function syncFullscreenButtons() {
     const active = !!document.fullscreenElement;
     document.body.classList.toggle("is-fullscreen", active);
-    document.querySelectorAll("#fullscreen-toggle, #module-fullscreen").forEach(button => {
+    document.querySelectorAll("#fullscreen-toggle, #module-fullscreen, #extras-fullscreen").forEach(button => {
       button.setAttribute("aria-pressed", active ? "true" : "false");
       const label = button.querySelector("[data-i18n]");
       if (label) {
@@ -2591,9 +2603,15 @@
   const EXTRAS_TOGGLES = ["extras-toggle", "media-controls", "stream-controls", "split-controls"];
   function setExtrasOpen(open) {
     if (!extras) return;
-    extras.classList.toggle("open", !!open);
-    EXTRAS_TOGGLES.forEach(id => $(id)?.setAttribute("aria-expanded", open ? "true" : "false"));
+    const isOpen = !!open;
+    extras.classList.toggle("open", isOpen);
+    /* An explicit close (button, Esc, or a command) wins over the :hover
+       reveal until the pointer leaves the dock and comes back. */
+    extras.classList.toggle("force-closed", !isOpen);
+    EXTRAS_TOGGLES.forEach(id => $(id)?.setAttribute("aria-expanded", isOpen ? "true" : "false"));
   }
+
+  extras?.addEventListener("pointerleave", () => extras.classList.remove("force-closed"));
 
   /* Every module has its own Extras button, all driving the same dock. */
   EXTRAS_TOGGLES.forEach(id => {
@@ -2603,15 +2621,8 @@
     });
   });
 
-  /* The opt-in Full screen control in the dock and on the module home. */
-  ["fullscreen-toggle", "module-fullscreen"].forEach(id => {
-    $(id)?.addEventListener("click", e => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleBoardFullscreen();
-    });
-  });
   syncFullscreenButtons();
+  syncAutoplayButton();
 
   $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
 
@@ -2630,6 +2641,7 @@
     keys.forEach(key => { prefs[key] = PREF_DEFAULTS[key]; });
     savePrefs();
     applyPrefs(true);
+    if (keys.includes("autoplay")) syncAutoplayButton();
     if (module === "look" || module === "notes") applyLook();
     if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
@@ -2667,7 +2679,10 @@
     if (key === "gap") { syncPrefInputs(); layout(); }
     else if (key === "bgDim" || key === "bgColor" || key === "dashColor") applyLook();
     else if (key === "logoSize") { applyLook(); layout(); }
-    else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") syncPrefInputs();
+    else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") {
+      syncPrefInputs();
+      if (key === "autoplay") { syncAutoplayButton(); if (!prefs.autoplay) clearAutoplay(); else armAutoplay(); }
+    }
     else if (String(key).startsWith("media")) {
       applyMediaPrefs();
       if (mediaPresent) renderMediaStage();
@@ -2910,161 +2925,378 @@
     }
   }
 
-  extrasNotesOnly?.addEventListener("click", () => { showNotesWall(); setNotesPresentation(true); });
-  $("extras-notes-manual")?.addEventListener("click", () => {
+  /* ── one command table for keys, pointer controls and the help panel ──
+     Everything non-destructive lives here once. Destructive actions stay in
+     Settings behind their confirmation and deliberately have no shortcut. */
+  function togglePresentation() {
+    showNotesWall();
+    if (notesPresent && !presentationManual) setNotesPresentation(false);
+    else setNotesPresentation(true);
+  }
+
+  function toggleManualPresentation() {
     showNotesWall();
     if (notesPresent && presentationManual) setNotesPresentation(false);
     else setNotesPresentation(true, true);
-  });
+  }
 
-  extrasShowAll?.addEventListener("click", () => {
+  function toggleMediaPresentation(manual = false) {
+    if (!mediaOpenNow()) openMediaWall();
+    if (mediaPresent && (manual ? presentationManual : !presentationManual)) setMediaPresentation(false);
+    else setMediaPresentation(true, manual);
+  }
+
+  function toggleStreamPresentation() {
+    if (!streamWallOpenNow()) openStreamWall();
+    setStreamPresentation(!document.body.classList.contains("present-stream"));
+  }
+
+  function nextSlide(d) {
+    if (mediaPresent) stepMediaStage(d);
+    else step(d);
+  }
+
+  function toggleSplit() {
+    if (splitActive()) { exitSplit(); activateModule("notes"); return; }
+    openSplitDialog();
+  }
+
+  function toggleSettings() {
+    if (notesPresent) setNotesPresentation(false);
+    if (mediaPresent) setMediaPresentation(false);
+    if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
+    if (dashboardOpen()) closeDashboard();
+    if (focusId) closeFocus();
+    setExtrasOpen(!extras?.classList.contains("open"));
+  }
+
+  function toggleDashboardCommand() {
+    if (dashboardOpen()) closeDashboard();
+    else { showNotesWall(); openDashboard(); }
+    setExtrasOpen(false);
+  }
+
+  function toggleMediaWall() {
+    if (mediaOpenNow()) closeMediaWall();
+    else openMediaWall();
+    setExtrasOpen(false);
+  }
+
+  function toggleStreamWall() {
+    if (streamWallOpenNow()) closeStreamWall();
+    else activateModule("stream");
+    setExtrasOpen(false);
+  }
+
+  function toggleFilters() {
+    if (!prefs.filters) {
+      prefs.filters = true;
+      savePrefs();
+      applyPrefs(false);
+      fbar.classList.add("on");
+    } else fbar.classList.toggle("on");
+  }
+
+  function toggleQr() {
+    prefs.qr = !prefs.qr;
+    savePrefs();
+    applyPrefs(true);
+    flashStatus(prefs.qr ? "QR card on" : "QR card off");
+  }
+
+  function toggleAutoplay() {
+    prefs.autoplay = !prefs.autoplay;
+    savePrefs();
+    syncPrefInputs();
+    syncAutoplayButton();
+    if (prefs.autoplay) armAutoplay();
+    else clearAutoplay();
+    flashStatus(prefs.autoplay ? "Autoplay on" : "Autoplay off");
+  }
+
+  function showAllChrome() {
     showNotesWall();
     setNotesPresentation(false);
     ["brand", "qr", "filters"].forEach(key => { prefs[key] = true; });
     savePrefs();
     applyPrefs(true);
     setExtrasOpen(false);
+  }
+
+  function showAllCategories() {
+    showNotesWall();
+    setFilter("all");
+  }
+
+  function filterCategory(n) {
+    const cat = categoryList()[Number(n) - 1];
+    if (!cat) return;
+    showNotesWall();
+    setFilter(cat.key);
+  }
+
+  function closeContext() {
+    if (extras?.classList.contains("open")) { setExtrasOpen(false); return; }
+    if (notesPresent) { setNotesPresentation(false); return; }
+    if (mediaPresent) { setMediaPresentation(false); return; }
+    if (document.body.classList.contains("present-stream")) { setStreamPresentation(false); return; }
+    if (splitActive()) { exitSplit(); activateModule("notes"); return; }
+    if (streamWallOpenNow()) { closeStreamWall(); return; }
+    if (mediaOpenNow()) { closeMediaWall(); return; }
+    if (focusId) { closeFocus(); return; }
+    if (dashboardOpen()) { closeDashboard(); return; }
+    setExtrasOpen(false);
+  }
+
+  const SHORTCUT_GROUPS = [
+    { label: "Navigation", rows: [
+      { id: "help", label: "Shortcuts", keys: ["?"] },
+      { id: "close", label: "Close or go back", keys: ["Esc"] },
+      { id: "home", label: "Module home", keys: ["G"] },
+      { id: "notes", label: "Notes wall", keys: ["W"] },
+      { id: "media", label: "Media wall", keys: ["V"] },
+      { id: "stream", label: "Stream wall", keys: ["S"] },
+      { id: "split", label: "Split screen", keys: ["Shift", "S"] },
+      { id: "dashboard", label: "Dashboard", keys: ["D"] },
+      { id: "settings", label: "Settings", keys: ["H"] }
+    ] },
+    { label: "Present", rows: [
+      { id: "fullscreen", label: "Full screen", keys: ["Shift", "F"] },
+      { id: "present", label: "Present notes", keys: ["P"] },
+      { id: "manual", label: "Notes without autoplay", keys: ["M"] },
+      { id: "autoplay", label: "Autoplay", keys: ["A"] },
+      { id: "present-media", label: "Present media", keys: ["F"] },
+      { id: "present-stream", label: "Present stream", keys: ["F"] },
+      { id: "next", label: "Next", keys: ["→", "Space"] },
+      { id: "previous", label: "Previous", keys: ["←"] }
+    ] },
+    { label: "Wall", rows: [
+      { id: "event", label: "Edit event name", keys: ["E"] },
+      { id: "categories", label: "Edit categories", keys: ["C"] },
+      { id: "share", label: "Live wall link", keys: ["L"] },
+      { id: "highlights", label: "Highlights report", keys: ["R"] },
+      { id: "jpeg", label: "Notes image JPEG", keys: ["J"] },
+      { id: "qr", label: "QR card", keys: ["Q"] },
+      { id: "filters", label: "Category filter bar", keys: ["F"] },
+      { id: "all", label: "All categories", keys: ["0"] },
+      { id: "category", label: "Category 1–9", keys: ["1–9"] },
+      { id: "hide", label: "Hide note", keys: ["X"] },
+      { id: "requests", label: "Go-live requests", keys: ["B"] },
+      { id: "restore", label: "Restore hidden notes", keys: ["U"] },
+      { id: "reset-view", label: "Reset view", keys: ["Z"] },
+      { id: "show-all", label: "Show all", keys: ["Y"] },
+      { id: "language", label: "Switch language", keys: ["I"] }
+    ] }
+  ];
+
+  const shortcutsDialog = $("shortcuts-dialog"), shortcutsBody = $("shortcuts-body");
+
+  function closeShortcutsDialog() {
+    if (!shortcutsDialog?.open) return;
+    if (typeof shortcutsDialog.close === "function") shortcutsDialog.close();
+    else shortcutsDialog.removeAttribute("open");
+  }
+
+  function renderShortcuts() {
+    if (!shortcutsBody) return;
+    const frag = document.createDocumentFragment();
+    SHORTCUT_GROUPS.forEach(group => {
+      const section = document.createElement("section");
+      section.className = "shortcuts-group";
+      const title = document.createElement("h3");
+      title.textContent = t(group.label);
+      const list = document.createElement("div");
+      list.className = "shortcuts-list";
+      group.rows.forEach(row => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "shortcuts-row";
+        button.dataset.command = row.id;
+        if (row.id === "category") button.dataset.arg = "1";
+        const label = document.createElement("span");
+        label.className = "shortcuts-label";
+        label.textContent = t(row.label);
+        const keys = document.createElement("span");
+        keys.className = "shortcuts-keys";
+        row.keys.forEach(key => {
+          const kbd = document.createElement("kbd");
+          kbd.textContent = key;
+          keys.append(kbd);
+        });
+        button.append(label, keys);
+        button.addEventListener("click", () => {
+          const arg = Number(button.dataset.arg || 0);
+          closeShortcutsDialog();
+          runCommand(row.id, arg);
+        });
+        list.append(button);
+      });
+      section.append(title, list);
+      frag.append(section);
+    });
+    shortcutsBody.replaceChildren(frag);
+  }
+
+  function openShortcutsDialog() {
+    if (!shortcutsDialog) return;
+    renderShortcuts();
+    setExtrasOpen(false);
+    if (typeof shortcutsDialog.showModal === "function") {
+      if (!shortcutsDialog.open) shortcutsDialog.showModal();
+    } else shortcutsDialog.setAttribute("open", "");
+    $("shortcuts-close")?.focus({ preventScroll: true });
+  }
+
+  function runCommand(id, arg) {
+    /* Settings and Close manage the panel themselves; every other command
+       dismisses it so the wall underneath stays unambiguous. */
+    if (id !== "settings" && id !== "close" && id !== "help") setExtrasOpen(false);
+    switch (id) {
+      case "help": openShortcutsDialog(); break;
+      case "close": closeContext(); break;
+      case "home": openModuleHome(); break;
+      case "notes": showNotesWall(); break;
+      case "media": toggleMediaWall(); break;
+      case "stream": toggleStreamWall(); break;
+      case "split": toggleSplit(); break;
+      case "dashboard": toggleDashboardCommand(); break;
+      case "settings": toggleSettings(); break;
+      case "fullscreen": toggleBoardFullscreen(); break;
+      case "present": togglePresentation(); break;
+      case "manual": toggleManualPresentation(); break;
+      case "autoplay": toggleAutoplay(); break;
+      case "present-media": toggleMediaPresentation(false); break;
+      case "present-stream": toggleStreamPresentation(); break;
+      case "next": nextSlide(1); break;
+      case "previous": nextSlide(-1); break;
+      case "event": openEventEditor(); break;
+      case "categories": openCategoryEditor(); break;
+      case "share": openShareDialog(); break;
+      case "highlights": openWallHighlights(); break;
+      case "jpeg": downloadWallJPEG(); break;
+      case "qr": toggleQr(); break;
+      case "filters": toggleFilters(); break;
+      case "all": showAllCategories(); break;
+      case "category": filterCategory(arg); break;
+      case "hide": if (focusId) hideNote(focusId); break;
+      case "requests": openLiveRequestDialog(); break;
+      case "restore": restoreAll(); break;
+      case "reset-view": resetView(); break;
+      case "show-all": showAllChrome(); break;
+      case "language": I18N.setLang(I18N.lang() === "en" ? "fr" : "en"); break;
+      default: break;
+    }
+  }
+
+  /* Pointer controls use exactly the same commands as the keyboard. */
+  $("extras-fullscreen")?.addEventListener("click", e => { e.stopPropagation(); runCommand("fullscreen"); });
+  $("extras-autoplay")?.addEventListener("click", e => { e.stopPropagation(); runCommand("autoplay"); });
+  $("shortcuts-toggle")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
+  $("shortcuts-close")?.addEventListener("click", closeShortcutsDialog);
+  $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
+  $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
+  shortcutsDialog?.addEventListener("click", e => {
+    if (e.target === shortcutsDialog) closeShortcutsDialog();
   });
+  $("share-done")?.addEventListener("click", () => $("share-dialog")?.close?.());
+  $("share-dialog")?.addEventListener("click", e => {
+    if (e.target.id === "share-dialog") $("share-dialog").close();
+  });
+  ["fullscreen-toggle", "module-fullscreen"].forEach(id => {
+    $(id)?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      runCommand("fullscreen");
+    });
+  });
+  extrasNotesOnly?.addEventListener("click", e => { e.stopPropagation(); runCommand("present"); });
+  $("extras-notes-manual")?.addEventListener("click", e => { e.stopPropagation(); runCommand("manual"); });
+  extrasShowAll?.addEventListener("click", e => { e.stopPropagation(); runCommand("show-all"); });
 
   document.addEventListener("click", e => {
     if (!e.target.closest("#extras")) setExtrasOpen(false);
   });
 
   /* ── keyboard (moderator at the laptop) ────────────────────── */
+  /* Escape is special: it must also work while a Settings field has focus,
+     and it must dismiss the topmost dialog before the panel underneath. */
   document.addEventListener("keydown", e => {
-    if (eventDialog?.open || categoryDialog?.open || splitDialog?.open || liveRequestDialog?.open || /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
-    /* let Space/Enter activate a focused button or note natively */
+    if (e.key !== "Escape" && e.key !== "Esc") return;
+    if (shortcutsDialog?.open) { e.preventDefault(); e.stopPropagation(); closeShortcutsDialog(); return; }
+    if ($("share-dialog")?.open) { e.preventDefault(); e.stopPropagation(); $("share-dialog").close(); return; }
+    /* Native dialogs handle their own Escape; leave them alone. */
+    if (eventDialog?.open || categoryDialog?.open || splitDialog?.open || liveRequestDialog?.open || resetDialog?.open || $("highlights-dialog")?.open) return;
+    if (extras?.classList.contains("open")) { e.preventDefault(); e.stopPropagation(); setExtrasOpen(false); }
+  }, true);
+
+  document.addEventListener("keydown", e => {
+    /* Dialogs own their keys; never steal typing or native activation. */
+    if (eventDialog?.open || categoryDialog?.open || splitDialog?.open || liveRequestDialog?.open || resetDialog?.open ||
+        shortcutsDialog?.open || $("share-dialog")?.open || $("highlights-dialog")?.open ||
+        /^(input|textarea|select)$/i.test(e.target.tagName || "")) return;
     if ((e.key === " " || e.key === "Enter") && e.target.closest?.("button, .note")) return;
     const k = e.key.toLowerCase();
     touchAutoplay();
 
-    /* Shift+F is the global Full screen shortcut, including module home. */
-    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && k === "f") {
-      e.preventDefault();
-      toggleBoardFullscreen();
-      return;
+    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (k === "f") { e.preventDefault(); runCommand("fullscreen"); return; }
+      if (k === "s") { e.preventDefault(); runCommand("split"); return; }
     }
+
+    /* Global commands work from the module picker and every wall. */
+    if (k === "?") { e.preventDefault(); runCommand("help"); return; }
+    if (k === "g") { e.preventDefault(); runCommand("home"); return; }
+    if (k === "s") { e.preventDefault(); runCommand("stream"); return; }
+    if (k === "a") { e.preventDefault(); runCommand("autoplay"); return; }
+    if (k === "l") { e.preventDefault(); runCommand("share"); return; }
+    if (k === "r") { e.preventDefault(); runCommand("highlights"); return; }
+    if (k === "j") { e.preventDefault(); runCommand("jpeg"); return; }
+    if (k === "q") { e.preventDefault(); runCommand("qr"); return; }
+    if (k === "b") { e.preventDefault(); runCommand("requests"); return; }
+    if (k === "u") { e.preventDefault(); runCommand("restore"); return; }
+    if (k === "z") { e.preventDefault(); runCommand("reset-view"); return; }
+    if (k === "i") { e.preventDefault(); runCommand("language"); return; }
+    if (k === "y") { e.preventDefault(); runCommand("show-all"); return; }
 
     if (moduleHomeOpen) {
-      if (/^[1-3]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); }
-      else if (k === "v") { e.preventDefault(); activateModule("media"); }
-      return;
+      if (/^[1-3]$/.test(k)) { e.preventDefault(); activateModule(MODULE_KEYS[Number(k) - 1]); return; }
+      if (k === "v") { e.preventDefault(); activateModule("media"); return; }
     }
 
-    /* Esc always dismisses Extras before it leaves the module underneath. */
-    if (k === "escape" && extras?.classList.contains("open")) {
-      e.preventDefault();
-      setExtrasOpen(false);
-      return;
-    }
+    if (k === "escape") { e.preventDefault(); runCommand("close"); return; }
+    if (k === "h") { e.preventDefault(); runCommand("settings"); return; }
+    if (k === "w") { e.preventDefault(); runCommand("notes"); return; }
+    if (k === "d") { e.preventDefault(); runCommand("dashboard"); return; }
+    if (k === "e") { e.preventDefault(); runCommand("event"); return; }
+    if (k === "c") { e.preventDefault(); runCommand("categories"); return; }
+    if (k === "v") { e.preventDefault(); runCommand("media"); return; }
+    if (k === "p") { e.preventDefault(); runCommand("present"); return; }
+    if (k === "m") { e.preventDefault(); runCommand("manual"); return; }
+    if (k === "x" && focusId) { e.preventDefault(); runCommand("hide"); return; }
+    if (k === "0") { e.preventDefault(); runCommand("all"); return; }
+    if (/^[1-9]$/.test(k)) { e.preventDefault(); runCommand("category", Number(k)); return; }
 
-    /* The Extras shortcuts stay available in every module, not only Notes. */
-    if (k === "h") {
-      e.preventDefault();
-      if (notesPresent) setNotesPresentation(false);
-      if (mediaPresent) setMediaPresentation(false);
-      if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
-      if (dashboardOpen()) closeDashboard();
-      if (focusId) closeFocus();
-      setExtrasOpen(!extras?.classList.contains("open"));
-      return;
-    }
-    if (k === "w") { e.preventDefault(); showNotesWall(); setExtrasOpen(false); return; }
-    if (k === "d") {
-      e.preventDefault();
-      if (dashboardOpen()) closeDashboard();
-      else { showNotesWall(); openDashboard(); }
-      setExtrasOpen(false);
-      return;
-    }
-    if (k === "e") { e.preventDefault(); setExtrasOpen(false); openEventEditor(); return; }
-    if (k === "c") { e.preventDefault(); setExtrasOpen(false); openCategoryEditor(); return; }
-    if (k === "v") {
-      e.preventDefault();
-      if (mediaOpenNow()) closeMediaWall();
-      else openMediaWall();
-      return;
-    }
-
+    /* F is contextual: present the open module, otherwise the filter bar. */
     if (splitActive()) {
-      if (k === "escape") { e.preventDefault(); exitSplit(); activateModule("notes"); }
-      else if (k === "f" && splitModules.includes("media")) {
-        e.preventDefault();
-        if (mediaPresent && !presentationManual) setMediaPresentation(false);
-        else setMediaPresentation(true);
-      }
-      else if (k === "f" && splitModules.includes("stream")) {
-        e.preventDefault();
-        setStreamPresentation(!document.body.classList.contains("present-stream"));
-      }
+      if (k === "f" && splitModules.includes("media")) { e.preventDefault(); toggleMediaPresentation(false); }
+      else if (k === "f" && splitModules.includes("stream")) { e.preventDefault(); toggleStreamPresentation(); }
+      else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); nextSlide(1); }
+      else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); nextSlide(-1); }
       return;
     }
-
     if (streamWallOpenNow()) {
-      if (k === "escape") {
-        e.preventDefault();
-        if (document.body.classList.contains("present-stream")) setStreamPresentation(false);
-        else closeStreamWall();
-      }
-      else if (k === "f") { e.preventDefault(); setStreamPresentation(!document.body.classList.contains("present-stream")); }
-      else if (k === "v") { e.preventDefault(); openMediaWall(); }
+      if (k === "f") { e.preventDefault(); toggleStreamPresentation(); }
       return;
     }
-
     if (mediaOpenNow()) {
-      if (mediaPresent) {
-        if (k === "escape" || k === "f") { e.preventDefault(); setMediaPresentation(false); }
-        else if (k === "v") { e.preventDefault(); closeMediaWall(); }
-        else if (k === "m") {
-          if (presentationManual) setMediaPresentation(false);
-          else setMediaPresentation(true, true);
-        }
-        else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); stepMediaStage(1); }
-        else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); stepMediaStage(-1); }
-        return;
-      }
-      if (k === "escape" || k === "v") { e.preventDefault(); closeMediaWall(); }
-      else if (k === "f") { e.preventDefault(); setMediaPresentation(true); }
-      else if (k === "m") { e.preventDefault(); setMediaPresentation(true, true); }
+      if (k === "f") { e.preventDefault(); toggleMediaPresentation(false); }
+      else if (k === "arrowright" || k === "arrowdown" || k === " " || k === "pagedown") { e.preventDefault(); nextSlide(1); }
+      else if (k === "arrowleft" || k === "arrowup" || k === "pageup") { e.preventDefault(); nextSlide(-1); }
       return;
     }
-    if (k === "v") { e.preventDefault(); openMediaWall(); return; }
-    if (dashboardOpen()) {
-      if (k === "escape" || k === "d") closeDashboard();
-      else if (k === "h") setExtrasOpen(!extras?.classList.contains("open"));
-      return;
-    }
-    if (k === "escape") {
-      if (notesPresent) setNotesPresentation(false);
-      else if (focusId) closeFocus();
-      else { closeFocus(); setExtrasOpen(false); }
-    }
-    else if (k === "d") toggleDashboard();
-    else if (k === "x" && focusId) hideNote(focusId);
-    else if (k === "arrowright" || k === "arrowdown" || k === " ") { e.preventDefault(); step(1); }
-    else if (k === "arrowleft" || k === "arrowup") { e.preventDefault(); step(-1); }
-    else if (k === "e" && !focusId) openEventEditor();
-    else if (k === "c" && !focusId) openCategoryEditor();
-    else if (k === "h" && !focusId) {
-      if (notesPresent) { setNotesPresentation(false); setExtrasOpen(true); }
-      else setExtrasOpen(!extras?.classList.contains("open"));
-    }
-    else if (k === "m" && !focusId) {
-      if (notesPresent && presentationManual) setNotesPresentation(false);
-      else setNotesPresentation(true, true);
-    }
-    else if (k === "f") {
-      if (!prefs.filters) {
-        prefs.filters = true;
-        savePrefs();
-        applyPrefs(false);
-        fbar.classList.add("on");
-      } else fbar.classList.toggle("on");
-    }
-    else if (/^[1-9]$/.test(k)) {
-      const cat = categoryList()[Number(k) - 1];
-      if (cat) setFilter(cat.key);
-    }
+    if (k === "f") { e.preventDefault(); toggleFilters(); return; }
+    if (k === "arrowright" || k === "arrowdown" || k === " ") { e.preventDefault(); nextSlide(1); }
+    else if (k === "arrowleft" || k === "arrowup") { e.preventDefault(); nextSlide(-1); }
   });
 
   /* hide cursor when idle */
