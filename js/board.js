@@ -3041,9 +3041,27 @@
   $("shortcuts-close")?.addEventListener("click", closeShortcutsDialog);
   $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
   $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
-  /* Slide arrows use the same step function as ← / →, for notes and media. */
-  $("slide-prev")?.addEventListener("click", e => { e.stopPropagation(); nextSlide(-1); });
-  $("slide-next")?.addEventListener("click", e => { e.stopPropagation(); nextSlide(1); });
+  /* Slide arrows use the same step function as ← / →, for notes and media.
+     Pointer-down makes even a firm mouse or clicker press count; the click
+     handler is only a fallback for keyboard activation and never double-steps. */
+  const bindSlideArrow = (id, delta) => {
+    const el = $(id);
+    if (!el) return;
+    let pointerHandled = 0;
+    el.addEventListener("pointerdown", e => {
+      pointerHandled = Date.now();
+      e.preventDefault();
+      e.stopPropagation();
+      nextSlide(delta);
+    });
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      if (Date.now() - pointerHandled < 500) return;
+      nextSlide(delta);
+    });
+  };
+  bindSlideArrow("slide-prev", -1);
+  bindSlideArrow("slide-next", 1);
   shortcutsDialog?.addEventListener("click", e => {
     if (e.target === shortcutsDialog) closeShortcutsDialog();
   });
