@@ -972,6 +972,54 @@ body.reading #focus-ui{opacity:1}
 }
 .focus-btn--hide:hover{background:#8e2f2f;border-color:#8e2f2f;color:#fff5e6}
 
+/* ── autoplay slides: pointer next/previous ───────────────────
+   The reading-mode arrows are hidden in a show, so these two quiet
+   buttons give a mouse or touch screen the same command as ← / →. */
+.autoplay-nav{
+  position:fixed;
+  left:50%;
+  bottom:clamp(18px,3.5vh,34px);
+  z-index:180;
+  display:none;
+  align-items:center;
+  gap:8px;
+  transform:translateX(-50%);
+  opacity:.42;
+  transition:opacity .35s var(--ease-soft);
+}
+body.autoplay-nav .autoplay-nav{display:flex}
+body.autoplay-nav.idle .autoplay-nav{opacity:0;pointer-events:none}
+body.autoplay-nav .autoplay-nav:hover,
+body.autoplay-nav .autoplay-nav:focus-within{opacity:1}
+.autoplay-nav__btn{
+  pointer-events:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:46px;
+  height:46px;
+  padding:0;
+  border:1px solid rgba(255,242,224,.2);
+  border-radius:999px;
+  background:rgba(28,15,7,.5);
+  backdrop-filter:blur(12px) saturate(1.2);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2);
+  color:rgba(255,244,230,.86);
+  cursor:pointer;
+  transition:background .2s,color .2s,transform .2s;
+}
+.autoplay-nav__btn svg{width:17px;height:17px;display:block}
+.autoplay-nav__btn:hover,
+.autoplay-nav__btn:focus-visible{
+  background:rgba(255,244,230,.94);
+  color:#2a1a10;
+  transform:translateY(-1px);
+  outline:none;
+}
+/* Shows hide the cursor everywhere; bring it back over these controls. */
+body.present-notes .autoplay-nav__btn,
+body.present-media .autoplay-nav__btn{cursor:pointer!important}
+
 /* ── hidden filter controls ─────────────────────────────────── */
 #hot{position:fixed;left:0;right:0;top:0;height:66px;z-index:10}
 #filters{

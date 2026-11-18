@@ -13,7 +13,7 @@
 <title>Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Gochi+Hand&family=Kalam&family=Covered+By+Your+Grace&family=Homemade+Apple&family=Nanum+Pen+Script&family=Patrick+Hand&family=Reenie+Beanie&family+Shadows+Into+Light&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/paper.css?v=20261118d"><link rel="stylesheet" href="css/postit.css?v=20261118d"><link rel="stylesheet" href="css/board.css?v=20261118d"><link rel="stylesheet" href="css/piles.css?v=20261118d"><link rel="stylesheet" href="css/qr.css?v=20261118d">
+<link rel="stylesheet" href="css/paper.css?v=20261118f"><link rel="stylesheet" href="css/postit.css?v=20261118f"><link rel="stylesheet" href="css/board.css?v=20261118f"><link rel="stylesheet" href="css/piles.css?v=20261118f"><link rel="stylesheet" href="css/qr.css?v=20261118f">
 </head>
 <body>
 <main id="board">
@@ -594,6 +594,12 @@
   </div>
 </div>
 
+<!-- autoplay: pointer equivalent of the arrow keys, shown only during a show -->
+<nav id="autoplay-nav" class="autoplay-nav" aria-label="Slide controls" data-i18n-aria="Slide controls">
+  <button id="autoplay-prev" class="autoplay-nav__btn" type="button" title="Previous" data-i18n-title="Previous" aria-label="Previous" data-i18n-aria="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button id="autoplay-next" class="autoplay-nav__btn" type="button" title="Next" data-i18n-title="Next" aria-label="Next" data-i18n-aria="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+</nav>
+
 <!-- presenter: every shortcut in one place; each row is also a pointer control -->
 <dialog id="shortcuts-dialog" class="event-dialog shortcuts-dialog" aria-labelledby="shortcuts-title">
   <form method="dialog">
@@ -631,6 +637,6 @@
 <!-- print-only highlights report: filled by js/highlights.js, shown by the browser print dialog -->
 <div id="print-sheet" aria-hidden="true"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/config.js?v=20261118d"></script><script src="js/i18n.js?v=20261118d"></script><script src="js/store.js?v=20261118d"></script><script src="js/shared.js?v=20261118d"></script><script src="js/qrcode.js?v=20261118d"></script><script src="js/export.js?v=20261118d"></script><script src="js/highlights.js?v=20261118d"></script><script src="js/live.js?v=20261118d"></script><script src="js/board.js?v=20261118d"></script>
+<script src="js/config.js?v=20261118f"></script><script src="js/i18n.js?v=20261118f"></script><script src="js/store.js?v=20261118f"></script><script src="js/shared.js?v=20261118f"></script><script src="js/qrcode.js?v=20261118f"></script><script src="js/export.js?v=20261118f"></script><script src="js/highlights.js?v=20261118f"></script><script src="js/live.js?v=20261118f"></script><script src="js/board.js?v=20261118f"></script>
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body></html>

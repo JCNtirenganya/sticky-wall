@@ -851,6 +851,12 @@
     }
   }
 
+  /* A running show gets quiet pointer arrows beside the arrow keys. */
+  function syncAutoplayNav() {
+    const active = !!prefs.autoplay && !presentationManual && (notesPresent || mediaPresent);
+    document.body.classList.toggle("autoplay-nav", active);
+  }
+
   function syncFullscreenButtons() {
     const active = !!document.fullscreenElement;
     document.body.classList.toggle("is-fullscreen", active);
@@ -1428,6 +1434,7 @@
     mediaPresent = on;
     presentationManual = on ? !!manual : false;
     document.body.classList.toggle("present-media", mediaPresent);
+    syncAutoplayNav();
     $("media-present")?.setAttribute("aria-pressed", mediaPresent && !presentationManual ? "true" : "false");
     $("media-present-manual")?.setAttribute("aria-pressed", mediaPresent && presentationManual ? "true" : "false");
     if (mediaStage) mediaStage.hidden = !mediaPresent;
@@ -1684,6 +1691,7 @@
       openStreamWall();
     }
     document.body.classList.toggle("present-stream", !!on);
+    syncAutoplayNav();
     $("stream-present")?.setAttribute("aria-pressed", on ? "true" : "false");
     if (on) { goFullscreen(); updateStreamGrid(); }
     else if (document.fullscreenElement) leaveFullscreen();
@@ -2535,7 +2543,8 @@
   }
 
   document.addEventListener("click", e => {
-    if (focusId && !e.target.closest(".note") && !e.target.closest("#filters") && !e.target.closest(".focus-btn")) closeFocus();
+    if (focusId && !e.target.closest(".note") && !e.target.closest("#filters") &&
+        !e.target.closest(".focus-btn") && !e.target.closest("#autoplay-nav")) closeFocus();
   });
   $("prev").addEventListener("click", e => { e.stopPropagation(); step(-1); });
   $("next").addEventListener("click", e => { e.stopPropagation(); step(1); });
@@ -2623,6 +2632,7 @@
 
   syncFullscreenButtons();
   syncAutoplayButton();
+  syncAutoplayNav();
 
   $("extras-close")?.addEventListener("click", () => setExtrasOpen(false));
 
@@ -2641,7 +2651,7 @@
     keys.forEach(key => { prefs[key] = PREF_DEFAULTS[key]; });
     savePrefs();
     applyPrefs(true);
-    if (keys.includes("autoplay")) syncAutoplayButton();
+    if (keys.includes("autoplay")) { syncAutoplayButton(); syncAutoplayNav(); }
     if (module === "look" || module === "notes") applyLook();
     if (module === "media") { applyMediaPrefs(); renderMediaWall(); }
 
@@ -2681,7 +2691,11 @@
     else if (key === "logoSize") { applyLook(); layout(); }
     else if (key === "autoplay" || key === "autoplayDelay" || key === "autoplayDuration") {
       syncPrefInputs();
-      if (key === "autoplay") { syncAutoplayButton(); if (!prefs.autoplay) clearAutoplay(); else armAutoplay(); }
+      if (key === "autoplay") {
+        syncAutoplayButton();
+        syncAutoplayNav();
+        if (!prefs.autoplay) clearAutoplay(); else armAutoplay();
+      }
     }
     else if (String(key).startsWith("media")) {
       applyMediaPrefs();
@@ -2909,6 +2923,7 @@
       notesPresentSnapshot = null;
     }
     document.body.classList.toggle("present-notes", notesPresent);
+    syncAutoplayNav();
     $("extras-notes-manual")?.setAttribute("aria-pressed", notesPresent && presentationManual ? "true" : "false");
     savePrefs();
     applyPrefs(true);
@@ -3009,6 +3024,7 @@
     savePrefs();
     syncPrefInputs();
     syncAutoplayButton();
+    syncAutoplayNav();
     if (prefs.autoplay) armAutoplay();
     else clearAutoplay();
     flashStatus(prefs.autoplay ? "Autoplay on" : "Autoplay off");
@@ -3195,6 +3211,8 @@
   $("shortcuts-close")?.addEventListener("click", closeShortcutsDialog);
   $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
   $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
+  $("autoplay-prev")?.addEventListener("click", e => { e.stopPropagation(); runCommand("previous"); });
+  $("autoplay-next")?.addEventListener("click", e => { e.stopPropagation(); runCommand("next"); });
   shortcutsDialog?.addEventListener("click", e => {
     if (e.target === shortcutsDialog) closeShortcutsDialog();
   });

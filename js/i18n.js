@@ -482,6 +482,7 @@
       "Restore hidden notes": "Restaurer les notes masquées",
       "Switch language": "Changer de langue",
       "Navigation": "Navigation",
+      "Slide controls": "Commandes de diapositives",
       "Autoplay on": "Lecture auto activée",
       "Autoplay off": "Lecture auto désactivée",
       "QR card on": "Carte QR affichée",
