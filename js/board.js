@@ -3035,14 +3035,15 @@
     }
   }
 
-  /* Pointer controls use exactly the same commands as the keyboard. */
+  /* Pointer controls use the same commands as the keyboard. */
   $("extras-fullscreen")?.addEventListener("click", e => { e.stopPropagation(); runCommand("fullscreen"); });
   $("shortcuts-toggle")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
   $("shortcuts-close")?.addEventListener("click", closeShortcutsDialog);
   $("module-settings")?.addEventListener("click", e => { e.stopPropagation(); runCommand("settings"); });
   $("module-shortcuts")?.addEventListener("click", e => { e.stopPropagation(); runCommand("help"); });
-  $("slide-prev")?.addEventListener("click", e => { e.stopPropagation(); runCommand("previous"); });
-  $("slide-next")?.addEventListener("click", e => { e.stopPropagation(); runCommand("next"); });
+  /* Slide arrows use the same step function as ← / →, for notes and media. */
+  $("slide-prev")?.addEventListener("click", e => { e.stopPropagation(); nextSlide(-1); });
+  $("slide-next")?.addEventListener("click", e => { e.stopPropagation(); nextSlide(1); });
   shortcutsDialog?.addEventListener("click", e => {
     if (e.target === shortcutsDialog) closeShortcutsDialog();
   });

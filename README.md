@@ -80,7 +80,7 @@ Presenter changes are stored in this browser (`localStorage`) so the wall keeps 
 - **Dashboard colour**, category colours and dashboard settings live in **Settings → Notes**.
 - Cursor hides after 2.5 s; controls fade back in on pointer movement. Choices persist in this browser.
 - **Presentation is always manual**: nothing advances on its own. **Notes only** and the media **Present** button are chrome-free — header, status, QR, filters and the Settings dock disappear, the wall fills the window, and only the content remains. Real browser fullscreen stays opt-in with **Full screen** / **Shift+F**.
-- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) commands **previous / next** exactly like the arrow keys. They fade when the pointer is idle and never close the focused note.
+- **Presentation slides** have two quiet ← → buttons at the bottom centre: a pointer (or touch) commands **previous / next** exactly like the arrow keys. They stay visible during a show and never close the focused note.
 
 ### Keyboard shortcuts
 | Keys | Action |
@@ -180,7 +180,7 @@ The poll module is gone: no board, phone or embed code loads it. `supabase/migra
 - Settings: **H** opens Settings; **Module home** there returns to the picker. Toggling header, QR and filters should reclaim space and survive a refresh. **Esc** and **×** close it even when a field has focus.
 - Startup: open the board and confirm the module picker appears before any wall; reload and confirm it returns there.
 - Presentation: **Notes only** hides all chrome and fills the window; the wall stays dark (never white), and **Esc** restores exactly what was visible. **Full screen** is opt-in and works by pointer, and `?` lists every shortcut with clickable rows.
-- Slides: start a show, move the pointer and confirm the ← → buttons appear; clicking them changes the slide and does not close the focused note. Leave it running and confirm nothing advances on its own.
+- Slides: start a show and confirm the ← → buttons are visible; clicking them changes the slide and does not close the focused note. Leave it running and confirm nothing advances on its own.
 - QR: scan the top-right code; drag it, refresh, and confirm it stays. Double-click returns it to the corner.
 - Media: press **V**; photos and videos sit directly on the cork. Try a clip longer than 15 seconds and confirm the phone refuses it. **Present** switches to the black stage.
 - Highlights: open the report, check themes/quotes/participation, then **Save as PDF** and confirm the A4 report. With `HIGHLIGHTS_URL` empty the badge should read **Local summary**.
